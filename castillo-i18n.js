@@ -157,6 +157,7 @@
     'Podrá registrarla el mismo día.': 'You can log it on the day.',
     'Se abre ese día': 'Opens that day', 'Sin registrar — toque para elegir': 'Not logged — tap to choose',
     'Opción': 'Option', 'OPCIÓN': 'OPTION', 'Elija': 'Choose', 'una opción': 'an option',
+    'Ya registrado · no editable': 'Already logged · locked', 'Comida registrada': 'Meal logged',
     // estados
     'Completado': 'Completed', 'No realizado': 'Not done', 'Programado': 'Scheduled',
     // Evolución

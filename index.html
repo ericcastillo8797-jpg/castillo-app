@@ -584,11 +584,11 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ mealSheet.h }}</div>
           <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1;margin-top:4px">{{ mealSheet.n }}</div>
         </div>
-        <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.36);text-align:right;padding-bottom:4px">{{ L.elija }}<br>{{ L.unaOpcion }}</div>
+        <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.36);text-align:right;padding-bottom:4px">{{ mealSheet.lockNote }}</div>
       </div>
       <div style="overflow-y:auto;padding:12px 20px 26px;display:flex;flex-direction:column;gap:9px">
         <sc-for list="{{ mealSheet.opts }}" as="o" hint-placeholder-count="7">
-        <div onClick="{{ o.pick }}" style="border-radius:18px;padding:14px 15px;cursor:pointer;transition:all .28s cubic-bezier(.32,.72,0,1);animation:cRise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:{{ o.delay }};background:{{ o.bg }};border:1px solid {{ o.bd }}" style-active="transform:scale(.98)">
+        <div onClick="{{ o.pick }}" style="border-radius:18px;padding:14px 15px;cursor:{{ o.cursor }};opacity:{{ o.op }};transition:all .28s cubic-bezier(.32,.72,0,1);animation:cRise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:{{ o.delay }};background:{{ o.bg }};border:1px solid {{ o.bd }}" style-active="transform:scale(.98)">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
             <div style="font-family:'Instrument Serif',serif;font-size:12px;letter-spacing:.2em;color:{{ o.numFg }}">{{ o.rom }}</div>
             <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.1)"></div>
@@ -1130,7 +1130,7 @@ class Component extends DCLogic {
     rest: 0, restMax: 90,
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp',
     theme: null, anim: 1, drawn: true, swaps: {},
-    ck: {}, ckPhotos: {}, toast: null, marks: {},
+    ck: {}, ckPhotos: {}, toast: null, marks: {}, mealsLocked: {},
     lang: (function () { try { return localStorage.getItem('castillo_lang') || 'es'; } catch (e) { return 'es'; } })()
   };
   setLang = l => () => { try { localStorage.setItem('castillo_lang', l); } catch (e) {} this.setState({ lang: l }); };
@@ -1162,6 +1162,12 @@ class Component extends DCLogic {
     applyRealData(d);
     var patch = { scan: 2 };
     if (d && d.mealsSel) patch.meals = Object.assign({}, this.state.meals, d.mealsSel);
+    // comidas ya registradas HOY (bloqueadas): fijan la opción y no se pueden cambiar
+    if (d && d.mealsReg && Object.keys(d.mealsReg).length) {
+      patch.meals = Object.assign({}, patch.meals || this.state.meals, d.mealsReg);
+      var lk = {}; Object.keys(d.mealsReg).forEach(function (k) { lk[k] = true; });
+      patch.mealsLocked = lk;
+    }
     if (d && d.logsInit && Object.keys(d.logsInit).length) patch.logs = d.logsInit;
     var today = (d && d.DAYS || []).filter(function (x) { return x.today; })[0];
     if (today) patch.day = today.d;
@@ -1237,7 +1243,11 @@ class Component extends DCLogic {
   openSheet = s => { this.setState({ sheet: s, sheetIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ sheetIn: true }))); };
   closeSheet = () => { this.setState({ sheetIn: false }); this.later(() => this.setState({ sheet: null }), 480); };
   pickMeal = (id, i) => () => {
-    this.setState(s => ({ meals: Object.assign({}, s.meals, { [id]: i }) }));
+    if (this.state.mealsLocked[id]) return;   // ya registrada hoy -> no se puede cambiar
+    this.setState(s => ({ meals: Object.assign({}, s.meals, { [id]: i }), mealsLocked: Object.assign({}, s.mealsLocked, { [id]: true }) }));
+    if (window.CastilloData && window.CastilloData.registrarComida) {
+      window.CastilloData.registrarComida(id, i).then(() => this.flash('Comida registrada'), () => {});
+    }
     this.later(this.closeSheet, 430);
   };
 
@@ -1246,7 +1256,20 @@ class Component extends DCLogic {
     requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ wIn: true })));
   };
   closeWorkout = () => { this.setState({ wIn: false }); this.later(() => this.setState({ wOpen: false }), 540); };
-  finishWorkout = () => { this.closeWorkout(); this.flash('Entreno registrado · enviado al equipo'); };
+  finishWorkout = () => {
+    this.closeWorkout();
+    try {
+      const dS = DAYS.find(d => d.d === this.state.day) || DAYS[2] || DAYS[0];
+      const list = (WK[dS.wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
+      const logs = this.state.logs || {};
+      const ejercicios = list.map(e => ({ nombre: e.n, y: e.y, objetivo: e.p, series: (logs[e.id] || []).slice(0, e.s).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && l.done) })) }));
+      const completo = ejercicios.length > 0 && ejercicios.every(ej => ej.series.length > 0 && ej.series.every(s => String(s.reps).trim() && String(s.peso).trim()));
+      if (window.CastilloData && window.CastilloData.registrarEntreno) {
+        window.CastilloData.registrarEntreno(dS.t || 'Entrenamiento', ejercicios, completo).then(() => {}, () => {});
+      }
+    } catch (e) {}
+    this.flash('Entreno registrado · enviado al equipo');
+  };
   toggleEx = id => () => this.setState(s => ({ exClosed: Object.assign({}, s.exClosed, { [id]: !s.exClosed[id] }) }));
 
   setLog = (ex, i, f, v) => this.setState(s => {
@@ -1406,16 +1429,19 @@ class Component extends DCLogic {
 
     const sh = st.sheet || {};
     const sm = sh.k === 'meal' ? DIET.find(m => m.id === sh.id) : null;
-    const mealSheet = sm ? { h: sm.h, n: tMeal(sm.n), opts: sm.o.map((o, i) => {
+    const smLocked = sm ? !!st.mealsLocked[sm.id] : false;
+    const mealSheet = sm ? { h: sm.h, n: tMeal(sm.n), locked: smLocked, lockNote: smLocked ? T('Ya registrado · no editable') : T('Elija una opción'), opts: sm.o.map((o, i) => {
       const sel = meals[sm.id] === i;
       const foods = F(o).map(f => ({ n: tFood(f.n), q: f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '' }));
       const kcalTotal = F(o).reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
+      const dim = smLocked && !sel;   // si está bloqueada, atenúa las no elegidas
       return {
         rom: T('OPCIÓN') + ' ' + (i + 1), sel, foods, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.035) + 's',
         bg: sel ? 'rgba(var(--fgc,255,255,255),.1)' : 'var(--s2,#17171B)',
         bd: sel ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.07)',
         numFg: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)',
-        pick: this.pickMeal(sm.id, i)
+        cursor: smLocked ? 'default' : 'pointer', op: dim ? '0.4' : '1',
+        pick: smLocked ? (() => {}) : this.pickMeal(sm.id, i)
       };
     }) } : {};
 

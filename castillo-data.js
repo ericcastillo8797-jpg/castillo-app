@@ -46,14 +46,33 @@
       .catch(function () { return []; });
     var pReg = api('/rest/v1/entreno_registros?select=*&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
       .catch(function () { return []; });
-    return Promise.all([pRow, pProg, pEx, pReg]).then(function (res) {
+    var hoy = new Date(); var hoyStr = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+    var pCom = api('/rest/v1/comida_registros?select=*&cliente_email=ilike.' + e + '&fecha=eq.' + hoyStr, {}, token)
+      .catch(function () { return []; });
+    return Promise.all([pRow, pProg, pEx, pReg, pCom]).then(function (res) {
       var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
+      var comReg = (res[4] || [])[0] || null;
       if (!rows.length) throw new Error('No encontramos tu ficha. Avisa a Alex.');
       if (!window.buildAppData) throw new Error('Falta el transformador de datos');
       var data = window.buildAppData(rows[0], programs, ejercicios, registros);
+      data.mealsReg = (comReg && comReg.comidas) || {};   // { meal_id: opcion } registradas HOY (bloqueadas)
+      _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
       window.__DATA = data;
       return data;
     });
+  }
+
+  var _ctx = { token: null, email: null, hoy: null };
+  // registra (bloquea) una comida de HOY: mergea meal_id->opcion en comida_registros
+  function registrarComida(mealId, opcion) {
+    if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+    var cur = (window.__DATA && window.__DATA.mealsReg) || {};
+    var comidas = Object.assign({}, cur); comidas[mealId] = opcion;
+    if (window.__DATA) window.__DATA.mealsReg = comidas;
+    var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, comidas: comidas, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+    return api('/rest/v1/comida_registros?on_conflict=cliente_email,fecha', {
+      method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+    }, _ctx.token);
   }
 
   var CastilloData = {
@@ -80,7 +99,16 @@
         return loadData(s.access_token, s.email);
       });
     },
-    logout: function () { try { localStorage.removeItem(LS); } catch (e) {} window.__DATA = null; }
+    logout: function () { try { localStorage.removeItem(LS); } catch (e) {} window.__DATA = null; },
+    registrarComida: registrarComida,
+    // guarda el entreno de HOY que apunta el cliente en su app (mismo sitio que el CRM: entreno_registros)
+    registrarEntreno: function (titulo, ejercicios, completo) {
+      if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, titulo: titulo || 'Entrenamiento', ejercicios: ejercicios || [], estado: completo ? 'completado' : 'en_progreso', registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
+        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+      }, _ctx.token);
+    }
   };
   window.CastilloData = CastilloData;
 })();
