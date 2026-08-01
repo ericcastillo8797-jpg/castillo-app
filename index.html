@@ -124,7 +124,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div onClick="{{ d.pick }}" style="flex:none;width:46px;padding:10px 0 11px;border-radius:15px;text-align:center;cursor:pointer;transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ d.bg }};border:.5px solid {{ d.bd }};color:{{ d.fg }}" style-active="transform:scale(.94)">
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.12em;opacity:.55">{{ d.w }}</div>
         <div style="font-size:17px;font-weight:600;margin-top:5px">{{ d.d }}</div>
-        <div style="height:4px;margin-top:7px;display:flex;justify-content:center"><div style="width:4px;height:4px;border-radius:50%;background:{{ d.dot }}"></div></div>
+        <div style="height:5px;margin-top:7px;display:flex;gap:2.5px;justify-content:center;align-items:center">
+          <sc-for list="{{ d.dots }}" as="dt" hint-placeholder-count="2"><div style="width:4px;height:4px;border-radius:50%;background:{{ dt.c }}"></div></sc-for>
+        </div>
       </div>
       </sc-for>
     </div>
@@ -182,7 +184,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div onClick="{{ d.pick }}" style="flex:none;width:46px;padding:10px 0 11px;border-radius:15px;text-align:center;cursor:pointer;transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ d.bg }};border:.5px solid {{ d.bd }};color:{{ d.fg }}" style-active="transform:scale(.94)">
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.12em;opacity:.55">{{ d.w }}</div>
         <div style="font-size:17px;font-weight:600;margin-top:5px">{{ d.d }}</div>
-        <div style="height:4px;margin-top:7px;display:flex;justify-content:center"><div style="width:4px;height:4px;border-radius:50%;background:{{ d.dot }}"></div></div>
+        <div style="height:5px;margin-top:7px;display:flex;gap:2.5px;justify-content:center;align-items:center">
+          <sc-for list="{{ d.dots }}" as="dt" hint-placeholder-count="2"><div style="width:4px;height:4px;border-radius:50%;background:{{ dt.c }}"></div></sc-for>
+        </div>
       </div>
       </sc-for>
     </div>
@@ -1379,7 +1383,7 @@ class Component extends DCLogic {
       const foods = F(o).map(f => ({ n: f.n, q: f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '' }));
       const kcalTotal = F(o).reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
       return {
-        rom: 'OPCIÓN ' + ROM[i], sel, foods, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.035) + 's',
+        rom: 'OPCIÓN ' + (i + 1), sel, foods, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.035) + 's',
         bg: sel ? 'rgba(var(--fgc,255,255,255),.1)' : 'var(--s2,#17171B)',
         bd: sel ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.07)',
         numFg: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)',
@@ -1453,12 +1457,14 @@ class Component extends DCLogic {
     };
     const weekDays = _agDays.map(d => {
       const sel = d.d === st.day;
+      const nActs = (d.acts || []).length;
+      const dotC = sel ? 'rgba(var(--bgc,0,0,0),.55)' : 'rgba(var(--fgc,255,255,255),.6)';
       return {
         w: d.w, d: d.d, pick: () => this.setState({ day: d.d }),
         bg: sel ? 'var(--fg,#fff)' : (d.today ? 'rgba(var(--fgc,255,255,255),.07)' : 'transparent'),
         fg: sel ? 'var(--bg,#000)' : (d.today ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.58)'),
         bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
-        dot: d.dot === 1 ? (sel ? 'rgba(var(--bgc,0,0,0),.45)' : 'rgba(var(--fgc,255,255,255),.55)') : (d.dot === 2 ? (sel ? 'var(--bg,#000)' : 'var(--fg,#fff)') : 'transparent')
+        dots: Array.from({ length: nActs }, () => ({ c: dotC }))
       };
     });
 
