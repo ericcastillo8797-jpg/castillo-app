@@ -496,7 +496,6 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="width:46px;font-size:8.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.3)">Series</div>
             <div style="flex:1;font-size:8.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.3);text-align:center">Repeticiones</div>
             <div style="flex:1;font-size:8.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.3);text-align:center">Peso</div>
-            <div style="width:32px"></div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:7px">
@@ -510,9 +509,6 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
               <div onClick="{{ s.editW }}" style="flex:1;height:42px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:{{ s.wBg }};border:1px solid {{ s.wBd }}">
                 <div style="font-size:15px;font-weight:600;color:{{ s.wFg }}">{{ s.w }}</div>
                 <div style="font-size:8.5px;color:rgba(var(--fgc,255,255,255),.26);margin-top:1px">{{ s.lastW }}</div>
-              </div>
-              <div onClick="{{ s.mark }}" style="width:32px;height:32px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .26s cubic-bezier(.2,.8,.2,1);background:{{ s.ckBg }};color:{{ s.ckFg }};border:1.2px solid {{ s.ckBd }}" style-active="transform:scale(.88)">
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
               </div>
             </div>
             </sc-for>
@@ -1120,7 +1116,7 @@ class Component extends DCLogic {
     const a = this.props.arranque;
     return this.state.stage || (a === 'App' ? 'app' : a === 'Acceso' ? 'lock' : 'splash');
   }
-  get restSecs() { return this.props.descansoSegundos || 90; }
+  get restSecs() { return 120; }
 
   _enterWith = (d) => {
     applyRealData(d);
@@ -1236,7 +1232,26 @@ class Component extends DCLogic {
   skipRest = () => { clearInterval(this._iv); this.setState({ rest: 0 }); };
 
   openPad = p => { this.setState({ pad: p, padIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ padIn: true }))); };
-  closePad = () => { this.setState({ padIn: false }); this.later(() => this.setState({ pad: null }), 460); };
+  closePad = () => {
+    const p = this.state.pad;
+    // al registrar el PESO de una serie: se marca hecha y sale el descanso (sin tick)
+    if (p && p.t === 'set' && p.f === 'w') {
+      const l = (this.state.logs[p.ex] || [])[p.i] || {};
+      if (String(l.w || '').length && !l.done) {
+        this.setLog(p.ex, p.i, 'done', true);
+        this.startRest();
+        const ex = p.ex, e = EX.find(x => x.id === ex);
+        this.later(() => {
+          const arr = this.state.logs[ex] || [];
+          if (e && arr.length >= e.s && arr.slice(0, e.s).every(x => x && x.done)) {
+            const nx = EX[EX.findIndex(x => x.id === ex) + 1];
+            this.setState({ exOpen: nx ? nx.id : null });
+          }
+        }, 620);
+      }
+    }
+    this.setState({ padIn: false }); this.later(() => this.setState({ pad: null }), 460);
+  };
   padValue = p => {
     if (!p) return '';
     if (p.t === 'set') { const l = (this.state.logs[p.ex] || [])[p.i] || {}; return l[p.f] || ''; }
