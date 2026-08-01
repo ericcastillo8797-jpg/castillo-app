@@ -143,7 +143,7 @@
     'Plan de hoy': "Today's plan", 'Configuración': 'Settings', 'Dieta': 'Diet',
     // Home
     'Tareas de hoy': "Today's tasks", 'Resumen semanal': 'Weekly summary', 'completado': 'completed',
-    'Cumplimiento global': 'Overall completion', 'Métricas personales': 'Personal metrics',
+    'Cumplimiento global': 'Overall completion', 'objetivo / día': 'target / day', 'Métricas personales': 'Personal metrics',
     'Peso, medidas y foto': 'Weight, measurements & photo', 'Registrar cardio': 'Log cardio',
     'Registrar entreno': 'Log workout', 'Registrar pauta alimenticia': 'Log nutrition plan',
     'Cardio': 'Cardio', 'Caminar': 'Walk', 'Entrenamiento': 'Workout', 'Cardio marcado': 'Cardio logged',
@@ -191,6 +191,18 @@
     'Correo o contraseña incorrectos': 'Wrong email or password'
   };
 
+  // ---- Fechas (traduce meses/días/semana dentro de una cadena) ----
+  var MONTHS = { enero: 'January', febrero: 'February', marzo: 'March', abril: 'April', mayo: 'May', junio: 'June', julio: 'July', agosto: 'August', septiembre: 'September', octubre: 'October', noviembre: 'November', diciembre: 'December', ene: 'Jan', feb: 'Feb', mar: 'Mar', abr: 'Apr', may: 'May', jun: 'Jun', jul: 'Jul', ago: 'Aug', sep: 'Sep', oct: 'Oct', nov: 'Nov', dic: 'Dec' };
+  var WEEKD = { lunes: 'Monday', martes: 'Tuesday', 'miércoles': 'Wednesday', miercoles: 'Wednesday', jueves: 'Thursday', viernes: 'Friday', 'sábado': 'Saturday', sabado: 'Saturday', domingo: 'Sunday' };
+  function tdate(s, lang) {
+    if (lang !== 'en' || !s) return s;
+    var out = String(s);
+    Object.keys(WEEKD).forEach(function (k) { out = out.replace(new RegExp('\\b' + k + '\\b', 'gi'), WEEKD[k]); });
+    Object.keys(MONTHS).forEach(function (k) { out = out.replace(new RegExp('\\b' + k + '\\b', 'gi'), MONTHS[k]); });
+    out = out.replace(/ de /g, ' ').replace(/\bSemana\b/g, 'Week').replace(/\bsemana\b/g, 'week').replace(/\bdel\b/g, '').replace(/\bal\b/g, 'to').replace(/\s{2,}/g, ' ').trim();
+    return out;
+  }
+
   function pick(map, key, lang) {
     var e = map[key];
     if (!e) return key;
@@ -206,6 +218,7 @@
       return e ? (e[lang] || e.es || name) : name;
     },
     meal: function (name, lang) { return pick(MEAL, name, lang); },
-    t: function (str, lang) { if (lang !== 'en') return str; return UI[str] != null ? UI[str] : str; }
+    t: function (str, lang) { if (lang !== 'en') return str; return UI[str] != null ? UI[str] : str; },
+    date: tdate
   };
 })(typeof window !== 'undefined' ? window : globalThis);

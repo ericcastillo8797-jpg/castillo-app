@@ -63,7 +63,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </div>
       <div style="text-align:right;flex:none">
         <div style="font-family:'Instrument Serif',serif;font-size:40px;line-height:.9">{{ planPctLabel }}</div>
-        <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34);margin-top:2px">completado</div>
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34);margin-top:2px">{{ L.completadoLbl }}</div>
       </div>
     </div>
 
@@ -106,7 +106,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0 14px;margin-top:2px;border-top:.5px solid rgba(var(--fgc,255,255,255),.08)">
         <div>
           <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">{{ L.cumplGlobal }}</div>
-          <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.4);margin-top:3px">{{ wsKcal }} kcal objetivo / día</div>
+          <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.4);margin-top:3px">{{ wsKcalLabel }}</div>
         </div>
         <div style="font-family:'Instrument Serif',serif;font-size:34px;line-height:.9">{{ wsGlobalLabel }}</div>
       </div>
@@ -1322,6 +1322,7 @@ class Component extends DCLogic {
     const T = s => _i18n ? _i18n.t(s, lang) : s;             // UI (clave en español)
     const tFood = n => _i18n ? _i18n.food(n, lang) : n;      // alimento
     const tMeal = n => _i18n ? _i18n.meal(n, lang) : n;      // nombre de comida
+    const tD = s => _i18n ? _i18n.date(s, lang) : s;         // fecha (meses/días)
     const isEN = lang === 'en';
     const foodSub = (m, i) => T('Opción') + ' ' + (i + 1) + ' · ' + F(m.o[i]).map(f => tFood(f.n)).join(', ');
     // traductor general: clave exacta y, si no, palabras sueltas frecuentes (solo EN)
@@ -1352,16 +1353,16 @@ class Component extends DCLogic {
     _heroList.forEach(x => { const nm = x.split('|')[0]; const ex = EX.find(e => e.n === nm); _heroSeries += ex ? ex.s : 3; });
     const heroRom = _realToday.rom, heroTitle = _realToday.t;
     const heroMeta = _heroList.length ? (_heroList.length + ' ejercicios · ' + _heroSeries + ' series · ' + Math.max(20, Math.round(_heroSeries * 2.2)) + ' min') : 'Día de descanso';
-    const headLine = _hdr ? (_hdr.weekday + ' · Semana ' + _hdr.week) : 'Miércoles · Semana 30';
+    const headLine = tD(_hdr ? (_hdr.weekday + ' · Semana ' + _hdr.week) : 'Miércoles · Semana 30');
     const headDay = _hdr ? String(_hdr.dayNum) : '29';
-    const headMonth = _hdr ? _hdr.month : 'julio';
+    const headMonth = tD(_hdr ? _hdr.month : 'julio');
     const entHeader = _hdr ? (_hdr.monthCap + ' ' + _hdr.year + ' · Semana ' + _hdr.week) : 'Julio 2026 · Semana 30';
     const _weeksArr = (WEEKS && WEEKS.length) ? WEEKS : [{ label: (_hdr ? (_hdr.monthCap + ' ' + _hdr.year) : 'Julio 2026'), subtitle: '', days: DAYS }];
     const _wIdx = Math.max(0, Math.min(_weeksArr.length - 1, st.weekIdx || 0));
     const _agWeek = _weeksArr[_wIdx] || { days: DAYS };
     const _agDays = _agWeek.days || DAYS;
-    const agendaHdr = _agWeek.label || (_hdr ? (_hdr.monthCap + ' ' + _hdr.year) : 'Julio 2026');
-    const agendaSub = _agWeek.subtitle || '';
+    const agendaHdr = tD(_agWeek.label || (_hdr ? (_hdr.monthCap + ' ' + _hdr.year) : 'Julio 2026'));
+    const agendaSub = tD(_agWeek.subtitle || '');
     const canPrevWeek = _wIdx > 0;
     const canNextWeek = _wIdx < _weeksArr.length - 1;
     const prevWeek = this.shiftWeek(-1);
@@ -1479,7 +1480,7 @@ class Component extends DCLogic {
       };
     });
     const daySel = {
-      long: dS.long, rom: dS.rom, t: dS.t, s: tr(dS.s), ses: dS.ses, isToday: !!dS.today,
+      long: tD(dS.long), rom: dS.rom, t: dS.t, s: tr(dS.s), ses: dS.ses, isToday: !!dS.today,
       acts: dayActs, hasActs: dayActs.length > 0, rest: dayActs.length === 0
     };
     const weekDays = _agDays.map(d => {
@@ -1677,7 +1678,7 @@ class Component extends DCLogic {
         tareasHoy: T('Tareas de hoy'), resumenSemanal: T('Resumen semanal'),
         pautaAlim: T('Pauta alimenticia'), cumplGlobal: T('Cumplimiento global'),
         bibliotecaTecnica: T('Biblioteca de técnica'),
-        finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'),
+        finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
         registroSemanal: T('Registro semanal'), regCadaSemana: T('Registrado cada semana en su check-in.'),
@@ -1703,6 +1704,7 @@ class Component extends DCLogic {
       headLine, headDay, headMonth, heroRom, heroTitle, heroMeta, entHeader, agendaHdr, agendaSub, dietSub, evoCounts, woTitle,
       prevWeek, nextWeek, prevWeekOpacity, nextWeekOpacity,
       planPct, planPctLabel: planPct + '%', planTasks, wsRows, wsGlobal, wsGlobalLabel: wsGlobal + '%', wsKcal,
+      wsKcalLabel: wsKcal + ' kcal ' + T('objetivo / día'),
       workoutCta: setsDone === 0 ? T('Comenzar') : (setsDone === totalSets ? T('Completado') : T('Continuar')),
       startWorkout: this.startWorkout,
 
