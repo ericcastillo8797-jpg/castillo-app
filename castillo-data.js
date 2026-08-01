@@ -44,14 +44,13 @@
       .catch(function () { return api('/rest/v1/programs?select=nombre,contenido', {}, token); });
     var pEx = api('/rest/v1/ejercicios?select=id,nombre,categoria_biblio,variantes,video_url&activo=eq.true', {}, token)
       .catch(function () { return []; });
-    var hoy = new Date().toISOString().slice(0, 10);
-    var pReg = api('/rest/v1/entreno_registros?select=*&cliente_email=ilike.' + e + '&fecha=eq.' + hoy, {}, token)
+    var pReg = api('/rest/v1/entreno_registros?select=*&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
       .catch(function () { return []; });
     return Promise.all([pRow, pProg, pEx, pReg]).then(function (res) {
-      var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registro = (res[3] || [])[0] || null;
+      var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
       if (!rows.length) throw new Error('No encontramos tu ficha. Avisa a Alex.');
       if (!window.buildAppData) throw new Error('Falta el transformador de datos');
-      var data = window.buildAppData(rows[0], programs, ejercicios, registro);
+      var data = window.buildAppData(rows[0], programs, ejercicios, registros);
       window.__DATA = data;
       return data;
     });

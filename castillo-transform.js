@@ -30,7 +30,9 @@
     return ' g';
   }
 
-  function buildAppData(row, programs, ejercicios, registro) {
+  function buildAppData(row, programs, ejercicios, registros) {
+    // 4º arg puede ser un solo registro (compat) o el histórico completo (array)
+    var regList = Array.isArray(registros) ? registros : (registros ? [registros] : []);
     row = row || {};
     var now = new Date();
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
@@ -263,6 +265,9 @@
     }
 
     // ---------- logsInit: registro de hoy (lo que apuntó el cliente o el entrenador) ----------
+    var todayKeyReg = now.getFullYear() + '-' + d2(now.getMonth() + 1) + '-' + d2(now.getDate());
+    var registro = regList.filter(function (r) { return (r.fecha || '').slice(0, 10) === todayKeyReg; }).slice(-1)[0]
+      || regList.slice(-1)[0] || null;
     var logsInit = {};
     if (registro && Array.isArray(registro.ejercicios)) {
       registro.ejercicios.forEach(function (re) {
@@ -270,6 +275,35 @@
         if (ex && Array.isArray(re.series)) logsInit[ex.id] = re.series.map(function (s) { return { r: s.reps || '', w: s.peso || '', done: !!s.done }; });
       });
     }
+    // ---------- EXPROG: progreso por ejercicio (a partir de TODO el histórico de registros) ----------
+    function toNum(v) { var n = parseFloat(String(v == null ? '' : v).replace(',', '.').replace(/[^0-9.\-]/g, '')); return isNaN(n) ? null : n; }
+    var progMap = {}; // nombre ejercicio -> [{date, top, reps, vol, sets}]
+    regList.forEach(function (r) {
+      var fecha = (r.fecha || '').slice(0, 10);
+      if (!Array.isArray(r.ejercicios)) return;
+      r.ejercicios.forEach(function (re) {
+        var nombre = re.nombre || 'Ejercicio';
+        var series = Array.isArray(re.series) ? re.series : [];
+        var top = null, topReps = null, vol = 0, valid = 0;
+        series.forEach(function (s) {
+          var w = toNum(s.peso), rp = toNum(s.reps);
+          if (w != null) { if (top == null || w > top) { top = w; topReps = rp; } if (rp != null) vol += w * rp; valid++; }
+        });
+        if (!valid) return;
+        (progMap[nombre] || (progMap[nombre] = [])).push({ date: fecha, top: top, reps: topReps, vol: Math.round(vol), sets: valid });
+      });
+    });
+    var EXPROG = Object.keys(progMap).map(function (nombre) {
+      var pts = progMap[nombre].sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+      var first = pts[0], last = pts[pts.length - 1];
+      var ex = EX.filter(function (e) { return e.n === nombre; })[0];
+      var delta = (first && last && first.top != null && last.top != null) ? (last.top - first.top) : 0;
+      return {
+        nombre: nombre, y: ex ? ex.y : '', sessions: pts.length,
+        last: last ? last.top : null, lastReps: last ? last.reps : null, lastDate: last ? last.date : '',
+        delta: Math.round(delta * 10) / 10, points: pts
+      };
+    }).sort(function (a, b) { return (b.lastDate < a.lastDate ? -1 : 1); });
 
     // ---------- header (día de hoy) ----------
     var todayDay = DAYS.filter(function (d) { return d.today; })[0] || DAYS[0];
@@ -309,7 +343,7 @@
       WEIGHTS: WEIGHTS, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header, logsInit: logsInit,
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary,
-      WEEKS: WEEKS, curWeekIdx: curWeekIdx
+      WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG
     };
   }
 

@@ -335,6 +335,46 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </sc-for>
     </div>
     </sc-if>
+
+    <sc-if value="{{ evoEjercicio }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:cFade .4s both">
+      <sc-if value="{{ exProgEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:24px;padding:30px 20px;text-align:center;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px">
+        <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);line-height:1.5">Aún no hay entrenos registrados.<br/>Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.</div>
+      </div>
+      </sc-if>
+      <sc-for list="{{ exProgList }}" as="e" hint-placeholder-count="4">
+      <div style="margin-top:16px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:16px 16px 14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:52px;height:34px;flex:none;border-radius:8px;overflow:hidden;background:#0A0A0C;display:flex;align-items:center;justify-content:center">
+            <sc-if value="{{ e.thumb }}" hint-placeholder-val="{{ true }}"><img src="{{ e.thumb }}" alt="" style="width:100%;height:100%;object-fit:cover;opacity:.85" /></sc-if>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.nombre }}</div>
+            <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.4);margin-top:2px">{{ e.sessions }}</div>
+          </div>
+          <div style="text-align:right;flex:none">
+            <div style="display:flex;align-items:baseline;gap:4px;justify-content:flex-end">
+              <span style="font-family:'Instrument Serif',serif;font-size:26px;line-height:.9">{{ e.last }}</span>
+              <span style="font-size:11px;color:rgba(var(--fgc,255,255,255),.42)">kg</span>
+            </div>
+            <div style="font-size:11px;font-weight:500;margin-top:3px;color:{{ e.deltaFg }}">{{ e.deltaLabel }}</div>
+          </div>
+        </div>
+        <sc-if value="{{ e.hasProg }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:flex-end;gap:6px;height:52px;margin-top:14px;padding-top:6px;border-top:.5px solid rgba(var(--fgc,255,255,255),.06)">
+          <sc-for list="{{ e.bars }}" as="b" hint-placeholder-count="6">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0">
+            <div style="width:100%;max-width:22px;height:{{ b.h }};border-radius:4px;background:linear-gradient(180deg,#fff,#6b6b70)"></div>
+            <div style="font-size:8px;color:rgba(var(--fgc,255,255,255),.32)">{{ b.date }}</div>
+          </div>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
   </div>
   </sc-if>
 
@@ -984,6 +1024,7 @@ let DAYS = [
 ];
 
 let WEEKS = [];
+let EXPROG = [];
 
 let APPTS = [
   { w:'MIÉ', d:'29', t:'Sesión de entrenamiento', sub:'Alex Castillo · Su domicilio', h:'18:00' },
@@ -1060,6 +1101,7 @@ function applyRealData(d) {
   VAR = d.VAR || {};
   if (nz(d.DAYS)) DAYS = d.DAYS;
   if (nz(d.WEEKS)) WEEKS = d.WEEKS;
+  EXPROG = d.EXPROG || [];
   if (nz(d.APPTS)) APPTS = d.APPTS;
   if (nz(d.MET)) MET = d.MET;
   if (nz(d.VID)) VID = d.VID;
@@ -1079,7 +1121,7 @@ class Component extends DCLogic {
     wOpen: false, wIn: false, exOpen: 'e1',
     logs: {}, pad: null, padIn: false,
     rest: 0, restMax: 90,
-    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'metricas',
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp',
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, toast: null
   };
@@ -1430,9 +1472,29 @@ class Component extends DCLogic {
     const vidList = VID.filter(v => st.vidCat === 'Todos' || v.g === st.vidCat)
       .map(v => ({ t: v.t, g: v.g, thumb: THUMB(v.y), open: () => this.openSheet({ k: 'vid', v }) }));
 
-    const evoTabs = [['metricas','Métricas'],['fotos','Fotografías']].map(([k, n]) => {
+    const evoTabs = [['comp','Composición y medidas'],['ejercicio','Progreso en el ejercicio']].map(([k, n]) => {
       const sel = st.evoTab === k;
       return { n, pick: () => this.setState({ evoTab: k }), bg: sel ? 'rgba(var(--fgc,255,255,255),.13)' : 'transparent', fg: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)' };
+    });
+    const exProgList = EXPROG.map(e => {
+      const up = e.delta > 0, down = e.delta < 0;
+      const vals = e.points.map(p => p.top).filter(v => v != null);
+      const mn = vals.length ? Math.min.apply(null, vals) : 0, mx = vals.length ? Math.max.apply(null, vals) : 1;
+      const rng = mx - mn || 1;
+      return {
+        nombre: e.nombre, thumb: e.y ? THUMB(e.y) : '',
+        last: e.last != null ? String(e.last).replace('.', ',') : '—',
+        lastReps: e.lastReps != null ? (e.lastReps + ' reps') : '',
+        sessions: e.sessions + (e.sessions === 1 ? ' sesión' : ' sesiones'),
+        deltaLabel: (up ? '+' : '') + String(e.delta).replace('.', ',') + ' kg',
+        deltaFg: up ? '#7fd6a3' : (down ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.4)'),
+        hasProg: vals.length > 1,
+        bars: e.points.slice(-8).map(p => ({
+          h: (p.top != null ? (14 + Math.round((p.top - mn) / rng * 34)) : 3) + 'px',
+          date: p.date ? p.date.slice(8, 10) + '/' + p.date.slice(5, 7) : '',
+          val: p.top != null ? String(p.top).replace('.', ',') : '—'
+        }))
+      };
     });
 
     const mn = Math.min.apply(null, WEIGHTS), mx = Math.max.apply(null, WEIGHTS);
@@ -1596,7 +1658,8 @@ class Component extends DCLogic {
 
       weekDays, daySel, appts: APPTS,
       vidCats, vidList,
-      evoTabs, evoMetrics: st.evoTab === 'metricas', evoPhotos: st.evoTab === 'fotos',
+      evoTabs, evoMetrics: st.evoTab === 'comp', evoPhotos: st.evoTab === 'comp', evoEjercicio: st.evoTab === 'ejercicio',
+      exProgList, exProgEmpty: exProgList.length === 0,
       chart, metGroups,
       photoSets: PHOTOSETS.map(p => Object.assign({}, p, {
         shots: SHOTS.map(n => ({ n, open: this.openPhoto(p, n) }))
