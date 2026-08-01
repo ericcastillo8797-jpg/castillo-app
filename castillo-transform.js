@@ -118,17 +118,25 @@
         var dt = new Date(monDate); dt.setDate(monDate.getDate() + i);
         var key = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
         var slot = byDay[key];
-        var wkItem = slot && slot.items.filter(function (x) { return x.type === 'workout'; })[0];
-        var cardio = slot && slot.items.filter(function (x) { return x.type === 'cardio'; })[0];
+        var sItems = (slot && slot.items) || [];
+        var wkItem = sItems.filter(function (x) { return x.type === 'workout'; })[0];
+        var cardio = sItems.filter(function (x) { return x.type === 'cardio'; })[0];
+        var statsItem = sItems.filter(function (x) { return x.type === 'bodyStats'; })[0];
+        var photoItem = sItems.filter(function (x) { return x.type === 'bodyPhoto'; })[0];
         var isToday = key === todayKey;
         var wkKey = wkItem ? slug(wkItem.title) : 'descanso';
         var title = wkItem ? wkItem.title : (cardio ? cardio.title : 'Descanso');
         var status = isToday ? 'Hoy' : (dt < startOfDay(now) ? (wkItem && wkItem.done ? 'Completado' : (wkItem ? 'No realizado' : 'Descanso')) : 'Programado');
         var nCount = wkItem && WK[wkKey] ? (wkItem.done ? WK[wkKey].length + ' de ' + WK[wkKey].length : '—') : '—';
         var hh = wkItem ? d2(wkItem.dt.getHours()) + ':' + d2(wkItem.dt.getMinutes()) : '';
+        // lista de actividades del día (como Harbiz > Planificación): métricas (foto incluida) / cardio / entreno
+        var acts = [];
+        if (statsItem || photoItem) acts.push({ type: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: !!((statsItem && statsItem.done) || (photoItem && photoItem.done)) });
+        if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: 'Cardio', done: !!cardio.done });
+        if (wkItem) acts.push({ type: 'workout', label: wkItem.title, sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
         out.push({
           d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
-          rom: ROM[i], t: title, s: status, wk: wkKey, n: nCount,
+          rom: ROM[i], t: title, s: status, wk: wkKey, n: nCount, acts: acts,
           fecha: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()),
           ses: wkItem ? (hh + ' · Su domicilio') : (cardio ? cardio.title : 'Sin sesión'),
           dot: isToday ? 2 : (wkItem && wkItem.done ? 1 : 0), today: isToday
