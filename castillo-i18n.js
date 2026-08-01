@@ -182,6 +182,8 @@
     'Comenzar': 'Start', 'Continuar': 'Continue', 'ejercicios': 'exercises', 'reps': 'reps',
     // Ajustes
     'Apariencia': 'Appearance', 'Cuenta': 'Account', 'Cerrar sesión': 'Log out', 'Aplicación': 'App',
+    'Oscuro': 'Dark', 'Claro': 'Light', 'Correo': 'Email', 'Plan': 'Plan', 'Sistema completo': 'Full system',
+    'Revisión semanal': 'Weekly review', 'Viernes 19:00': 'Friday 19:00', 'Evaluación mensual': 'Monthly evaluation', 'Primer lunes': 'First Monday',
     'Idioma': 'Language', 'Español': 'Spanish', 'Inglés': 'English',
     'Toque la imagen para añadir su fotografía': 'Tap the image to add your photo',
     'Ver animación de apertura': 'View opening animation', 'Check-in semanal': 'Weekly check-in',
