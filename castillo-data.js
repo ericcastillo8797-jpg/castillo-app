@@ -42,11 +42,13 @@
     var pRow = api('/rest/v1/harbiz_clientes?select=*&limit=1&email=ilike.' + e, {}, token);
     var pProg = api('/rest/v1/programs?select=nombre,contenido&activo=eq.true', {}, token)
       .catch(function () { return api('/rest/v1/programs?select=nombre,contenido', {}, token); });
-    return Promise.all([pRow, pProg]).then(function (res) {
-      var rows = res[0] || [], programs = res[1] || [];
+    var pEx = api('/rest/v1/ejercicios?select=id,nombre,categoria_biblio,variantes,video_url&activo=eq.true', {}, token)
+      .catch(function () { return []; });
+    return Promise.all([pRow, pProg, pEx]).then(function (res) {
+      var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [];
       if (!rows.length) throw new Error('No encontramos tu ficha. Avisa a Alex.');
       if (!window.buildAppData) throw new Error('Falta el transformador de datos');
-      var data = window.buildAppData(rows[0], programs);
+      var data = window.buildAppData(rows[0], programs, ejercicios);
       window.__DATA = data;
       return data;
     });

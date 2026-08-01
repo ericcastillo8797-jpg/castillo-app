@@ -30,11 +30,20 @@
     return ' g';
   }
 
-  function buildAppData(row, programs) {
+  function buildAppData(row, programs, ejercicios) {
     row = row || {};
     var now = new Date();
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
     var progList = Array.isArray(programs) ? programs : (programs ? [programs] : []);
+    // ejercicios: catálogo del CRM (categoria_biblio + variantes que ordena Martín)
+    var exLib = Array.isArray(ejercicios) ? ejercicios : [];
+    var libById = {}, libByYt = {}, libByName = {};
+    exLib.forEach(function (o) {
+      libById[o.id] = o;
+      var y = ytId(o.video_url || '');
+      if (y) libByYt[y] = o;
+      if (o.nombre) libByName[o.nombre.toLowerCase().trim()] = o;
+    });
 
     // ---------- mapa titulo-workout -> ejercicios (fusionando TODOS los programas) ----------
     var workoutByTitle = {}; // title -> [exercises]
@@ -206,6 +215,30 @@
     var DATES = (wm && wm.data ? wm.data : []).slice().reverse().slice(0, 10).map(function (p) { var dt = new Date(ms(p.t)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
     if (!DATES.length) DATES = SESS.slice();
 
+    // ---------- VAR (variantes que ordena Martín) por ejercicio del entreno ----------
+    function libOf(exRec) {
+      return (exRec.y && libByYt[exRec.y]) || libByName[(exRec.n || '').toLowerCase().trim()] || null;
+    }
+    var VAR = {};
+    EX.forEach(function (exRec) {
+      var lib = libOf(exRec);
+      if (!lib || !Array.isArray(lib.variantes) || !lib.variantes.length) return;
+      var list = lib.variantes.map(function (vid) {
+        var v = libById[vid]; if (!v) return null;
+        return v.nombre + '|' + ytId(v.video_url || '');
+      }).filter(Boolean);
+      if (list.length) VAR[exRec.id] = list;
+    });
+
+    // ---------- VID (Biblioteca técnica): por grupo real si Martín ya categorizó ----------
+    var categorizados = exLib.filter(function (o) { return o.categoria_biblio; });
+    if (categorizados.length) {
+      var seenV = {};
+      VID = categorizados.map(function (o) {
+        return { t: o.nombre, g: o.categoria_biblio, y: ytId(o.video_url || '') };
+      }).filter(function (v) { var k = v.g + '|' + v.t; if (seenV[k]) return false; seenV[k] = 1; return true; });
+    }
+
     // ---------- header (día de hoy) ----------
     var todayDay = DAYS.filter(function (d) { return d.today; })[0] || DAYS[0];
     var header = {
@@ -216,7 +249,7 @@
     };
 
     return {
-      DIET: DIET, EX: EX, WK: WK, VAR: {}, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID,
+      DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID,
       WEIGHTS: WEIGHTS, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header
     };
