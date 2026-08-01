@@ -1126,6 +1126,7 @@ class Component extends DCLogic {
     applyRealData(d);
     var patch = { scan: 2 };
     if (d && d.mealsSel) patch.meals = Object.assign({}, this.state.meals, d.mealsSel);
+    if (d && d.logsInit && Object.keys(d.logsInit).length) patch.logs = d.logsInit;
     var today = (d && d.DAYS || []).filter(function (x) { return x.today; })[0];
     if (today) patch.day = today.d;
     this.setState(patch);

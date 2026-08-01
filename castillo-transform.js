@@ -30,7 +30,7 @@
     return ' g';
   }
 
-  function buildAppData(row, programs, ejercicios) {
+  function buildAppData(row, programs, ejercicios, registro) {
     row = row || {};
     var now = new Date();
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
@@ -239,6 +239,15 @@
       }).filter(function (v) { var k = v.g + '|' + v.t; if (seenV[k]) return false; seenV[k] = 1; return true; });
     }
 
+    // ---------- logsInit: registro de hoy (lo que apuntó el cliente o el entrenador) ----------
+    var logsInit = {};
+    if (registro && Array.isArray(registro.ejercicios)) {
+      registro.ejercicios.forEach(function (re) {
+        var ex = EX.filter(function (e) { return e.n === re.nombre; })[0];
+        if (ex && Array.isArray(re.series)) logsInit[ex.id] = re.series.map(function (s) { return { r: s.reps || '', w: s.peso || '', done: !!s.done }; });
+      });
+    }
+
     // ---------- header (día de hoy) ----------
     var todayDay = DAYS.filter(function (d) { return d.today; })[0] || DAYS[0];
     var header = {
@@ -251,7 +260,7 @@
     return {
       DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID,
       WEIGHTS: WEIGHTS, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
-      mealsSel: mealsSel, header: header
+      mealsSel: mealsSel, header: header, logsInit: logsInit
     };
   }
 
