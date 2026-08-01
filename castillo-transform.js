@@ -125,6 +125,7 @@
       DAYS.push({
         d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
         rom: ROM[i], t: title, s: status, wk: wkKey, n: nCount,
+        fecha: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()),
         ses: wkItem ? (hh + ' · Su domicilio') : (cardio ? cardio.title : 'Sin sesión'),
         dot: isToday ? 2 : (wkItem && wkItem.done ? 1 : 0), today: isToday
       });
