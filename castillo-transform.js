@@ -258,10 +258,35 @@
       nMeals: DIET.length, nMetrics: fields.length, nPhotos: PHOTOSETS.length
     };
 
+    // ---------- Plan de hoy (tareas) + Resumen semanal (%) ----------
+    var todayItems = (byDay[todayKey] && byDay[todayKey].items) || [];
+    function hasT(type) { return todayItems.some(function (x) { return x.type === type; }); }
+    function doneT(type) { return todayItems.some(function (x) { return x.type === type && x.done; }); }
+    var entrenoHecho = !!(registro && registro.estado === 'completado') || doneT('workout');
+    var todayTasks = [];
+    if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') });
+    if (hasT('cardio')) todayTasks.push({ key: 'cardio', label: 'Registrar cardio', sub: (todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}).title || 'Caminar', done: doneT('cardio') });
+    if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Registrar entreno', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
+    todayTasks.push({ key: 'nutricion', label: 'Registrar pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.length > 0 && DIET.every(function (m) { return mealsSel[m.id] != null; }) });
+    var trainDoneN = todayTasks.filter(function (t) { return t.done; }).length;
+    var planHoyPct = todayTasks.length ? Math.round(trainDoneN / todayTasks.length * 100) : 0;
+    // cumplimiento semanal (planificado vs completado en la semana actual)
+    var wkEnd = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7);
+    var weekEv = events.filter(function (e) { if (e.removed) return false; var dt = new Date(ms(e.date)); return dt >= mon && dt < wkEnd; });
+    function compl(types) { var pl = weekEv.filter(function (e) { return types.indexOf(e.type) >= 0; }); var dn = pl.filter(function (e) { return e.completed; }); return { done: dn.length, total: pl.length, pct: pl.length ? Math.round(dn.length / pl.length * 100) : 0 }; }
+    var cEntreno = compl(['workout']), cCardio = compl(['cardio']), cMetricas = compl(['bodyStats', 'bodyPhoto']);
+    var totPl = cEntreno.total + cCardio.total + cMetricas.total, totDn = cEntreno.done + cCardio.done + cMetricas.done;
+    var weekSummary = {
+      entrenos: cEntreno, cardio: cCardio, metricas: cMetricas,
+      global: { done: totDn, total: totPl, pct: totPl ? Math.round(totDn / totPl * 100) : 0 },
+      kcal: (plan && plan.valuesTarget && plan.valuesTarget.energy) ? Math.round(plan.valuesTarget.energy) : 0
+    };
+
     return {
       DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID,
       WEIGHTS: WEIGHTS, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
-      mealsSel: mealsSel, header: header, logsInit: logsInit
+      mealsSel: mealsSel, header: header, logsInit: logsInit,
+      todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary
     };
   }
 

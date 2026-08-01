@@ -54,67 +54,61 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
   <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
   <div data-screen-label="Home" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 20px 132px">
 
-    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between">
       <div>
         <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ headLine }}</div>
-        <div style="display:flex;align-items:baseline;gap:9px;margin-top:8px">
-          <span style="font-family:'Instrument Serif',serif;font-size:54px;line-height:.84">{{ headDay }}</span>
-          <span style="font-family:'Instrument Serif',serif;font-style:italic;font-size:24px;color:rgba(var(--fgc,255,255,255),.5)">{{ headMonth }}</span>
-        </div>
+        <div style="font-family:'Instrument Serif',serif;font-size:44px;line-height:.9;margin-top:9px">Plan de hoy</div>
+        <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.42);margin-top:6px">{{ headDay }} {{ headMonth }}</div>
+      </div>
+      <div style="text-align:right;flex:none">
+        <div style="font-family:'Instrument Serif',serif;font-size:40px;line-height:.9">{{ planPctLabel }}</div>
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34);margin-top:2px">completado</div>
       </div>
     </div>
 
-    
-        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">Entrenamiento de hoy</div>
-    <div onClick="{{ startWorkout }}" style="position:relative;overflow:hidden;background:linear-gradient(165deg,var(--s2,#16161A) 0%,var(--s1,#0B0B0D) 70%);border:.5px solid rgba(var(--fgc,255,255,255),.12);border-radius:22px;padding:19px;cursor:pointer;transition:transform .22s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.978)">
-      <div style="position:absolute;top:0;left:0;width:44%;height:100%;background:linear-gradient(100deg,transparent,rgba(var(--fgc,255,255,255),.07),transparent);animation:cSheen 5.5s ease-in-out infinite"></div>
-      <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between">
-        <div>
-          <div style="font-family:'Instrument Serif',serif;font-size:12px;letter-spacing:.28em;color:rgba(var(--fgc,255,255,255),.44)">{{ heroRom }}</div>
-          <div style="font-size:21px;font-weight:600;margin-top:6px;letter-spacing:-.02em">{{ heroTitle }}</div>
-          <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.44);margin-top:4px">{{ heroMeta }}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:9px 15px;font-size:12.5px;font-weight:600">
-          {{ workoutCta }}
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
-        </div>
-      </div>
-      <div style="position:relative;margin-top:17px;height:3px;border-radius:3px;background:rgba(var(--fgc,255,255,255),.12);overflow:hidden">
-        <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,#8d8d93,#fff);transition:width .7s cubic-bezier(.32,.72,0,1);width:{{ trainPct }}%"></div>
-      </div>
+    <div style="margin-top:16px;height:6px;border-radius:6px;background:rgba(var(--fgc,255,255,255),.1);overflow:hidden">
+      <div style="height:100%;border-radius:6px;background:linear-gradient(90deg,#8d8d93,#fff);transition:width .8s cubic-bezier(.32,.72,0,1);width:{{ planPct }}%"></div>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 2px 10px">
-      <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">Pauta alimenticia</div>
-      <div onClick="{{ goDiet }}" style="font-size:11px;color:rgba(var(--fgc,255,255,255),.42);cursor:pointer">Ver la semana</div>
-    </div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">Tareas de hoy</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
-      <sc-for list="{{ mealRows }}" as="m" hint-placeholder-count="7">
-      <div onClick="{{ m.open }}" style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14.5px;font-weight:500">{{ m.n }}</div>
-          <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.sub }}</div>
-        </div>
-        <sc-if value="{{ m.done }}" hint-placeholder-val="{{ false }}">
-        <div style="width:24px;height:24px;flex:none;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center;animation:cPop .42s cubic-bezier(.2,.8,.2,1) both">
+      <sc-for list="{{ planTasks }}" as="t" hint-placeholder-count="4">
+      <div onClick="{{ t.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
+        <div style="width:26px;height:26px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ t.ckBg }};color:{{ t.ckFg }};border:1.3px solid {{ t.ckBd }}">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
         </div>
-        </sc-if>
-        <sc-if value="{{ m.pending }}" hint-placeholder-val="{{ true }}">
-        <div style="width:24px;height:24px;flex:none;border-radius:50%;border:1.2px dashed rgba(var(--fgc,255,255,255),.24)"></div>
-        </sc-if>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14.5px;font-weight:500">{{ t.label }}</div>
+          <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.sub }}</div>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 11 11" fill="none" stroke="currentColor" opacity=".3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
       </div>
       </sc-for>
     </div>
 
-    <div style="display:flex;align-items:center;gap:11px;margin-top:14px;padding:14px 16px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:18px">
-      <div style="width:30px;height:30px;flex:none;border-radius:50%;background:var(--s2,#17171A);display:flex;align-items:center;justify-content:center">
-        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" opacity=".7" stroke-width="1.4"><circle cx="7" cy="7" r="6"></circle><path d="M7 3.6V7l2.4 1.5" stroke-linecap="round"></path></svg>
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">Resumen semanal</div>
+    <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:16px 16px 6px">
+      <sc-for list="{{ wsRows }}" as="w" hint-placeholder-count="3">
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px">
+          <div style="font-size:13px;font-weight:500">{{ w.l }}</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-size:11px;color:rgba(var(--fgc,255,255,255),.4)">{{ w.sub }}</span>
+            <span style="font-size:13px;font-weight:600">{{ w.pct }}%</span>
+          </div>
+        </div>
+        <div style="height:4px;border-radius:4px;background:rgba(var(--fgc,255,255,255),.1);overflow:hidden">
+          <div style="height:100%;border-radius:4px;background:linear-gradient(90deg,#8d8d93,#fff);transition:width .8s cubic-bezier(.32,.72,0,1);width:{{ w.bar }}"></div>
+        </div>
       </div>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:500">Sesión hoy · 18:00</div>
+      </sc-for>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0 14px;margin-top:2px;border-top:.5px solid rgba(var(--fgc,255,255,255),.08)">
+        <div>
+          <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">Cumplimiento global</div>
+          <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.4);margin-top:3px">{{ wsKcal }} kcal objetivo / día</div>
+        </div>
+        <div style="font-family:'Instrument Serif',serif;font-size:34px;line-height:.9">{{ wsGlobalLabel }}</div>
       </div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">Confirmada</div>
     </div>
   </div>
   </sc-if>
@@ -1279,6 +1273,24 @@ class Component extends DCLogic {
     const headMonth = _hdr ? _hdr.month : 'julio';
     const entHeader = _hdr ? (_hdr.monthCap + ' ' + _hdr.year + ' · Semana ' + _hdr.week) : 'Julio 2026 · Semana 30';
     const agendaHdr = _hdr ? (_hdr.monthCap + ' ' + _hdr.year) : 'Julio 2026';
+    // --- Plan de hoy (tareas + progreso) + Resumen semanal ---
+    const _dd = (typeof window !== 'undefined' && window.__DATA) || {};
+    const planPct = _dd.planHoyPct || 0;
+    const _acts = { entreno: this.startWorkout, nutricion: this.goDiet, metricas: this.openCheckin, cardio: () => this.flash('Cardio marcado') };
+    const planTasks = (_dd.todayTasks || []).map(tk => ({
+      label: tk.label, sub: tk.sub, done: tk.done,
+      ckBg: tk.done ? 'var(--fg,#fff)' : 'transparent', ckFg: tk.done ? 'var(--bg,#000)' : 'transparent',
+      ckBd: tk.done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.24)',
+      open: _acts[tk.key] || (() => {})
+    }));
+    const _ws = _dd.weekSummary || {};
+    const wsRows = [
+      { l: 'Entrenos', pct: (_ws.entrenos || {}).pct || 0, sub: ((_ws.entrenos || {}).done || 0) + ' / ' + ((_ws.entrenos || {}).total || 0) },
+      { l: 'Cardio', pct: (_ws.cardio || {}).pct || 0, sub: ((_ws.cardio || {}).done || 0) + ' / ' + ((_ws.cardio || {}).total || 0) },
+      { l: 'Métricas', pct: (_ws.metricas || {}).pct || 0, sub: ((_ws.metricas || {}).done || 0) + ' / ' + ((_ws.metricas || {}).total || 0) }
+    ].map(r => ({ ...r, bar: r.pct + '%' }));
+    const wsGlobal = (_ws.global || {}).pct || 0;
+    const wsKcal = _ws.kcal || 0;
     const dietSub = _hdr ? (_hdr.nMeals + ' comidas · varias opciones cada una') : 'Comidas · varias opciones cada una';
     const evoCounts = _hdr ? (_hdr.nPhotos + ' fotos · ' + _hdr.nMetrics + ' métricas') : 'Fotos · métricas';
 
@@ -1540,6 +1552,7 @@ class Component extends DCLogic {
       setsDoneLabel: setsDone + ' de ' + totalSets,
       mealRows, trainPct, trainPctLabel: trainPct + '%',
       headLine, headDay, headMonth, heroRom, heroTitle, heroMeta, entHeader, agendaHdr, dietSub, evoCounts, woTitle,
+      planPct, planPctLabel: planPct + '%', planTasks, wsRows, wsGlobal, wsGlobalLabel: wsGlobal + '%', wsKcal,
       workoutCta: setsDone === 0 ? 'Comenzar' : (setsDone === totalSets ? 'Completado' : 'Continuar'),
       startWorkout: this.startWorkout,
 
