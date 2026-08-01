@@ -103,32 +103,54 @@
       slot.items.push({ type: e.type, title: e.title, done: !!e.completed, dt: dt });
     });
 
-    // ---------- DAYS (semana actual) ----------
+    // ---------- DAYS / WEEKS (semana actual + navegación) ----------
     var mon = mondayOf(now);
     var todayKey = now.getFullYear() + '-' + d2(now.getMonth() + 1) + '-' + d2(now.getDate());
     // numero de semana ISO aprox
     var jan1 = new Date(now.getFullYear(), 0, 1);
     var week = Math.ceil((((startOfDay(now) - jan1) / 86400000) + jan1.getDay() + 1) / 7);
-    var DAYS = [];
-    for (var i = 0; i < 7; i++) {
-      var dt = new Date(mon); dt.setDate(mon.getDate() + i);
-      var key = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
-      var slot = byDay[key];
-      var wkItem = slot && slot.items.filter(function (x) { return x.type === 'workout'; })[0];
-      var cardio = slot && slot.items.filter(function (x) { return x.type === 'cardio'; })[0];
-      var isToday = key === todayKey;
-      var wkKey = wkItem ? slug(wkItem.title) : 'descanso';
-      var title = wkItem ? wkItem.title : (cardio ? cardio.title : 'Descanso');
-      var status = isToday ? 'Hoy' : (dt < startOfDay(now) ? (wkItem && wkItem.done ? 'Completado' : (wkItem ? 'No realizado' : 'Descanso')) : 'Programado');
-      var nCount = wkItem && WK[wkKey] ? (wkItem.done ? WK[wkKey].length + ' de ' + WK[wkKey].length : '—') : '—';
-      var hh = wkItem ? d2(wkItem.dt.getHours()) + ':' + d2(wkItem.dt.getMinutes()) : '';
-      DAYS.push({
-        d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
-        rom: ROM[i], t: title, s: status, wk: wkKey, n: nCount,
-        fecha: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()),
-        ses: wkItem ? (hh + ' · Su domicilio') : (cardio ? cardio.title : 'Sin sesión'),
-        dot: isToday ? 2 : (wkItem && wkItem.done ? 1 : 0), today: isToday
-      });
+    // construye una semana (7 días) a partir de su lunes
+    function buildWeek(monDate) {
+      var out = [];
+      for (var i = 0; i < 7; i++) {
+        var dt = new Date(monDate); dt.setDate(monDate.getDate() + i);
+        var key = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
+        var slot = byDay[key];
+        var wkItem = slot && slot.items.filter(function (x) { return x.type === 'workout'; })[0];
+        var cardio = slot && slot.items.filter(function (x) { return x.type === 'cardio'; })[0];
+        var isToday = key === todayKey;
+        var wkKey = wkItem ? slug(wkItem.title) : 'descanso';
+        var title = wkItem ? wkItem.title : (cardio ? cardio.title : 'Descanso');
+        var status = isToday ? 'Hoy' : (dt < startOfDay(now) ? (wkItem && wkItem.done ? 'Completado' : (wkItem ? 'No realizado' : 'Descanso')) : 'Programado');
+        var nCount = wkItem && WK[wkKey] ? (wkItem.done ? WK[wkKey].length + ' de ' + WK[wkKey].length : '—') : '—';
+        var hh = wkItem ? d2(wkItem.dt.getHours()) + ':' + d2(wkItem.dt.getMinutes()) : '';
+        out.push({
+          d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
+          rom: ROM[i], t: title, s: status, wk: wkKey, n: nCount,
+          fecha: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()),
+          ses: wkItem ? (hh + ' · Su domicilio') : (cardio ? cardio.title : 'Sin sesión'),
+          dot: isToday ? 2 : (wkItem && wkItem.done ? 1 : 0), today: isToday
+        });
+      }
+      var last = new Date(monDate); last.setDate(monDate.getDate() + 6);
+      var lbl = (monDate.getMonth() === last.getMonth())
+        ? (MO[monDate.getMonth()].charAt(0).toUpperCase() + MO[monDate.getMonth()].slice(1) + ' ' + monDate.getFullYear())
+        : (MO[monDate.getMonth()].slice(0, 3) + '–' + MO[last.getMonth()].slice(0, 3) + ' ' + last.getFullYear());
+      return { label: lbl, subtitle: 'Semana del ' + monDate.getDate() + ' al ' + last.getDate(), mon: monDate.getTime(), days: out };
+    }
+    var DAYS = buildWeek(mon).days;
+    // rango de semanas: desde el lunes del evento más antiguo al del más nuevo, unido a semana actual ±1, con tope
+    var evMondays = events.filter(function (e) { return !e.removed && e.date; }).map(function (e) { return mondayOf(new Date(ms(e.date))).getTime(); });
+    var minMon = mon.getTime(), maxMon = mon.getTime();
+    evMondays.forEach(function (t) { if (t < minMon) minMon = t; if (t > maxMon) maxMon = t; });
+    var oneWk = 7 * 86400000;
+    minMon = Math.min(minMon, mon.getTime() - oneWk);
+    maxMon = Math.max(maxMon, mon.getTime() + oneWk);
+    var WEEKS = [], curWeekIdx = 0, guard = 0;
+    for (var wt = minMon; wt <= maxMon && guard < 40; wt += oneWk, guard++) {
+      var wobj = buildWeek(new Date(wt));
+      if (wt === mon.getTime()) curWeekIdx = WEEKS.length;
+      WEEKS.push(wobj);
     }
 
     // ---------- APPTS (proximas sesiones) ----------
@@ -286,7 +308,8 @@
       DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID,
       WEIGHTS: WEIGHTS, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header, logsInit: logsInit,
-      todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary
+      todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary,
+      WEEKS: WEEKS, curWeekIdx: curWeekIdx
     };
   }
 

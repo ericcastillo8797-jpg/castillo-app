@@ -164,9 +164,20 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
   <div data-screen-label="Entrenamientos" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 0 132px">
     <div style="padding:0 20px">
       <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">Agenda</div>
-      <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:5px">{{ agendaHdr }}</div>
     </div>
-    <div style="display:flex;gap:8px;padding:20px 20px 6px;overflow-x:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 2px;gap:12px">
+      <div onClick="{{ prevWeek }}" style="width:34px;height:34px;flex:none;border-radius:50%;border:.5px solid rgba(var(--fgc,255,255,255),.14);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:{{ prevWeekOpacity }};transition:transform .2s cubic-bezier(.2,.8,.2,1),opacity .2s" style-active="transform:scale(.9)">
+        <svg width="13" height="13" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5 3 5.5 8 9.5"></path></svg>
+      </div>
+      <div style="flex:1;text-align:center;min-width:0">
+        <div style="font-size:14px;font-weight:600;letter-spacing:-.01em">{{ agendaHdr }}</div>
+        <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:2px">{{ agendaSub }}</div>
+      </div>
+      <div onClick="{{ nextWeek }}" style="width:34px;height:34px;flex:none;border-radius:50%;border:.5px solid rgba(var(--fgc,255,255,255),.14);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:{{ nextWeekOpacity }};transition:transform .2s cubic-bezier(.2,.8,.2,1),opacity .2s" style-active="transform:scale(.9)">
+        <svg width="13" height="13" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;padding:12px 20px 6px;overflow-x:auto">
       <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
       <div onClick="{{ d.pick }}" style="flex:none;width:46px;padding:10px 0 11px;border-radius:15px;text-align:center;cursor:pointer;transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ d.bg }};border:.5px solid {{ d.bd }};color:{{ d.fg }}" style-active="transform:scale(.94)">
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.12em;opacity:.55">{{ d.w }}</div>
@@ -972,6 +983,8 @@ let DAYS = [
   { d:2,  w:'D', long:'Domingo 2 de agosto',   rom:'VII',t:'Descanso',         s:'Programado', wk:'descanso', n:'—',      ses:'Sin sesión', dot:0 }
 ];
 
+let WEEKS = [];
+
 let APPTS = [
   { w:'MIÉ', d:'29', t:'Sesión de entrenamiento', sub:'Alex Castillo · Su domicilio', h:'18:00' },
   { w:'VIE', d:'31', t:'Revisión semanal', sub:'Videollamada · 20 min', h:'19:00' },
@@ -1046,6 +1059,7 @@ function applyRealData(d) {
   if (nz(d.WK)) WK = d.WK;
   VAR = d.VAR || {};
   if (nz(d.DAYS)) DAYS = d.DAYS;
+  if (nz(d.WEEKS)) WEEKS = d.WEEKS;
   if (nz(d.APPTS)) APPTS = d.APPTS;
   if (nz(d.MET)) MET = d.MET;
   if (nz(d.VID)) VID = d.VID;
@@ -1065,7 +1079,7 @@ class Component extends DCLogic {
     wOpen: false, wIn: false, exOpen: 'e1',
     logs: {}, pad: null, padIn: false,
     rest: 0, restMax: 90,
-    day: 29, vidCat: 'Todos', evoTab: 'metricas',
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'metricas',
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, toast: null
   };
@@ -1100,6 +1114,7 @@ class Component extends DCLogic {
     if (d && d.logsInit && Object.keys(d.logsInit).length) patch.logs = d.logsInit;
     var today = (d && d.DAYS || []).filter(function (x) { return x.today; })[0];
     if (today) patch.day = today.d;
+    if (d && typeof d.curWeekIdx === 'number') patch.weekIdx = d.curWeekIdx;
     this.setState(patch);
     this.later(() => this.setState({ stage: 'app', tab: 'home' }), 900);
   };
@@ -1124,6 +1139,17 @@ class Component extends DCLogic {
     this.setState({ tab: t });
     if (this._sc) this._sc.scrollTop = 0;
     if (t === 'evo') this.playEvo();
+  };
+  shiftWeek = dir => () => {
+    const weeks = (WEEKS && WEEKS.length) ? WEEKS : [{ days: DAYS }];
+    this.setState(s => {
+      const idx = Math.max(0, Math.min(weeks.length - 1, (s.weekIdx || 0) + dir));
+      const wk = weeks[idx] || { days: DAYS };
+      const days = wk.days || [];
+      const today = days.filter(d => d.today)[0];
+      const day = today ? today.d : (days[0] ? days[0].d : s.day);
+      return { weekIdx: idx, day };
+    });
   };
   playEvo = () => {
     cancelAnimationFrame(this._raf);
@@ -1272,7 +1298,18 @@ class Component extends DCLogic {
     const headDay = _hdr ? String(_hdr.dayNum) : '29';
     const headMonth = _hdr ? _hdr.month : 'julio';
     const entHeader = _hdr ? (_hdr.monthCap + ' ' + _hdr.year + ' · Semana ' + _hdr.week) : 'Julio 2026 · Semana 30';
-    const agendaHdr = _hdr ? (_hdr.monthCap + ' ' + _hdr.year) : 'Julio 2026';
+    const _weeksArr = (WEEKS && WEEKS.length) ? WEEKS : [{ label: (_hdr ? (_hdr.monthCap + ' ' + _hdr.year) : 'Julio 2026'), subtitle: '', days: DAYS }];
+    const _wIdx = Math.max(0, Math.min(_weeksArr.length - 1, st.weekIdx || 0));
+    const _agWeek = _weeksArr[_wIdx] || { days: DAYS };
+    const _agDays = _agWeek.days || DAYS;
+    const agendaHdr = _agWeek.label || (_hdr ? (_hdr.monthCap + ' ' + _hdr.year) : 'Julio 2026');
+    const agendaSub = _agWeek.subtitle || '';
+    const canPrevWeek = _wIdx > 0;
+    const canNextWeek = _wIdx < _weeksArr.length - 1;
+    const prevWeek = this.shiftWeek(-1);
+    const nextWeek = this.shiftWeek(1);
+    const prevWeekOpacity = canPrevWeek ? '1' : '.25';
+    const nextWeekOpacity = canNextWeek ? '1' : '.25';
     // --- Plan de hoy (tareas + progreso) + Resumen semanal ---
     const _dd = (typeof window !== 'undefined' && window.__DATA) || {};
     const planPct = _dd.planHoyPct || 0;
@@ -1363,7 +1400,7 @@ class Component extends DCLogic {
       };
     });
 
-    const dS = DAYS.find(d => d.d === st.day) || DAYS[2];
+    const dS = _agDays.find(d => d.d === st.day) || _agDays[2] || _agDays[0];
     const dayEx = (WK[dS.wk] || []).map((x, i) => {
       const parts = x.split('|');
       const exr = EX.find(e => e.n === parts[0]);
@@ -1375,7 +1412,7 @@ class Component extends DCLogic {
       cta: dS.today ? 'Abrir entrenamiento' : (dS.s === 'Completado' ? 'Ver el registro' : 'Ver el entrenamiento'),
       open: this.startWorkout
     };
-    const weekDays = DAYS.map(d => {
+    const weekDays = _agDays.map(d => {
       const sel = d.d === st.day;
       return {
         w: d.w, d: d.d, pick: () => this.setState({ day: d.d }),
@@ -1551,7 +1588,8 @@ class Component extends DCLogic {
 
       setsDoneLabel: setsDone + ' de ' + totalSets,
       mealRows, trainPct, trainPctLabel: trainPct + '%',
-      headLine, headDay, headMonth, heroRom, heroTitle, heroMeta, entHeader, agendaHdr, dietSub, evoCounts, woTitle,
+      headLine, headDay, headMonth, heroRom, heroTitle, heroMeta, entHeader, agendaHdr, agendaSub, dietSub, evoCounts, woTitle,
+      prevWeek, nextWeek, prevWeekOpacity, nextWeekOpacity,
       planPct, planPctLabel: planPct + '%', planTasks, wsRows, wsGlobal, wsGlobalLabel: wsGlobal + '%', wsKcal,
       workoutCta: setsDone === 0 ? 'Comenzar' : (setsDone === totalSets ? 'Completado' : 'Continuar'),
       startWorkout: this.startWorkout,
