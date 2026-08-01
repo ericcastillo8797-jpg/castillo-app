@@ -222,8 +222,18 @@
       if (p == null || isNaN(pn) || pn === 0 || (!isNaN(cn) && cn && Math.abs(pn - cn) / cn > 0.18)) return metVal(m);
       return p;
     }
+    function isoWeek(dt) { var j = new Date(dt.getFullYear(), 0, 1); return Math.ceil((((startOfDay(dt) - j) / 86400000) + j.getDay() + 1) / 7); }
+    function weekRange(dt) { var m0 = mondayOf(dt), e = new Date(m0); e.setDate(m0.getDate() + 6); return m0.getDate() + ' ' + MO[m0.getMonth()].slice(0, 3) + ' – ' + e.getDate() + ' ' + MO[e.getMonth()].slice(0, 3); }
     var fields = metrics.filter(function (m) { return metVal(m) != null; }).map(function (m) {
-      return { k: slug(m.name), l: m.name, u: m.unit || '', v: comma(metVal(m)), p: comma(metPrev(m)) };
+      // histórico REAL de la métrica (más reciente primero) con etiqueta de semana + rango de fechas
+      var pts = (m.data || []).filter(function (p) { return p && p.t != null && p.y != null && !isNaN(parseFloat(String(p.y).replace(',', '.'))); })
+        .map(function (p) { return { t: ms(p.t), y: p.y }; });
+      pts.push({ t: now.getTime(), y: metVal(m) });
+      pts.sort(function (a, b) { return b.t - a.t; });
+      var seen = {}, hist = [];
+      pts.forEach(function (p) { var dt = new Date(p.t); var wk = isoWeek(dt); if (seen[wk]) return; seen[wk] = 1; hist.push({ v: comma(p.y), raw: parseFloat(String(p.y).replace(',', '.')), weekLabel: 'Semana ' + wk, range: weekRange(dt) }); });
+      hist = hist.slice(0, 12);
+      return { k: slug(m.name), l: m.name, u: m.unit || '', v: comma(metVal(m)), p: comma(metPrev(m)), hist: hist };
     });
     var MET = fields.length ? [{ g: 'Composición y medidas', f: fields }] : [];
 

@@ -1114,7 +1114,7 @@ class Component extends DCLogic {
     email: '', pass: '', scan: 0,
     meals: { m1: 2, m2: 0, m3: 3 },
     sheet: null, sheetIn: false,
-    wOpen: false, wIn: false, exOpen: 'e1',
+    wOpen: false, wIn: false, exClosed: {},
     logs: {}, pad: null, padIn: false,
     rest: 0, restMax: 90,
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp',
@@ -1234,7 +1234,7 @@ class Component extends DCLogic {
   };
   closeWorkout = () => { this.setState({ wIn: false }); this.later(() => this.setState({ wOpen: false }), 540); };
   finishWorkout = () => { this.closeWorkout(); this.flash('Entreno registrado · enviado al equipo'); };
-  toggleEx = id => () => this.setState(s => ({ exOpen: s.exOpen === id ? null : id }));
+  toggleEx = id => () => this.setState(s => ({ exClosed: Object.assign({}, s.exClosed, { [id]: !s.exClosed[id] }) }));
 
   setLog = (ex, i, f, v) => this.setState(s => {
     const logs = Object.assign({}, s.logs);
@@ -1254,13 +1254,6 @@ class Component extends DCLogic {
       if (!cur.r) this.setLog(ex, i, 'r', e.l[i][0]);
       if (!cur.w) this.setLog(ex, i, 'w', e.l[i][1]);
       this.startRest();
-      this.later(() => {
-        const arr = this.state.logs[ex] || [];
-        if (arr.length >= e.s && arr.slice(0, e.s).every(x => x && x.done)) {
-          const nx = EX[EX.findIndex(x => x.id === ex) + 1];
-          this.setState({ exOpen: nx ? nx.id : null });
-        }
-      }, 620);
     }
   };
 
@@ -1283,14 +1276,6 @@ class Component extends DCLogic {
       if (String(l.w || '').length && !l.done) {
         this.setLog(p.ex, p.i, 'done', true);
         this.startRest();
-        const ex = p.ex, e = EX.find(x => x.id === ex);
-        this.later(() => {
-          const arr = this.state.logs[ex] || [];
-          if (e && arr.length >= e.s && arr.slice(0, e.s).every(x => x && x.done)) {
-            const nx = EX[EX.findIndex(x => x.id === ex) + 1];
-            this.setState({ exOpen: nx ? nx.id : null });
-          }
-        }, 620);
       }
     }
     this.setState({ padIn: false }); this.later(() => this.setState({ pad: null }), 460);
@@ -1355,7 +1340,7 @@ class Component extends DCLogic {
     // --- Plan de hoy (tareas + progreso) + Resumen semanal ---
     const _dd = (typeof window !== 'undefined' && window.__DATA) || {};
     const _todayFecha = (DAYS.find(d => d.today) || {}).fecha || 'hoy';
-    const _acts = { entreno: this.startWorkout, nutricion: this.goDiet, metricas: this.openCheckin, cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
+    const _acts = { entreno: this.startWorkout, nutricion: this.go('diet'), metricas: this.openCheckin, cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
     const planTasks = (_dd.todayTasks || []).map(tk => {
       const marked = st.marks[_todayFecha + '|' + tk.key];
       const done = tk.done || !!marked;
@@ -1409,7 +1394,7 @@ class Component extends DCLogic {
     const exercises = workoutEx.map((e, ix) => {
       const arr = logs[e.id] || [];
       const dn = arr.slice(0, e.s).filter(x => x && x.done).length;
-      const isOpen = st.exOpen === e.id;
+      const isOpen = !st.exClosed[e.id];
       return {
         n: st.swaps[e.id] || e.n, p: e.p, rest: e.rest, open: isOpen, thumb: THUMB(e.y),
         openVar: this.openVar(e),
@@ -1604,12 +1589,9 @@ class Component extends DCLogic {
     const mf = sh.k === 'met' ? sh.f : null;
     let metSheet = {};
     if (mf) {
-      const base = num(mf.v), step = base - num(mf.p);
-      const rows = Array.from({ length: 10 }, (_, i) => {
-        const val = base - step * i + Math.sin(i * 1.9) * Math.abs(step) * 0.3;
-        return { w: 'Semana ' + (30 - i), raw: val, v: val.toFixed(1).replace('.', ','),
-          date: DATES[i], fg: i === 0 ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.75)' };
-      });
+      const H = (mf.hist && mf.hist.length) ? mf.hist : [{ weekLabel: '', range: DATES[0] || '', raw: num(mf.v), v: mf.v }];
+      const rows = H.map((h, i) => ({ w: h.weekLabel, date: h.range, raw: h.raw, v: h.v,
+        fg: i === 0 ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.75)' }));
       rows.forEach((r, i) => {
         const d = i < rows.length - 1 ? r.raw - rows[i + 1].raw : 0;
         r.dl = i === rows.length - 1 ? '—' : (d > 0 ? '↑ ' : d < 0 ? '↓ ' : '· ') + Math.abs(d).toFixed(1).replace('.', ',');
