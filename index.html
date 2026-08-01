@@ -243,13 +243,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
   <div data-screen-label="Evolucion" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 20px 132px">
     <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">Evolución</div>
 
-    <div style="display:flex;gap:4px;margin-top:18px;padding:3px;background:var(--s1,#101012);border:.5px solid rgba(var(--fgc,255,255,255),.08);border-radius:12px">
-      <sc-for list="{{ evoTabs }}" as="t" hint-placeholder-count="2">
-      <div onClick="{{ t.pick }}" style="flex:1;text-align:center;padding:8px 0;border-radius:9px;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ t.bg }};color:{{ t.fg }}">{{ t.n }}</div>
-      </sc-for>
-    </div>
-
-    <div style="margin-top:16px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 18px 12px">
+    <div style="margin-top:18px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 18px 12px">
       <div style="display:flex;align-items:flex-end;justify-content:space-between">
         <div>
           <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">Peso corporal</div>
@@ -273,6 +267,12 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="display:flex;justify-content:space-between;font-size:9.5px;color:rgba(var(--fgc,255,255,255),.3);padding-top:4px">
         <span>{{ chartL0 }}</span><span>{{ chartL1 }}</span><span>{{ chartL2 }}</span>
       </div>
+    </div>
+
+    <div style="display:flex;gap:4px;margin-top:16px;padding:3px;background:var(--s1,#101012);border:.5px solid rgba(var(--fgc,255,255,255),.08);border-radius:12px">
+      <sc-for list="{{ evoTabs }}" as="t" hint-placeholder-count="2">
+      <div onClick="{{ t.pick }}" style="flex:1;text-align:center;padding:8px 0;border-radius:9px;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ t.bg }};color:{{ t.fg }}">{{ t.n }}</div>
+      </sc-for>
     </div>
 
     <sc-if value="{{ evoMetrics }}" hint-placeholder-val="{{ true }}">
@@ -588,11 +588,16 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             </sc-if>
           </div>
           <sc-for list="{{ o.foods }}" as="f" hint-placeholder-count="3">
-          <div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0">
-            <div style="font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92)">{{ f.n }}</div>
-            <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none">{{ f.q }}</div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0">
+            <div style="flex:1;min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92)">{{ f.n }}</div>
+            <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:64px;text-align:right">{{ f.q }}</div>
+            <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:70px;text-align:right">{{ f.kcalLabel }}</div>
           </div>
           </sc-for>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:9px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.1)">
+            <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">Total</div>
+            <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
+          </div>
         </div>
         </sc-for>
       </div>
@@ -905,7 +910,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:930},&quot;arranque&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Apertura&quot;,&quot;Acceso&quot;,&quot;App&quot;],&quot;default&quot;:&quot;Apertura&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototipo&quot;},&quot;tema&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Oscuro&quot;,&quot;Claro&quot;],&quot;default&quot;:&quot;Oscuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototipo&quot;},&quot;mostrarUltimaSemana&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Entrenamiento&quot;},&quot;descansoSegundos&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:90,&quot;min&quot;:30,&quot;max&quot;:210,&quot;step&quot;:15,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Entrenamiento&quot;}}">
-const F = s => s.split(';').map(p => { const i = p.lastIndexOf(':'); return { n: p.slice(0, i), q: p.slice(i + 1) }; });
+const F = s => s.split(';').map(p => { const parts = p.split('@@'); const base = parts[0]; const kcal = parts.length > 1 ? parts[1] : ''; const i = base.lastIndexOf(':'); return { n: base.slice(0, i), q: base.slice(i + 1), kcal }; });
 const ROM = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 
 let DIET = [
@@ -1114,7 +1119,7 @@ class Component extends DCLogic {
     rest: 0, restMax: 90,
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp',
     theme: null, anim: 1, drawn: true, swaps: {},
-    ck: {}, ckPhotos: {}, toast: null
+    ck: {}, ckPhotos: {}, toast: null, marks: {}
   };
 
   componentWillUnmount() { cancelAnimationFrame(this._raf); clearInterval(this._iv); (this._to || []).forEach(clearTimeout); }
@@ -1211,6 +1216,10 @@ class Component extends DCLogic {
   };
   logout = () => { if (window.CastilloData) window.CastilloData.logout(); this.setState({ stage: 'lock', tab: 'home', email: '', pass: '' }); };
   flash = m => { this.setState({ toast: m }); this.later(() => this.setState({ toast: null }), 2600); };
+  toggleMark = (fecha, type, msg) => () => {
+    const key = (fecha || 'hoy') + '|' + type;
+    this.setState(s => { const done = !s.marks[key]; if (done && msg) this.flash(msg); return { marks: Object.assign({}, s.marks, { [key]: done }) }; });
+  };
 
   openSheet = s => { this.setState({ sheet: s, sheetIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ sheetIn: true }))); };
   closeSheet = () => { this.setState({ sheetIn: false }); this.later(() => this.setState({ sheet: null }), 480); };
@@ -1345,14 +1354,19 @@ class Component extends DCLogic {
     const nextWeekOpacity = canNextWeek ? '1' : '.25';
     // --- Plan de hoy (tareas + progreso) + Resumen semanal ---
     const _dd = (typeof window !== 'undefined' && window.__DATA) || {};
-    const planPct = _dd.planHoyPct || 0;
-    const _acts = { entreno: this.startWorkout, nutricion: this.goDiet, metricas: this.openCheckin, cardio: () => this.flash('Cardio marcado') };
-    const planTasks = (_dd.todayTasks || []).map(tk => ({
-      label: tk.label, sub: tk.sub, done: tk.done,
-      ckBg: tk.done ? 'var(--fg,#fff)' : 'transparent', ckFg: tk.done ? 'var(--bg,#000)' : 'transparent',
-      ckBd: tk.done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.24)',
-      open: _acts[tk.key] || (() => {})
-    }));
+    const _todayFecha = (DAYS.find(d => d.today) || {}).fecha || 'hoy';
+    const _acts = { entreno: this.startWorkout, nutricion: this.goDiet, metricas: this.openCheckin, cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
+    const planTasks = (_dd.todayTasks || []).map(tk => {
+      const marked = st.marks[_todayFecha + '|' + tk.key];
+      const done = tk.done || !!marked;
+      return {
+        label: tk.label, sub: tk.sub, done,
+        ckBg: done ? 'var(--fg,#fff)' : 'transparent', ckFg: done ? 'var(--bg,#000)' : 'transparent',
+        ckBd: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.24)',
+        open: _acts[tk.key] || (() => {})
+      };
+    });
+    const planPct = planTasks.length ? Math.round(planTasks.filter(t => t.done).length / planTasks.length * 100) : 0;
     const _ws = _dd.weekSummary || {};
     const wsRows = [
       { l: 'Entrenos', pct: (_ws.entrenos || {}).pct || 0, sub: ((_ws.entrenos || {}).done || 0) + ' / ' + ((_ws.entrenos || {}).total || 0) },
@@ -1377,8 +1391,10 @@ class Component extends DCLogic {
     const sm = sh.k === 'meal' ? DIET.find(m => m.id === sh.id) : null;
     const mealSheet = sm ? { h: sm.h, n: sm.n, opts: sm.o.map((o, i) => {
       const sel = meals[sm.id] === i;
+      const foods = F(o).map(f => ({ n: f.n, q: f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '' }));
+      const kcalTotal = F(o).reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
       return {
-        rom: 'OPCIÓN ' + ROM[i], sel, foods: F(o), delay: (0.03 + i * 0.035) + 's',
+        rom: 'OPCIÓN ' + ROM[i], sel, foods, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.035) + 's',
         bg: sel ? 'rgba(var(--fgc,255,255,255),.1)' : 'var(--s2,#17171B)',
         bd: sel ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.07)',
         numFg: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)',
@@ -1437,12 +1453,13 @@ class Component extends DCLogic {
     const dayActs = (dS.acts || []).map(a => {
       let open, thumb = '';
       if (a.type === 'metricas') open = this.openCheckin;
-      else if (a.type === 'cardio') open = () => this.flash('Cardio marcado');
+      else if (a.type === 'cardio') open = this.toggleMark(dS.fecha, 'cardio', 'Cardio marcado');
       else { open = this.startWorkout; const first = (WK[a.wk] || [])[0]; const exr = first ? EX.find(e => e.n === first.split('|')[0]) : null; thumb = (exr && exr.y) ? THUMB(exr.y) : ''; }
+      const done = a.done || !!st.marks[dS.fecha + '|' + a.type];
       return {
-        type: a.type, label: a.label, sub: a.sub, done: a.done, open, thumb,
-        ckBg: a.done ? 'var(--fg,#fff)' : 'transparent', ckFg: a.done ? 'var(--bg,#000)' : 'transparent',
-        ckBd: a.done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.24)'
+        type: a.type, label: a.label, sub: a.sub, done, open, thumb,
+        ckBg: done ? 'var(--fg,#fff)' : 'transparent', ckFg: done ? 'var(--bg,#000)' : 'transparent',
+        ckBd: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.24)'
       };
     });
     const daySel = {

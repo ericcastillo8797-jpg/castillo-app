@@ -194,9 +194,13 @@
         var opts = (meal.option || []).map(function (op) {
           var foods = (op.foodInTheMeal || []).map(function (f) {
             var qty = f.valuesQuantity && f.valuesQuantity.quantity != null ? f.valuesQuantity.quantity : '';
-            return f.name + ':' + qty + foodUnit(f);
+            var kcal = f.valuesQuantity && f.valuesQuantity.energy != null ? Math.round(f.valuesQuantity.energy) : '';
+            return f.name + ':' + qty + foodUnit(f) + '@@' + kcal;
           });
-          var recs = (op.recipes || []).map(function (r) { return (r.name || 'Receta') + ':1 ud'; });
+          var recs = (op.recipes || []).map(function (r) {
+            var rk = r.valuesQuantity && r.valuesQuantity.energy != null ? Math.round(r.valuesQuantity.energy) : (r.energy != null ? Math.round(r.energy) : '');
+            return (r.name || 'Receta') + ':1 ud@@' + rk;
+          });
           return foods.concat(recs).join(';');
         }).filter(function (s) { return s; });
         if (!opts.length) return;
