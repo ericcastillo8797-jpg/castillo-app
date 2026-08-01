@@ -217,17 +217,22 @@
 
     // serie de peso para el mini-grafico
     var wm = metrics.filter(function (m) { return /peso|weight/i.test(m.name); })[0];
-    var WEIGHTS = [];
+    var WEIGHTS = [], WDATES = [];
+    function fmtShort(tv) { var dt = new Date(ms(tv)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); }
     if (wm) {
       var cur = parseFloat(String(wm.current).replace(',', '.'));
       (wm.data || []).forEach(function (p) {
         var n = parseFloat(String(p.y).replace(',', '.'));
         // descarta puntos implausibles (>18% del actual = dato basura)
-        if (!isNaN(n) && n > 0 && (isNaN(cur) || !cur || Math.abs(n - cur) / cur < 0.18)) WEIGHTS.push(n);
+        if (!isNaN(n) && n > 0 && (isNaN(cur) || !cur || Math.abs(n - cur) / cur < 0.18)) { WEIGHTS.push(n); WDATES.push(p.t ? fmtShort(p.t) : ''); }
       });
-      if (!isNaN(cur) && cur > 0) WEIGHTS.push(cur);
+      if (!isNaN(cur) && cur > 0) { WEIGHTS.push(cur); WDATES.push(fmtShort(now.getTime())); }
     }
-    if (WEIGHTS.length === 1) WEIGHTS = [WEIGHTS[0], WEIGHTS[0]];
+    if (WEIGHTS.length === 1) { WEIGHTS = [WEIGHTS[0], WEIGHTS[0]]; WDATES = [WDATES[0] || '', WDATES[0] || '']; }
+    // 3 etiquetas del eje X del mini-grafico (primera / media / última fecha real)
+    var chartLabels = WDATES.length
+      ? [WDATES[0], WDATES[Math.floor((WDATES.length - 1) / 2)], WDATES[WDATES.length - 1]]
+      : ['', '', ''];
 
     // ---------- PHOTOSETS (fotos de progreso) ----------
     var photos = (row.evolution && row.evolution.photos) || [];
@@ -340,7 +345,7 @@
 
     return {
       DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID,
-      WEIGHTS: WEIGHTS, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
+      WEIGHTS: WEIGHTS, chartLabels: chartLabels, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header, logsInit: logsInit,
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary,
       WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG

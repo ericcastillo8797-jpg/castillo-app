@@ -215,25 +215,32 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </sc-if>
       </div>
 
-      <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">Biblioteca de técnica</div>
-    </div>
-    <div style="display:flex;gap:7px;padding:0 20px 4px;overflow-x:auto">
-      <sc-for list="{{ vidCats }}" as="c" hint-placeholder-count="6">
-      <div onClick="{{ c.pick }}" style="flex:none;padding:8px 14px;border-radius:100px;font-size:12px;font-weight:500;cursor:pointer;transition:all .26s cubic-bezier(.32,.72,0,1);background:{{ c.bg }};color:{{ c.fg }};border:.5px solid {{ c.bd }}" style-active="transform:scale(.95)">{{ c.n }}</div>
-      </sc-for>
-    </div>
-    <div style="padding:14px 20px 0;display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <sc-for list="{{ vidList }}" as="v" hint-placeholder-count="6">
-      <div onClick="{{ v.open }}" style="cursor:pointer;transition:transform .22s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.96)">
-        <div style="position:relative;aspect-ratio:16/11;border-radius:14px;overflow:hidden;background:#0A0A0C;border:.5px solid rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center">
-          <sc-if value="{{ v.thumb }}" hint-placeholder-val="{{ false }}"><img src="{{ v.thumb }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6" /></sc-if>
-          <div style="position:relative;width:34px;height:34px;border-radius:50%;border:.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff">
-            <svg width="11" height="13" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
-          </div>
-        </div>
-        <div style="font-size:12.5px;font-weight:500;margin-top:8px;line-height:1.3">{{ v.t }}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 2px 10px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">Pauta alimenticia</div>
+        <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.34)">{{ dietState }}</div>
       </div>
-      </sc-for>
+      <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
+        <sc-for list="{{ dietRows }}" as="m" hint-placeholder-count="7">
+        <div onClick="{{ m.open }}" style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:{{ m.cursor }};transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14.5px;font-weight:500;color:{{ m.fg }}">{{ m.n }}</div>
+            <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.sub }}</div>
+          </div>
+          <sc-if value="{{ m.done }}" hint-placeholder-val="{{ false }}">
+          <div style="width:24px;height:24px;flex:none;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center;animation:cPop .42s cubic-bezier(.2,.8,.2,1) both">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
+          </div>
+          </sc-if>
+          <sc-if value="{{ m.pending }}" hint-placeholder-val="{{ true }}">
+          <div style="width:24px;height:24px;flex:none;border-radius:50%;border:1.2px dashed rgba(var(--fgc,255,255,255),.24)"></div>
+          </sc-if>
+          <sc-if value="{{ m.locked }}" hint-placeholder-val="{{ false }}">
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".3" stroke-width="1.4" style="flex:none"><rect x="2" y="5.2" width="8" height="5.6" rx="1.4"></rect><path d="M4 5.2V3.8a2 2 0 0 1 4 0v1.4"></path></svg>
+          </sc-if>
+        </div>
+        </sc-for>
+      </div>
+      <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:14px">{{ dietNote }}</div>
     </div>
   </div>
   </sc-if>
@@ -241,53 +248,41 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
   <sc-if value="{{ isEvo }}" hint-placeholder-val="{{ false }}">
   <div data-screen-label="Evolucion" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 20px 132px">
     <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">Evolución</div>
-    <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:5px">12 semanas bajo el sistema</div>
 
-    <div onClick="{{ openCheckin }}" style="margin-top:20px;background:linear-gradient(165deg,var(--s2,#17171B),var(--s1,#0B0B0D));border:.5px solid rgba(var(--fgc,255,255,255),.13);border-radius:20px;padding:17px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .22s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.978)">
-      <div style="flex:1">
-        <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">Check-in semana 30</div>
-        <div style="font-size:16.5px;font-weight:600;margin-top:6px">{{ ckTitle }}</div>
-        <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:3px">{{ evoCounts }}</div>
-      </div>
-      <div style="width:34px;height:34px;flex:none;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center">
-        <svg width="13" height="13" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:4px;margin-top:20px;padding:3px;background:var(--s1,#101012);border:.5px solid rgba(var(--fgc,255,255,255),.08);border-radius:12px">
+    <div style="display:flex;gap:4px;margin-top:18px;padding:3px;background:var(--s1,#101012);border:.5px solid rgba(var(--fgc,255,255,255),.08);border-radius:12px">
       <sc-for list="{{ evoTabs }}" as="t" hint-placeholder-count="2">
       <div onClick="{{ t.pick }}" style="flex:1;text-align:center;padding:8px 0;border-radius:9px;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ t.bg }};color:{{ t.fg }}">{{ t.n }}</div>
       </sc-for>
     </div>
 
-    <sc-if value="{{ evoMetrics }}" hint-placeholder-val="{{ true }}">
-    <div style="animation:cFade .4s both">
-      <div style="margin-top:18px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 18px 12px">
-        <div style="display:flex;align-items:flex-end;justify-content:space-between">
-          <div>
-            <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">Peso corporal</div>
-            <div style="display:flex;align-items:baseline;gap:7px;margin-top:7px">
-              <span style="font-family:'Instrument Serif',serif;font-size:38px;line-height:.9">{{ pesoAnim }}</span>
-              <span style="font-size:13px;color:rgba(var(--fgc,255,255,255),.42)">kg</span>
-            </div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:15px;font-weight:600">{{ pesoDelta }}</div>
-            <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.36);margin-top:2px">variación</div>
+    <div style="margin-top:16px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 18px 12px">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between">
+        <div>
+          <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">Peso corporal</div>
+          <div style="display:flex;align-items:baseline;gap:7px;margin-top:7px">
+            <span style="font-family:'Instrument Serif',serif;font-size:38px;line-height:.9">{{ pesoAnim }}</span>
+            <span style="font-size:13px;color:rgba(var(--fgc,255,255,255),.42)">kg</span>
           </div>
         </div>
-        <svg viewBox="0 0 320 92" style="width:100%;height:92px;margin-top:10px;overflow:visible">
-          <defs><linearGradient id="cg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".16"></stop><stop offset="1" stop-color="currentColor" stop-opacity="0"></stop></linearGradient></defs>
-          <polygon points="{{ chartArea }}" fill="url(#cg2)" style="transition:opacity .9s ease .25s;opacity:{{ chartFill }}"></polygon>
-          <polyline points="{{ chartLine }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:900;transition:stroke-dashoffset 1.1s cubic-bezier(.32,.72,0,1);stroke-dashoffset:{{ chartDash }}"></polyline>
-          <circle cx="{{ chartLx }}" cy="{{ chartLy }}" r="3.6" fill="currentColor"></circle>
-          <circle cx="{{ chartLx }}" cy="{{ chartLy }}" r="8" fill="none" stroke="currentColor" opacity=".22" stroke-width="1"></circle>
-        </svg>
-        <div style="display:flex;justify-content:space-between;font-size:9.5px;color:rgba(var(--fgc,255,255,255),.3);padding-top:4px">
-          <span>Sem. 18</span><span>Sem. 24</span><span>Sem. 30</span>
+        <div style="text-align:right">
+          <div style="font-size:15px;font-weight:600">{{ pesoDelta }}</div>
+          <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.36);margin-top:2px">variación</div>
         </div>
       </div>
+      <svg viewBox="0 0 320 92" style="width:100%;height:92px;margin-top:10px;overflow:visible">
+        <defs><linearGradient id="cg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".16"></stop><stop offset="1" stop-color="currentColor" stop-opacity="0"></stop></linearGradient></defs>
+        <polygon points="{{ chartArea }}" fill="url(#cg2)" style="transition:opacity .9s ease .25s;opacity:{{ chartFill }}"></polygon>
+        <polyline points="{{ chartLine }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:900;transition:stroke-dashoffset 1.1s cubic-bezier(.32,.72,0,1);stroke-dashoffset:{{ chartDash }}"></polyline>
+        <circle cx="{{ chartLx }}" cy="{{ chartLy }}" r="3.6" fill="currentColor"></circle>
+        <circle cx="{{ chartLx }}" cy="{{ chartLy }}" r="8" fill="none" stroke="currentColor" opacity=".22" stroke-width="1"></circle>
+      </svg>
+      <div style="display:flex;justify-content:space-between;font-size:9.5px;color:rgba(var(--fgc,255,255,255),.3);padding-top:4px">
+        <span>{{ chartL0 }}</span><span>{{ chartL1 }}</span><span>{{ chartL2 }}</span>
+      </div>
+    </div>
 
+    <sc-if value="{{ evoMetrics }}" hint-placeholder-val="{{ true }}">
+    <div style="animation:cFade .4s both">
       <sc-for list="{{ metGroups }}" as="g" hint-placeholder-count="4">
       <div>
         <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:24px 2px 10px">{{ g.g }}</div>
@@ -1083,6 +1078,7 @@ const PTS = [
 ];
 
 let WEIGHTS = [88.6,88.1,87.6,87.4,86.9,86.5,86.2,85.8,85.4,85.0,84.9,84.2];
+let chartLabels = ['22 may','19 jun','24 jul'];
 let SHOTS = ['Frontal','Espalda','Lateral'];
 let SESS = ['22 jul','15 jul','08 jul','01 jul','24 jun'];
 let DATES = ['24 jul','17 jul','10 jul','03 jul','26 jun','19 jun','12 jun','05 jun','29 may','22 may'];
@@ -1106,6 +1102,7 @@ function applyRealData(d) {
   if (nz(d.MET)) MET = d.MET;
   if (nz(d.VID)) VID = d.VID;
   if (nz(d.WEIGHTS)) WEIGHTS = d.WEIGHTS;
+  if (nz(d.chartLabels)) chartLabels = d.chartLabels;
   if (nz(d.PHOTOSETS)) PHOTOSETS = d.PHOTOSETS;
   if (nz(d.SESS)) SESS = d.SESS;
   if (nz(d.DATES)) DATES = d.DATES;
@@ -1669,6 +1666,7 @@ class Component extends DCLogic {
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoDelta,
       chartArea: chart.area, chartLine: chart.line, chartLx: chart.lx, chartLy: chart.ly,
+      chartL0: chartLabels[0] || '', chartL1: chartLabels[1] || '', chartL2: chartLabels[2] || '',
       chartDash: st.drawn ? 0 : 900, chartFill: st.drawn ? 1 : 0,
       isMetSheet: sh.k === 'met', metSheet,
       isVarSheet: sh.k === 'var', varSheet,
