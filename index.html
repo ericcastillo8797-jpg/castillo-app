@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="./castillo-i18n.js"></script>
 <script src="./castillo-transform.js"></script>
 <script src="./castillo-data.js"></script>
 <script src="./support.js"></script>
@@ -57,7 +58,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <div style="display:flex;align-items:flex-end;justify-content:space-between">
       <div>
         <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ headLine }}</div>
-        <div style="font-family:'Instrument Serif',serif;font-size:44px;line-height:.9;margin-top:9px">Plan de hoy</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:44px;line-height:.9;margin-top:9px">{{ L.planHoy }}</div>
         <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.42);margin-top:6px">{{ headDay }} {{ headMonth }}</div>
       </div>
       <div style="text-align:right;flex:none">
@@ -70,7 +71,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="height:100%;border-radius:6px;background:linear-gradient(90deg,#8d8d93,#fff);transition:width .8s cubic-bezier(.32,.72,0,1);width:{{ planPct }}%"></div>
     </div>
 
-    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">Tareas de hoy</div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.tareasHoy }}</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
       <sc-for list="{{ planTasks }}" as="t" hint-placeholder-count="4">
       <div onClick="{{ t.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
@@ -86,7 +87,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </sc-for>
     </div>
 
-    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">Resumen semanal</div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.resumenSemanal }}</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:16px 16px 6px">
       <sc-for list="{{ wsRows }}" as="w" hint-placeholder-count="3">
       <div style="margin-bottom:14px">
@@ -104,7 +105,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </sc-for>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0 14px;margin-top:2px;border-top:.5px solid rgba(var(--fgc,255,255,255),.08)">
         <div>
-          <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">Cumplimiento global</div>
+          <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">{{ L.cumplGlobal }}</div>
           <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.4);margin-top:3px">{{ wsKcal }} kcal objetivo / día</div>
         </div>
         <div style="font-family:'Instrument Serif',serif;font-size:34px;line-height:.9">{{ wsGlobalLabel }}</div>
@@ -165,7 +166,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
   <sc-if value="{{ isTrain }}" hint-placeholder-val="{{ false }}">
   <div data-screen-label="Entrenamientos" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 0 132px">
     <div style="padding:0 20px">
-      <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">Agenda</div>
+      <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">{{ L.agenda }}</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 2px;gap:12px">
       <div onClick="{{ prevWeek }}" style="width:34px;height:34px;flex:none;border-radius:50%;border:.5px solid rgba(var(--fgc,255,255,255),.14);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:{{ prevWeekOpacity }};transition:transform .2s cubic-bezier(.2,.8,.2,1),opacity .2s" style-active="transform:scale(.9)">
@@ -214,7 +215,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </sc-if>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 2px 10px">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">Pauta alimenticia</div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.pautaAlim }}</div>
         <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.34)">{{ dietState }}</div>
       </div>
       <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
@@ -245,12 +246,12 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
   <sc-if value="{{ isEvo }}" hint-placeholder-val="{{ false }}">
   <div data-screen-label="Evolucion" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 20px 132px">
-    <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">Evolución</div>
+    <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">{{ L.evolucion }}</div>
 
     <div style="margin-top:18px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 18px 12px">
       <div style="display:flex;align-items:flex-end;justify-content:space-between">
         <div>
-          <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">Peso corporal</div>
+          <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">{{ L.pesoCorporal }}</div>
           <div style="display:flex;align-items:baseline;gap:7px;margin-top:7px">
             <span style="font-family:'Instrument Serif',serif;font-size:38px;line-height:.9">{{ pesoAnim }}</span>
             <span style="font-size:13px;color:rgba(var(--fgc,255,255,255),.42)">kg</span>
@@ -333,7 +334,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <div style="animation:cFade .4s both">
       <sc-if value="{{ exProgEmpty }}" hint-placeholder-val="{{ false }}">
       <div style="margin-top:24px;padding:30px 20px;text-align:center;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px">
-        <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);line-height:1.5">Aún no hay entrenos registrados.<br/>Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.</div>
+        <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);line-height:1.5">{{ L.sinEntrenos }}<br/>{{ L.cuandoEntrenador }}</div>
       </div>
       </sc-if>
       <sc-for list="{{ exProgList }}" as="e" hint-placeholder-count="4">
@@ -373,7 +374,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
   <sc-if value="{{ isConf }}" hint-placeholder-val="{{ false }}">
   <div data-screen-label="Configuracion" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 20px 132px">
-    <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">Configuración</div>
+    <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">{{ L.config }}</div>
 
     <div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 0 4px">
       <div style="position:relative;width:104px;height:104px;border-radius:50%;padding:4px;border:.5px solid rgba(var(--fgc,255,255,255),.14);background:var(--s1,#0C0C0E)">
@@ -385,7 +386,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </div>
     </div>
 
-    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">Apariencia</div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.apariencia }}</div>
     <div style="display:flex;gap:11px">
       <sc-for list="{{ themes }}" as="t" hint-placeholder-count="2">
       <div onClick="{{ t.pick }}" style="flex:1;border-radius:18px;padding:13px;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:var(--s1,#0C0C0E);border:1px solid {{ t.bd }}" style-active="transform:scale(.97)">
@@ -404,7 +405,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </sc-for>
     </div>
 
-    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">Cuenta</div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.cuenta }}</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
       <sc-for list="{{ accountRows }}" as="r" hint-placeholder-count="4">
       <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06)">
@@ -414,14 +415,20 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </sc-for>
     </div>
 
-    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">Aplicación</div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.idioma }}</div>
+    <div style="display:flex;gap:11px">
+      <div onClick="{{ pickEs }}" style="flex:1;text-align:center;padding:14px 0;border-radius:16px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ langEsBg }};color:{{ langEsFg }};border:1px solid {{ langEsBd }}" style-active="transform:scale(.97)">{{ L.espanol }}</div>
+      <div onClick="{{ pickEn }}" style="flex:1;text-align:center;padding:14px 0;border-radius:16px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ langEnBg }};color:{{ langEnFg }};border:1px solid {{ langEnBd }}" style-active="transform:scale(.97)">{{ L.ingles }}</div>
+    </div>
+
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.aplicacion }}</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
       <div onClick="{{ replaySplash }}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
-        <div style="flex:1;font-size:13.5px">Ver animación de apertura</div>
+        <div style="flex:1;font-size:13.5px">{{ L.verAnimacion }}</div>
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5 7.5 6 4 9.5"></path></svg>
       </div>
       <div onClick="{{ logout }}" style="display:flex;align-items:center;padding:14px 16px;cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
-        <div style="flex:1;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.55)">Cerrar sesión</div>
+        <div style="flex:1;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.55)">{{ L.cerrarSesion }}</div>
       </div>
     </div>
   </div>
@@ -432,19 +439,19 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
   <div style="position:absolute;bottom:0;left:0;right:0;z-index:6;padding:9px 12px 30px;background:rgba(var(--bgc,0,0,0),.62);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border-top:.5px solid rgba(var(--fgc,255,255,255),.09);display:flex;color:rgba(var(--fgc,255,255,255),.36)">
     <div onClick="{{ goHome }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .24s cubic-bezier(.2,.8,.2,1);color:{{ cHome }}" style-active="transform:scale(.9)">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.2 12 3.6l8.5 6.6V19a1.4 1.4 0 0 1-1.4 1.4H4.9A1.4 1.4 0 0 1 3.5 19Z"></path><path d="M9.4 20.4v-6.2h5.2v6.2"></path></svg>
-      <span style="font-size:9.5px;font-weight:500">Hoy</span>
+      <span style="font-size:9.5px;font-weight:500">{{ L.hoy }}</span>
     </div>
     <div onClick="{{ goTrain }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .24s cubic-bezier(.2,.8,.2,1);color:{{ cTrain }}" style-active="transform:scale(.9)">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.4"></rect><path d="M3.5 9h17M8 3v3M16 3v3"></path></svg>
-      <span style="font-size:9.5px;font-weight:500">Agenda</span>
+      <span style="font-size:9.5px;font-weight:500">{{ L.agenda }}</span>
     </div>
     <div onClick="{{ goEvo }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .24s cubic-bezier(.2,.8,.2,1);color:{{ cEvo }}" style-active="transform:scale(.9)">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 16.6 8.6 11l3.6 3.4 7.4-7.6"></path><path d="M15.4 6.8h4.2V11"></path></svg>
-      <span style="font-size:9px;font-weight:500">Evolución</span>
+      <span style="font-size:9px;font-weight:500">{{ L.evolucion }}</span>
     </div>
     <div onClick="{{ goConf }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .24s cubic-bezier(.2,.8,.2,1);color:{{ cConf }}" style-active="transform:scale(.9)">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"></circle><path d="M12 2.2v3.1M12 18.7v3.1M2.2 12h3.1M18.7 12h3.1M5.05 5.05l2.2 2.2M16.75 16.75l2.2 2.2M18.95 5.05l-2.2 2.2M7.25 16.75l-2.2 2.2"></path></svg>
-      <span style="font-size:9px;font-weight:500">Ajustes</span>
+      <span style="font-size:9px;font-weight:500">{{ L.ajustes }}</span>
     </div>
   </div>
 </div>
@@ -494,7 +501,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="position:relative;width:46px;height:46px;border-radius:50%;border:.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.4);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;color:#fff">
               <svg width="13" height="15" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
             </div>
-            <div style="position:absolute;bottom:9px;left:12px;font-size:8.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72)">Vídeo de técnica</div>
+            <div style="position:absolute;bottom:9px;left:12px;font-size:8.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72)">{{ L.videoTecnica }}</div>
           </div>
           <div style="display:flex;margin-top:13px;background:var(--s3,#151519);border:.5px solid rgba(var(--fgc,255,255,255),.08);border-radius:14px;overflow:hidden">
             <div style="flex:1;padding:11px 13px"><div style="font-size:8.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.3)">Series</div><div style="font-size:16px;font-weight:600;margin-top:4px">{{ e.nS }}</div></div>
@@ -537,7 +544,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </div>
       </sc-for>
 
-      <div onClick="{{ finishWorkout }}" style="margin-top:10px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">Finalizar</div>
+      <div onClick="{{ finishWorkout }}" style="margin-top:10px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ L.finalizar }}</div>
     </div>
   </div>
 
@@ -577,7 +584,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ mealSheet.h }}</div>
           <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1;margin-top:4px">{{ mealSheet.n }}</div>
         </div>
-        <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.36);text-align:right;padding-bottom:4px">Elija<br>una opción</div>
+        <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.36);text-align:right;padding-bottom:4px">{{ L.elija }}<br>{{ L.unaOpcion }}</div>
       </div>
       <div style="overflow-y:auto;padding:12px 20px 26px;display:flex;flex-direction:column;gap:9px">
         <sc-for list="{{ mealSheet.opts }}" as="o" hint-placeholder-count="7">
@@ -599,7 +606,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </div>
           </sc-for>
           <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:9px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.1)">
-            <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">Total</div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
             <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
           </div>
         </div>
@@ -628,7 +635,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <sc-if value="{{ isMetSheet }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Historial de metrica" style="display:flex;flex-direction:column;min-height:0">
       <div style="padding:14px 20px 14px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
-        <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">Registro semanal</div>
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.registroSemanal }}</div>
         <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:4px">
           <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1">{{ metSheet.l }}</div>
           <div style="display:flex;align-items:baseline;gap:5px">
@@ -655,7 +662,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </div>
           </sc-for>
         </div>
-        <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:14px">Registrado cada semana en su check-in.</div>
+        <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:14px">{{ L.regCadaSemana }}</div>
       </div>
     </div>
     </sc-if>
@@ -1123,8 +1130,10 @@ class Component extends DCLogic {
     rest: 0, restMax: 90,
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp',
     theme: null, anim: 1, drawn: true, swaps: {},
-    ck: {}, ckPhotos: {}, toast: null, marks: {}
+    ck: {}, ckPhotos: {}, toast: null, marks: {},
+    lang: (function () { try { return localStorage.getItem('castillo_lang') || 'es'; } catch (e) { return 'es'; } })()
   };
+  setLang = l => () => { try { localStorage.setItem('castillo_lang', l); } catch (e) {} this.setState({ lang: l }); };
 
   componentWillUnmount() { cancelAnimationFrame(this._raf); clearInterval(this._iv); (this._to || []).forEach(clearTimeout); }
   later(fn, ms) { this._to = this._to || []; this._to.push(setTimeout(fn, ms)); }
@@ -1307,6 +1316,24 @@ class Component extends DCLogic {
     const st = this.state, stage = this.stage, logs = st.logs, meals = st.meals;
     const theme = st.theme || (this.props.tema === 'Claro' ? 'light' : 'dark');
     const num = s => parseFloat(String(s).replace(',', '.'));
+    // --- idioma ---
+    const lang = st.lang || 'es';
+    const _i18n = (typeof window !== 'undefined' && window.I18N) || null;
+    const T = s => _i18n ? _i18n.t(s, lang) : s;             // UI (clave en español)
+    const tFood = n => _i18n ? _i18n.food(n, lang) : n;      // alimento
+    const tMeal = n => _i18n ? _i18n.meal(n, lang) : n;      // nombre de comida
+    const isEN = lang === 'en';
+    const foodSub = (m, i) => T('Opción') + ' ' + (i + 1) + ' · ' + F(m.o[i]).map(f => tFood(f.n)).join(', ');
+    // traductor general: clave exacta y, si no, palabras sueltas frecuentes (solo EN)
+    const tr = s => {
+      if (!s || !isEN) return s;
+      const u = T(s); if (u !== s) return u;
+      return String(s)
+        .replace(/\bcomidas\b/g, 'meals').replace(/\bcomida\b/g, 'meal')
+        .replace(/\bejercicios\b/g, 'exercises').replace(/\bejercicio\b/g, 'exercise')
+        .replace(/\bseries\b/g, 'sets').replace(/\bserie\b/g, 'set')
+        .replace(/\bsesiones\b/g, 'sessions').replace(/\bsesión\b/g, 'session');
+    };
 
     const mealsDone = DIET.filter(m => meals[m.id] !== undefined).length;
     // ejercicios SOLO del entreno del día seleccionado (no el catálogo entero)
@@ -1349,7 +1376,7 @@ class Component extends DCLogic {
       const marked = st.marks[_todayFecha + '|' + tk.key];
       const done = tk.done || !!marked;
       return {
-        label: tk.label, sub: tk.sub, done,
+        label: tr(tk.label), sub: tr(tk.sub), done,
         ckBg: done ? 'var(--fg,#fff)' : 'transparent', ckFg: done ? 'var(--bg,#000)' : 'transparent',
         ckBd: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.24)',
         open: _acts[tk.key] || (() => {})
@@ -1358,9 +1385,9 @@ class Component extends DCLogic {
     const planPct = planTasks.length ? Math.round(planTasks.filter(t => t.done).length / planTasks.length * 100) : 0;
     const _ws = _dd.weekSummary || {};
     const wsRows = [
-      { l: 'Entrenos', pct: (_ws.entrenos || {}).pct || 0, sub: ((_ws.entrenos || {}).done || 0) + ' / ' + ((_ws.entrenos || {}).total || 0) },
-      { l: 'Cardio', pct: (_ws.cardio || {}).pct || 0, sub: ((_ws.cardio || {}).done || 0) + ' / ' + ((_ws.cardio || {}).total || 0) },
-      { l: 'Métricas', pct: (_ws.metricas || {}).pct || 0, sub: ((_ws.metricas || {}).done || 0) + ' / ' + ((_ws.metricas || {}).total || 0) }
+      { l: T('Entrenos'), pct: (_ws.entrenos || {}).pct || 0, sub: ((_ws.entrenos || {}).done || 0) + ' / ' + ((_ws.entrenos || {}).total || 0) },
+      { l: T('Cardio'), pct: (_ws.cardio || {}).pct || 0, sub: ((_ws.cardio || {}).done || 0) + ' / ' + ((_ws.cardio || {}).total || 0) },
+      { l: T('Métricas'), pct: (_ws.metricas || {}).pct || 0, sub: ((_ws.metricas || {}).done || 0) + ' / ' + ((_ws.metricas || {}).total || 0) }
     ].map(r => ({ ...r, bar: r.pct + '%' }));
     const wsGlobal = (_ws.global || {}).pct || 0;
     const wsKcal = _ws.kcal || 0;
@@ -1370,20 +1397,20 @@ class Component extends DCLogic {
     const mealRows = DIET.map(m => {
       const i = meals[m.id], has = i !== undefined;
       return {
-        h: m.h, n: m.n, done: has, pending: !has,
-        sub: has ? 'Opción ' + (i + 1) + ' · ' + F(m.o[i]).map(f => f.n).join(', ') : 'Sin registrar — toque para elegir',
+        h: m.h, n: tMeal(m.n), done: has, pending: !has,
+        sub: has ? foodSub(m, i) : T('Sin registrar — toque para elegir'),
         open: () => this.openSheet({ k: 'meal', id: m.id })
       };
     });
 
     const sh = st.sheet || {};
     const sm = sh.k === 'meal' ? DIET.find(m => m.id === sh.id) : null;
-    const mealSheet = sm ? { h: sm.h, n: sm.n, opts: sm.o.map((o, i) => {
+    const mealSheet = sm ? { h: sm.h, n: tMeal(sm.n), opts: sm.o.map((o, i) => {
       const sel = meals[sm.id] === i;
-      const foods = F(o).map(f => ({ n: f.n, q: f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '' }));
+      const foods = F(o).map(f => ({ n: tFood(f.n), q: f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '' }));
       const kcalTotal = F(o).reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
       return {
-        rom: 'OPCIÓN ' + (i + 1), sel, foods, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.035) + 's',
+        rom: T('OPCIÓN') + ' ' + (i + 1), sel, foods, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.035) + 's',
         bg: sel ? 'rgba(var(--fgc,255,255,255),.1)' : 'var(--s2,#17171B)',
         bd: sel ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.07)',
         numFg: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)',
@@ -1402,7 +1429,7 @@ class Component extends DCLogic {
       return {
         n: st.swaps[e.id] || e.n, p: e.p, rest: e.rest, open: isOpen, thumb: THUMB(e.y),
         openVar: this.openVar(e),
-        varLabel: st.swaps[e.id] ? 'Variante en uso · ver otras' : 'No puedo hacer este ejercicio',
+        varLabel: st.swaps[e.id] ? T('Variante en uso · ver otras') : T('No puedo hacer este ejercicio'),
         nS: String(e.s), reps: e.p.split('×').pop().trim(),
         prevDate: SESS[0], prevSets: e.l.map(x => x[1]).join('  ·  ') + (e.l[0][1].charAt(0) === '+' ? ' kg de lastre' : ' kg'),
         openHist: this.openHist(e),
@@ -1446,13 +1473,13 @@ class Component extends DCLogic {
       else { open = this.startWorkout; const first = (WK[a.wk] || [])[0]; const exr = first ? EX.find(e => e.n === first.split('|')[0]) : null; thumb = (exr && exr.y) ? THUMB(exr.y) : ''; }
       const done = a.done || !!st.marks[dS.fecha + '|' + a.type];
       return {
-        type: a.type, label: a.label, sub: a.sub, done, open, thumb,
+        type: a.type, label: a.type === 'workout' ? a.label : tr(a.label), sub: tr(a.sub), done, open, thumb,
         ckBg: done ? 'var(--fg,#fff)' : 'transparent', ckFg: done ? 'var(--bg,#000)' : 'transparent',
         ckBd: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.24)'
       };
     });
     const daySel = {
-      long: dS.long, rom: dS.rom, t: dS.t, s: dS.s, ses: dS.ses, isToday: !!dS.today,
+      long: dS.long, rom: dS.rom, t: dS.t, s: tr(dS.s), ses: dS.ses, isToday: !!dS.today,
       acts: dayActs, hasActs: dayActs.length > 0, rest: dayActs.length === 0
     };
     const weekDays = _agDays.map(d => {
@@ -1477,7 +1504,7 @@ class Component extends DCLogic {
 
     const evoTabs = [['comp','Composición y medidas'],['ejercicio','Progreso en el ejercicio']].map(([k, n]) => {
       const sel = st.evoTab === k;
-      return { n, pick: () => this.setState({ evoTab: k }), bg: sel ? 'rgba(var(--fgc,255,255,255),.13)' : 'transparent', fg: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)' };
+      return { n: T(n), pick: () => this.setState({ evoTab: k }), bg: sel ? 'rgba(var(--fgc,255,255,255),.13)' : 'transparent', fg: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)' };
     });
     const exProgList = EXPROG.map(e => {
       const up = e.delta > 0, down = e.delta < 0;
@@ -1488,7 +1515,7 @@ class Component extends DCLogic {
         nombre: e.nombre, thumb: e.y ? THUMB(e.y) : '',
         last: e.last != null ? String(e.last).replace('.', ',') : '—',
         lastReps: e.lastReps != null ? (e.lastReps + ' reps') : '',
-        sessions: e.sessions + (e.sessions === 1 ? ' sesión' : ' sesiones'),
+        sessions: e.sessions + ' ' + (e.sessions === 1 ? T('sesión') : T('sesiones')),
         deltaLabel: (up ? '+' : '') + String(e.delta).replace('.', ',') + ' kg',
         deltaFg: up ? '#7fd6a3' : (down ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.4)'),
         hasProg: vals.length > 1,
@@ -1518,9 +1545,9 @@ class Component extends DCLogic {
     const _wLast = WEIGHTS[WEIGHTS.length - 1], _wFirst = WEIGHTS[0];
     const _wDelta = _wLast - _wFirst;
     const pesoDelta = (Math.abs(_wDelta) < 0.05 ? '·' : (_wDelta > 0 ? '+' : '−')) + Math.abs(_wDelta).toFixed(1).replace('.', ',');
-    const metGroups = MET.map(g => ({ g: g.g, f: g.f.map(f => {
+    const metGroups = MET.map(g => ({ g: T(g.g), f: g.f.map(f => {
       const d = num(f.v) - num(f.p);
-      return { l: f.l, u: f.u, v: dec(f.v), p: f.p + ' ' + f.u, open: this.openMet(f),
+      return { l: T(f.l), u: f.u, v: dec(f.v), p: f.p + ' ' + f.u, open: this.openMet(f),
         dl: (d > 0 ? '↑ ' : d < 0 ? '↓ ' : '· ') + Math.abs(d).toFixed(1).replace('.', ',') };
     }) }));
 
@@ -1552,17 +1579,17 @@ class Component extends DCLogic {
     const dietRows = DIET.map((m, ix) => {
       if (dietToday) {
         const i = meals[m.id], has = i !== undefined;
-        return { n: m.n, done: has, pending: !has, locked: false, cursor: 'pointer', fg: 'inherit',
-          sub: has ? 'Opción ' + (i + 1) + ' · ' + F(m.o[i]).map(f => f.n).join(', ') : 'Sin registrar — toque para elegir',
+        return { n: tMeal(m.n), done: has, pending: !has, locked: false, cursor: 'pointer', fg: 'inherit',
+          sub: has ? foodSub(m, i) : T('Sin registrar — toque para elegir'),
           open: () => this.openSheet({ k: 'meal', id: m.id }) };
       }
       if (dietPast) {
         const i = (ix * 2 + st.day) % 7;
-        return { n: m.n, done: false, pending: false, locked: true, cursor: 'default', fg: 'inherit',
-          sub: 'Opción ' + (i + 1) + ' · ' + F(m.o[i]).map(f => f.n).join(', '), open: null };
+        return { n: tMeal(m.n), done: false, pending: false, locked: true, cursor: 'default', fg: 'inherit',
+          sub: foodSub(m, i), open: null };
       }
-      return { n: m.n, done: false, pending: false, locked: true, cursor: 'default', fg: A + '.5)',
-        sub: 'Se abre ese día', open: null };
+      return { n: tMeal(m.n), done: false, pending: false, locked: true, cursor: 'default', fg: A + '.5)',
+        sub: T('Se abre ese día'), open: null };
     });
 
     const xe = sh.k === 'exh' ? sh.e : null;
@@ -1644,6 +1671,29 @@ class Component extends DCLogic {
       splashTransform: stage === 'splashOut' ? 'scale(1.14)' : 'none',
       skipSplash: this.skipSplash, replaySplash: this.replaySplash,
 
+      L: {
+        hoy: T('Hoy'), agenda: T('Agenda'), evolucion: T('Evolución'), ajustes: T('Ajustes'),
+        planHoy: T('Plan de hoy'), config: T('Configuración'), dieta: T('Dieta'),
+        tareasHoy: T('Tareas de hoy'), resumenSemanal: T('Resumen semanal'),
+        pautaAlim: T('Pauta alimenticia'), cumplGlobal: T('Cumplimiento global'),
+        bibliotecaTecnica: T('Biblioteca de técnica'),
+        finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'),
+        pesoCorporal: T('Peso corporal'), variacion: T('variación'),
+        sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
+        registroSemanal: T('Registro semanal'), regCadaSemana: T('Registrado cada semana en su check-in.'),
+        serieMasPesada: T('Serie más pesada'), historialCargas: T('Historial de cargas'),
+        series: T('Series'), repeticiones: T('Repeticiones'), peso: T('Peso'),
+        apariencia: T('Apariencia'), idioma: T('Idioma'), espanol: T('Español'), ingles: T('Inglés'),
+        cuenta: T('Cuenta'), cerrarSesion: T('Cerrar sesión'), aplicacion: T('Aplicación'),
+        tocarFoto: T('Toque la imagen para añadir su fotografía'), verAnimacion: T('Ver animación de apertura'),
+        checkinSemanal: T('Check-in semanal'), enviarCheckin: T('Enviar check-in'), listo: T('Listo'),
+        acceder: T('Acceder'), accederFace: T('Acceder con Face ID'), saltar: T('Saltar'),
+        videoTecnica: T('Vídeo de técnica'), noPuedoEjercicio: T('No puedo hacer este ejercicio'),
+        volverOriginal: T('Volver al ejercicio original'), siNoMaterial: T('Si no dispone del material')
+      },
+      pickEs: this.setLang('es'), pickEn: this.setLang('en'),
+      langEsBg: !isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEsFg: !isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEsBd: !isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
+      langEnBg: isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEnFg: isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEnBd: isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
       isHome: st.tab === 'home', isDiet: st.tab === 'diet', isTrain: st.tab === 'train', isEvo: st.tab === 'evo',
       goHome: this.go('home'), goDiet: this.go('diet'), goTrain: this.go('train'), goEvo: this.go('evo'),
       cHome: tabColor('home'), cDiet: tabColor('diet'), cTrain: tabColor('train'), cEvo: tabColor('evo'),
@@ -1653,7 +1703,7 @@ class Component extends DCLogic {
       headLine, headDay, headMonth, heroRom, heroTitle, heroMeta, entHeader, agendaHdr, agendaSub, dietSub, evoCounts, woTitle,
       prevWeek, nextWeek, prevWeekOpacity, nextWeekOpacity,
       planPct, planPctLabel: planPct + '%', planTasks, wsRows, wsGlobal, wsGlobalLabel: wsGlobal + '%', wsKcal,
-      workoutCta: setsDone === 0 ? 'Comenzar' : (setsDone === totalSets ? 'Completado' : 'Continuar'),
+      workoutCta: setsDone === 0 ? T('Comenzar') : (setsDone === totalSets ? T('Completado') : T('Continuar')),
       startWorkout: this.startWorkout,
 
       weekDays, daySel, appts: APPTS,
@@ -1674,9 +1724,9 @@ class Component extends DCLogic {
       isMetSheet: sh.k === 'met', metSheet,
       isVarSheet: sh.k === 'var', varSheet,
       dietRows,
-      dietState: dietToday ? 'Hoy · editable' : (dietPast ? 'Registro cerrado' : 'Programada'),
-      dietNote: dietToday ? 'Marque cada comida con la opción que ha tomado.'
-        : (dietPast ? 'Lo registrado en días anteriores no puede modificarse.' : 'Podrá registrarla el mismo día.'),
+      dietState: dietToday ? T('Hoy · editable') : (dietPast ? T('Registro cerrado') : T('Programada')),
+      dietNote: dietToday ? T('Marque cada comida con la opción que ha tomado.')
+        : (dietPast ? T('Lo registrado en días anteriores no puede modificarse.') : T('Podrá registrarla el mismo día.')),
       isExhSheet: sh.k === 'exh', exhSheet,
       isConf: st.tab === 'conf', goConf: this.go('conf'), cConf: tabColor('conf'),
       isDark: theme === 'dark',
