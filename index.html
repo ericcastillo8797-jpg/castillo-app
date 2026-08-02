@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-<script src="./castillo-i18n.js?v=10"></script>
-<script src="./castillo-transform.js?v=10"></script>
-<script src="./castillo-data.js?v=10"></script>
+<script src="./castillo-i18n.js?v=11"></script>
+<script src="./castillo-transform.js?v=11"></script>
+<script src="./castillo-data.js?v=11"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1276,10 +1276,14 @@ class Component extends DCLogic {
       }).join('');
       const css = '@page{size:A4;margin:11mm 12mm 9mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#111;font-size:10px;line-height:1.28;padding:16px}.hd{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-end}.hd .brand{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#888;font-weight:700}.hd h1{font-size:22px;font-weight:700;margin-top:2px}.hd .sub{font-size:10px;color:#666;margin-top:2px}.hd .r{text-align:right}.hd .kcal{font-size:21px;font-weight:800}.hd .kl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#888}.meal{margin-bottom:11px;break-inside:avoid}.meal-h{font-size:14px;font-weight:700;border-bottom:1px solid #222;padding-bottom:2px;margin-bottom:6px}.opts{column-count:3;column-gap:16px}.opt{break-inside:avoid;margin-bottom:8px}.opt-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dotted #ccc;padding-bottom:1.5px;margin-bottom:2.5px}.opt-n{font-size:9px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:.04em}.opt-kc{font-size:8.5px;color:#aaa;font-weight:600}.food{font-size:10px;padding:1px 0}.food .fq{font-weight:700;color:#111}.food .fn{color:#555}.ft{margin-top:10px;border-top:1px solid #ddd;padding-top:5px;font-size:8px;color:#999;text-align:center}';
       const doc = '<!doctype html><html lang="' + lang + '"><head><meta charset="utf-8"><title>' + esc(nombre) + ' — ' + L.br + '</title><style>' + css + '</style></head><body><div class="hd"><div class="l"><div class="brand">' + L.br + '</div><h1>' + esc(nombre) + '</h1><div class="sub">' + L.sub + '</div></div><div class="r"><div class="kcal">' + kcal + '</div><div class="kl">' + L.kl + '</div></div></div>' + meals + '<div class="ft">' + L.ft + '</div></body></html>';
-      const w = window.open('', '_blank');
-      if (!w) { this.flash(lang === 'en' ? 'Allow pop-ups to download the diet' : 'Permite las ventanas emergentes para descargar la dieta'); return; }
-      w.document.write(doc); w.document.close(); w.focus();
-      this.later(() => { try { w.print(); } catch (e) {} }, 400);
+      // imprime SIN salir de la app: iframe oculto -> sale el diálogo imprimir/guardar encima, y al cerrarlo sigues dentro
+      var old = document.getElementById('dietaPrintFrame'); if (old) old.remove();
+      var f = document.createElement('iframe');
+      f.id = 'dietaPrintFrame';
+      f.setAttribute('style', 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0');
+      document.body.appendChild(f);
+      var fd = f.contentWindow.document; fd.open(); fd.write(doc); fd.close();
+      this.later(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} }, 450);
     } catch (e) { this.flash('No se pudo generar la dieta'); }
   };
 
