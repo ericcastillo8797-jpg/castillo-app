@@ -246,6 +246,10 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </sc-for>
       </div>
       <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:14px">{{ dietNote }}</div>
+      <div onClick="{{ printDiet }}" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:100px;padding:13px;font-size:13px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.5v7M4 6l3 3 3-3"></path><path d="M2.5 10.5v1.4a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-1.4"></path></svg>
+        {{ L.descargarDieta }}
+      </div>
     </div>
   </div>
   </sc-if>
