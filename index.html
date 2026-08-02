@@ -6,9 +6,10 @@
 <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="./castillo-i18n.js?v=12"></script>
-<script src="./castillo-transform.js?v=12"></script>
-<script src="./castillo-data.js?v=12"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="./castillo-i18n.js?v=13"></script>
+<script src="./castillo-transform.js?v=13"></script>
+<script src="./castillo-data.js?v=13"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1266,80 +1267,64 @@ class Component extends DCLogic {
     this.later(this.closeSheet, 430);
   };
 
+  // HTML común de la dieta (diseño 3 columnas, 1 hoja) — lo usan Imprimir y Compartir
+  _dietDocHtml = () => {
+    const lang = this.state.lang || 'es';
+    const I = window.I18N;
+    const tf = n => I ? I.food(n, lang) : n, tm = n => I ? I.meal(n, lang) : n;
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const dd = (typeof window !== 'undefined' && window.__DATA) || {};
+    const nombre = (dd.header && dd.header.nombre) || 'Cliente';
+    const kcal = (dd.weekSummary && dd.weekSummary.kcal) || '';
+    const L = lang === 'en' ? { br: 'Castillo Private · Meal plan', sub: 'Choose one option per meal · raw weights unless stated', kl: 'kcal target / day', op: 'Option', ft: 'Castillo Private — personalized plan. Check with your coach before changing it.' }
+      : { br: 'Castillo Private · Plan de alimentación', sub: 'Elige una opción en cada comida · pesos en crudo salvo indicación', kl: 'kcal objetivo / día', op: 'Opción', ft: 'Castillo Private — plan personalizado. Consulta con tu entrenador antes de modificarlo.' };
+    const meals = DIET.map(m => {
+      const opts = m.o.map((o, i) => {
+        const foods = F(o), kc = foods.reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
+        const items = foods.map(f => '<div class="food"><span class="fq">' + esc(f.q) + '</span> <span class="fn">' + esc(tf(f.n)) + '</span></div>').join('');
+        return '<div class="opt"><div class="opt-h"><span class="opt-n">' + L.op + ' ' + (i + 1) + '</span><span class="opt-kc">' + kc + ' kcal</span></div>' + items + '</div>';
+      }).join('');
+      return '<section class="meal"><h2 class="meal-h">' + esc(tm(m.n)) + '</h2><div class="opts">' + opts + '</div></section>';
+    }).join('');
+    const css = '@page{size:A4;margin:11mm 12mm 9mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#111;font-size:10px;line-height:1.28;padding:16px}.hd{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-end}.hd .brand{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#888;font-weight:700}.hd h1{font-size:22px;font-weight:700;margin-top:2px}.hd .sub{font-size:10px;color:#666;margin-top:2px}.hd .r{text-align:right}.hd .kcal{font-size:21px;font-weight:800}.hd .kl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#888}.meal{margin-bottom:11px;break-inside:avoid}.meal-h{font-size:14px;font-weight:700;border-bottom:1px solid #222;padding-bottom:2px;margin-bottom:6px}.opts{column-count:3;column-gap:16px}.opt{break-inside:avoid;margin-bottom:8px}.opt-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dotted #ccc;padding-bottom:1.5px;margin-bottom:2.5px}.opt-n{font-size:9px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:.04em}.opt-kc{font-size:8.5px;color:#aaa;font-weight:600}.food{font-size:10px;padding:1px 0}.food .fq{font-weight:700;color:#111}.food .fn{color:#555}.ft{margin-top:10px;border-top:1px solid #ddd;padding-top:5px;font-size:8px;color:#999;text-align:center}';
+    const body = '<div class="hd"><div class="l"><div class="brand">' + L.br + '</div><h1>' + esc(nombre) + '</h1><div class="sub">' + L.sub + '</div></div><div class="r"><div class="kcal">' + kcal + '</div><div class="kl">' + L.kl + '</div></div></div>' + meals + '<div class="ft">' + L.ft + '</div>';
+    const doc = '<!doctype html><html lang="' + lang + '"><head><meta charset="utf-8"><title>' + esc(nombre) + ' — ' + L.br + '</title><style>' + css + '</style></head><body>' + body + '</body></html>';
+    return { doc: doc, nombre: nombre };
+  };
+
   printDiet = () => {
     try {
-      const lang = this.state.lang || 'es';
-      const I = window.I18N;
-      const tf = n => I ? I.food(n, lang) : n, tm = n => I ? I.meal(n, lang) : n;
-      const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const dd = (typeof window !== 'undefined' && window.__DATA) || {};
-      const nombre = (dd.header && dd.header.nombre) || '';
-      const kcal = (dd.weekSummary && dd.weekSummary.kcal) || '';
-      const L = lang === 'en' ? { br: 'Castillo Private · Meal plan', sub: 'Choose one option per meal · raw weights unless stated', kl: 'kcal target / day', op: 'Option', ft: 'Castillo Private — personalized plan. Check with your coach before changing it.' }
-        : { br: 'Castillo Private · Plan de alimentación', sub: 'Elige una opción en cada comida · pesos en crudo salvo indicación', kl: 'kcal objetivo / día', op: 'Opción', ft: 'Castillo Private — plan personalizado. Consulta con tu entrenador antes de modificarlo.' };
-      const meals = DIET.map(m => {
-        const opts = m.o.map((o, i) => {
-          const foods = F(o), kc = foods.reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
-          const items = foods.map(f => '<div class="food"><span class="fq">' + esc(f.q) + '</span> <span class="fn">' + esc(tf(f.n)) + '</span></div>').join('');
-          return '<div class="opt"><div class="opt-h"><span class="opt-n">' + L.op + ' ' + (i + 1) + '</span><span class="opt-kc">' + kc + ' kcal</span></div>' + items + '</div>';
-        }).join('');
-        return '<section class="meal"><h2 class="meal-h">' + esc(tm(m.n)) + '</h2><div class="opts">' + opts + '</div></section>';
-      }).join('');
-      const css = '@page{size:A4;margin:11mm 12mm 9mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#111;font-size:10px;line-height:1.28;padding:16px}.hd{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-end}.hd .brand{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#888;font-weight:700}.hd h1{font-size:22px;font-weight:700;margin-top:2px}.hd .sub{font-size:10px;color:#666;margin-top:2px}.hd .r{text-align:right}.hd .kcal{font-size:21px;font-weight:800}.hd .kl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#888}.meal{margin-bottom:11px;break-inside:avoid}.meal-h{font-size:14px;font-weight:700;border-bottom:1px solid #222;padding-bottom:2px;margin-bottom:6px}.opts{column-count:3;column-gap:16px}.opt{break-inside:avoid;margin-bottom:8px}.opt-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dotted #ccc;padding-bottom:1.5px;margin-bottom:2.5px}.opt-n{font-size:9px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:.04em}.opt-kc{font-size:8.5px;color:#aaa;font-weight:600}.food{font-size:10px;padding:1px 0}.food .fq{font-weight:700;color:#111}.food .fn{color:#555}.ft{margin-top:10px;border-top:1px solid #ddd;padding-top:5px;font-size:8px;color:#999;text-align:center}';
-      const doc = '<!doctype html><html lang="' + lang + '"><head><meta charset="utf-8"><title>' + esc(nombre) + ' — ' + L.br + '</title><style>' + css + '</style></head><body><div class="hd"><div class="l"><div class="brand">' + L.br + '</div><h1>' + esc(nombre) + '</h1><div class="sub">' + L.sub + '</div></div><div class="r"><div class="kcal">' + kcal + '</div><div class="kl">' + L.kl + '</div></div></div>' + meals + '<div class="ft">' + L.ft + '</div></body></html>';
-      // imprime SIN salir de la app: iframe oculto -> sale el diálogo imprimir/guardar encima, y al cerrarlo sigues dentro
+      const built = this._dietDocHtml();
       var old = document.getElementById('dietaPrintFrame'); if (old) old.remove();
       var f = document.createElement('iframe');
       f.id = 'dietaPrintFrame';
       f.setAttribute('style', 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0');
       document.body.appendChild(f);
-      var fd = f.contentWindow.document; fd.open(); fd.write(doc); fd.close();
+      var fd = f.contentWindow.document; fd.open(); fd.write(built.doc); fd.close();
       this.later(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} }, 450);
     } catch (e) { this.flash('No se pudo generar la dieta'); }
   };
 
-  // genera el PDF real de la dieta (jsPDF) para compartir/guardar
-  _buildDietPdf = () => {
-    var Ctor = window.jspdf && window.jspdf.jsPDF; if (!Ctor) return null;
-    var lang = this.state.lang || 'es', I = window.I18N;
-    var tf = n => I ? I.food(n, lang) : n, tm = n => I ? I.meal(n, lang) : n;
-    var dd = (typeof window !== 'undefined' && window.__DATA) || {};
-    var nombre = (dd.header && dd.header.nombre) || 'Cliente';
-    var kcal = (dd.weekSummary && dd.weekSummary.kcal) || '';
-    var L = lang === 'en' ? { br: 'CASTILLO PRIVATE · MEAL PLAN', sub: 'Choose one option per meal · raw weights unless stated', kl: 'KCAL TARGET / DAY', op: 'OPTION' }
-      : { br: 'CASTILLO PRIVATE · PLAN DE ALIMENTACIÓN', sub: 'Elige una opción en cada comida · pesos en crudo salvo indicación', kl: 'KCAL OBJETIVO / DÍA', op: 'OPCIÓN' };
-    var doc = new Ctor({ unit: 'mm', format: 'a4' }), M = 14, W = 210, Hh = 297, y = M + 4;
-    doc.setTextColor(140); doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.text(L.br, M, y);
-    doc.setTextColor(17); doc.setFontSize(20); doc.text(nombre, M, y + 8);
-    doc.setTextColor(100); doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(L.sub, M, y + 13);
-    doc.setTextColor(17); doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text(String(kcal), W - M, y + 7, { align: 'right' });
-    doc.setTextColor(140); doc.setFontSize(7); doc.text(L.kl, W - M, y + 12, { align: 'right' });
-    y += 18; doc.setDrawColor(17); doc.setLineWidth(0.5); doc.line(M, y, W - M, y); y += 7;
-    DIET.forEach(m => {
-      if (y > Hh - 26) { doc.addPage(); y = M + 4; }
-      doc.setTextColor(17); doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.text(tm(m.n), M, y);
-      y += 1.5; doc.setDrawColor(180); doc.setLineWidth(0.3); doc.line(M, y, W - M, y); y += 5;
-      m.o.forEach((o, i) => {
-        var foods = F(o), kc = foods.reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
-        if (y > Hh - 16) { doc.addPage(); y = M + 4; }
-        doc.setTextColor(70); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.text(L.op + ' ' + (i + 1), M, y);
-        doc.setTextColor(160); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.text(kc + ' kcal', W - M, y, { align: 'right' }); y += 4.5;
-        foods.forEach(f => {
-          if (y > Hh - 12) { doc.addPage(); y = M + 4; }
-          doc.setTextColor(17); doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.text(String(f.q), M + 2, y);
-          doc.setTextColor(90); doc.setFont('helvetica', 'normal'); doc.text(tf(f.n), M + 24, y); y += 4.6;
-        });
-        y += 2.5;
-      });
-      y += 3;
-    });
-    return { doc: doc, nombre: nombre };
-  };
+  // Compartir: renderiza el MISMO diseño (3 columnas, 1 hoja) a imagen y lo mete en un PDF A4 -> menú compartir iOS
   shareDiet = async () => {
     try {
-      var built = this._buildDietPdf();
-      if (!built) { this.flash('Cargando… inténtalo de nuevo'); return; }
-      var blob = built.doc.output('blob');
+      if (!(window.jspdf && window.jspdf.jsPDF) || !window.html2canvas) { this.flash('Cargando… inténtalo de nuevo'); return; }
+      const built = this._dietDocHtml();
+      var old = document.getElementById('dietaShareFrame'); if (old) old.remove();
+      var f = document.createElement('iframe');
+      f.id = 'dietaShareFrame';
+      f.setAttribute('style', 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;background:#fff');
+      document.body.appendChild(f);
+      var fd = f.contentWindow.document; fd.open(); fd.write(built.doc); fd.close();
+      await new Promise(r => setTimeout(r, 550));
+      var canvas = await window.html2canvas(fd.body, { scale: 2, backgroundColor: '#ffffff', windowWidth: 794, width: 794 });
+      f.remove();
+      var img = canvas.toDataURL('image/jpeg', 0.92);
+      var jsPDF = window.jspdf.jsPDF, pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+      var pw = 210, ph = 297, ih = canvas.height * pw / canvas.width;
+      if (ih <= ph) { pdf.addImage(img, 'JPEG', 0, 0, pw, ih); }
+      else { var pos = 0; while (pos < ih) { pdf.addImage(img, 'JPEG', 0, -pos, pw, ih); pos += ph; if (pos < ih) pdf.addPage(); } }
+      var blob = pdf.output('blob');
       var fname = String(built.nombre || 'dieta').replace(/\s+/g, '_') + '.pdf';
       var file = new File([blob], fname, { type: 'application/pdf' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
