@@ -29,6 +29,10 @@
     try { localStorage.setItem(LS, JSON.stringify({ access_token: s.access_token, refresh_token: s.refresh_token, email: (s.user && s.user.email) || s.email, ts: Date.now() })); } catch (e) {}
   }
   function readSession() { try { return JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e) { return null; } }
+  // "recuérdame": guarda el acceso en ESTE móvil para que el Face ID entre solo aunque caduque la sesión
+  var CR = 'castillo_creds';
+  function saveCreds(email, pass) { try { localStorage.setItem(CR, btoa(unescape(encodeURIComponent(JSON.stringify({ e: email, p: pass }))))); } catch (e) {} }
+  function readCreds() { try { var v = localStorage.getItem(CR); if (!v) return null; return JSON.parse(decodeURIComponent(escape(atob(v)))); } catch (e) { return null; } }
 
   function friendly(msg) {
     if (/invalid login|credentials/i.test(msg)) return 'Correo o contraseña incorrectos';
@@ -75,31 +79,40 @@
     }, _ctx.token);
   }
 
+  // login con correo+contraseña (guarda sesión + credenciales para el Face ID)
+  function passwordLogin(email, pass) {
+    return api('/auth/v1/token?grant_type=password', {
+      method: 'POST', body: JSON.stringify({ email: String(email).trim(), password: pass })
+    }).then(function (s) {
+      saveSession(s); saveCreds(String(email).trim(), pass);
+      return loadData(s.access_token, (s.user && s.user.email) || email);
+    });
+  }
+
   var CastilloData = {
-    hasSession: function () { var s = readSession(); return !!(s && s.access_token && s.email); },
+    // el Face ID "funciona" si hay sesión guardada O credenciales recordadas en este móvil
+    hasSession: function () { var s = readSession(); return !!((s && s.access_token && s.email) || readCreds()); },
     loginAndLoad: function (email, pass) {
-      return api('/auth/v1/token?grant_type=password', {
-        method: 'POST', body: JSON.stringify({ email: String(email).trim(), password: pass })
-      }).then(function (s) {
-        saveSession(s);
-        return loadData(s.access_token, (s.user && s.user.email) || email);
-      }).catch(function (e) { e.message = friendly(e.message || ''); throw e; });
+      return passwordLogin(email, pass).catch(function (e) { e.message = friendly(e.message || ''); throw e; });
     },
-    // Face ID / reapertura: reusa sesión guardada (refresca token si hace falta)
+    // Face ID / reapertura: reusa la sesión; si caducó, reentra solo con las credenciales guardadas
     restoreSession: function () {
-      var s = readSession();
-      if (!s || !s.refresh_token) return Promise.reject(new Error('Accede con tu correo la primera vez'));
-      return api('/auth/v1/token?grant_type=refresh_token', {
-        method: 'POST', body: JSON.stringify({ refresh_token: s.refresh_token })
-      }).then(function (ns) {
-        saveSession(ns);
-        return loadData(ns.access_token, (ns.user && ns.user.email) || s.email);
-      }).catch(function () {
-        // si el refresh falla pero el access_token aún vale, intenta con él
-        return loadData(s.access_token, s.email);
-      });
+      var s = readSession(), creds = readCreds();
+      var fallback = function () { return creds ? passwordLogin(creds.e, creds.p) : Promise.reject(new Error('Accede con tu correo la primera vez')); };
+      if (s && s.refresh_token) {
+        return api('/auth/v1/token?grant_type=refresh_token', {
+          method: 'POST', body: JSON.stringify({ refresh_token: s.refresh_token })
+        }).then(function (ns) {
+          saveSession(ns);
+          return loadData(ns.access_token, (ns.user && ns.user.email) || s.email);
+        }).catch(function () {
+          // refresh caducado -> reentra con credenciales guardadas; si no, con el access_token viejo
+          return creds ? passwordLogin(creds.e, creds.p) : loadData(s.access_token, s.email);
+        });
+      }
+      return fallback();
     },
-    logout: function () { try { localStorage.removeItem(LS); } catch (e) {} window.__DATA = null; },
+    logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); } catch (e) {} window.__DATA = null; },
     registrarComida: registrarComida,
     // guarda el entreno de HOY que apunta el cliente en su app (mismo sitio que el CRM: entreno_registros)
     registrarEntreno: function (titulo, ejercicios, completo) {
