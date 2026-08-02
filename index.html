@@ -1289,8 +1289,8 @@ class Component extends DCLogic {
     try {
       const dS = DAYS.find(d => d.d === this.state.day) || DAYS[2] || DAYS[0];
       const list = (WK[dS.wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
-      const logs = this.state.logs || {};
-      const ejercicios = list.map(e => ({ nombre: e.n, y: e.y, objetivo: e.p, series: (logs[e.id] || []).slice(0, e.s).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && l.done) })) }));
+      const logs = this.state.logs || {}, swaps = this.state.swaps || {};
+      const ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, y: e.y, objetivo: e.p, series: (logs[e.id] || []).slice(0, e.s).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && l.done) })) }));
       const completo = ejercicios.length > 0 && ejercicios.every(ej => ej.series.length > 0 && ej.series.every(s => String(s.reps).trim() && String(s.peso).trim()));
       if (window.CastilloData && window.CastilloData.registrarEntreno) {
         window.CastilloData.registrarEntreno(dS.t || 'Entrenamiento', ejercicios, completo).then(() => {}, () => {});
