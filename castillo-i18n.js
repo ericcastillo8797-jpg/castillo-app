@@ -213,14 +213,21 @@
     return e[lang] || e.es || key;
   }
 
+  // normaliza: quita espacios raros (non-breaking  ), colapsa espacios, minúsculas
+  function nk(s) { return String(s == null ? '' : s).replace(/ /g, ' ').replace(/\s+/g, ' ').trim().toLowerCase(); }
   w.I18N = {
     // food(): si no está en el diccionario, devuelve el original tal cual
     food: function (name, lang) {
       if (!name) return name;
-      var e = FOOD[String(name).trim().toLowerCase()];
+      var e = FOOD[nk(name)];
       return e ? (e[lang] || e.es || name) : name;
     },
-    meal: function (name, lang) { return pick(MEAL, name, lang); },
+    meal: function (name, lang) {
+      if (!name) return name;
+      // busca por clave normalizada en MEAL (que está keyed por nombre en español)
+      var keys = Object.keys(MEAL); for (var i = 0; i < keys.length; i++) { if (nk(keys[i]) === nk(name)) return (lang === 'en' ? MEAL[keys[i]].en : MEAL[keys[i]].es) || name; }
+      return name;
+    },
     t: function (str, lang) { if (lang !== 'en') return str; return UI[str] != null ? UI[str] : str; },
     date: tdate
   };
