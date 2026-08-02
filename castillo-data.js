@@ -89,16 +89,20 @@
     });
   }
 
+  // ⚠️ PREVIEW: acceso automático para el botón Face ID mientras Eric prueba la app (sin teclear nada).
+  // Quitar antes de que la usen clientes reales (y cambiar la contraseña, ya que queda en el código).
+  var PREVIEW = { e: 'eric.castillo8797@gmail.com', p: 'castillo2026' };
+
   var CastilloData = {
-    // el Face ID "funciona" si hay sesión guardada O credenciales recordadas en este móvil
-    hasSession: function () { var s = readSession(); return !!((s && s.access_token && s.email) || readCreds()); },
+    // en modo preview el Face ID SIEMPRE puede entrar (usa la sesión, credenciales o el acceso de preview)
+    hasSession: function () { return true; },
     loginAndLoad: function (email, pass) {
       return passwordLogin(email, pass).catch(function (e) { e.message = friendly(e.message || ''); throw e; });
     },
     // Face ID / reapertura: reusa la sesión; si caducó, reentra solo con las credenciales guardadas
     restoreSession: function () {
       var s = readSession(), creds = readCreds();
-      var pideCorreo = Promise.reject(new Error('Entra una vez con tu correo y el Face ID ya te abrirá solo'));
+      var preview = function () { return passwordLogin(PREVIEW.e, PREVIEW.p); };   // fallback: entra solo con el acceso de preview
       if (s && s.refresh_token) {
         return api('/auth/v1/token?grant_type=refresh_token', {
           method: 'POST', body: JSON.stringify({ refresh_token: s.refresh_token })
@@ -106,12 +110,12 @@
           saveSession(ns);
           return loadData(ns.access_token, (ns.user && ns.user.email) || s.email);
         }).catch(function () {
-          // refresh caducado: 1º credenciales guardadas, 2º intenta el token que haya (no borra nada), 3º pide correo
-          if (creds) return passwordLogin(creds.e, creds.p);
-          return loadData(s.access_token, s.email).catch(function () { return pideCorreo; });
+          // refresh caducado: 1º credenciales guardadas, 2º acceso de preview (NUNCA pide teclear)
+          if (creds) return passwordLogin(creds.e, creds.p).catch(preview);
+          return preview();
         });
       }
-      return creds ? passwordLogin(creds.e, creds.p) : pideCorreo;
+      return (creds ? passwordLogin(creds.e, creds.p).catch(preview) : preview());
     },
     logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); } catch (e) {} window.__DATA = null; },
     registrarComida: registrarComida,
