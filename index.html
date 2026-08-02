@@ -7,9 +7,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=13"></script>
-<script src="./castillo-transform.js?v=13"></script>
-<script src="./castillo-data.js?v=13"></script>
+<script src="./castillo-i18n.js?v=14"></script>
+<script src="./castillo-transform.js?v=14"></script>
+<script src="./castillo-data.js?v=14"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1321,9 +1321,9 @@ class Component extends DCLogic {
       f.remove();
       var img = canvas.toDataURL('image/jpeg', 0.92);
       var jsPDF = window.jspdf.jsPDF, pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-      var pw = 210, ph = 297, ih = canvas.height * pw / canvas.width;
-      if (ih <= ph) { pdf.addImage(img, 'JPEG', 0, 0, pw, ih); }
-      else { var pos = 0; while (pos < ih) { pdf.addImage(img, 'JPEG', 0, -pos, pw, ih); pos += ph; if (pos < ih) pdf.addPage(); } }
+      var pw = 210, ph = 297, iw = pw, ih = canvas.height * pw / canvas.width;
+      if (ih > ph) { ih = ph; iw = canvas.width * ph / canvas.height; }   // encaja SIEMPRE en 1 hoja
+      pdf.addImage(img, 'JPEG', (pw - iw) / 2, 0, iw, ih);
       var blob = pdf.output('blob');
       var fname = String(built.nombre || 'dieta').replace(/\s+/g, '_') + '.pdf';
       var file = new File([blob], fname, { type: 'application/pdf' });
