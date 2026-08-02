@@ -116,9 +116,15 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
   <sc-if value="{{ isDiet }}" hint-placeholder-val="{{ false }}">
   <div data-screen-label="Dieta" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 0 132px">
-    <div style="padding:0 20px">
-      <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">Dieta</div>
-      <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:5px">{{ dietSub }}</div>
+    <div style="padding:0 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+      <div style="min-width:0">
+        <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">{{ L.dieta }}</div>
+        <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:5px">{{ dietSub }}</div>
+      </div>
+      <div onClick="{{ printDiet }}" style="flex:none;display:flex;align-items:center;gap:6px;margin-top:6px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:100px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.95)">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.5v7M4 6l3 3 3-3"></path><path d="M2.5 10.5v1.4a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-1.4"></path></svg>
+        {{ L.descargarDieta }}
+      </div>
     </div>
     <div style="display:flex;gap:8px;padding:20px 20px 6px;overflow-x:auto">
       <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
@@ -1245,6 +1251,34 @@ class Component extends DCLogic {
     this.later(this.closeSheet, 430);
   };
 
+  printDiet = () => {
+    try {
+      const lang = this.state.lang || 'es';
+      const I = window.I18N;
+      const tf = n => I ? I.food(n, lang) : n, tm = n => I ? I.meal(n, lang) : n;
+      const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const dd = (typeof window !== 'undefined' && window.__DATA) || {};
+      const nombre = (dd.header && dd.header.nombre) || '';
+      const kcal = (dd.weekSummary && dd.weekSummary.kcal) || '';
+      const L = lang === 'en' ? { br: 'Castillo Private · Meal plan', sub: 'Choose one option per meal · raw weights unless stated', kl: 'kcal target / day', op: 'Option', ft: 'Castillo Private — personalized plan. Check with your coach before changing it.' }
+        : { br: 'Castillo Private · Plan de alimentación', sub: 'Elige una opción en cada comida · pesos en crudo salvo indicación', kl: 'kcal objetivo / día', op: 'Opción', ft: 'Castillo Private — plan personalizado. Consulta con tu entrenador antes de modificarlo.' };
+      const meals = DIET.map(m => {
+        const opts = m.o.map((o, i) => {
+          const foods = F(o), kc = foods.reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
+          const items = foods.map(f => '<div class="food"><span class="fq">' + esc(f.q) + '</span> <span class="fn">' + esc(tf(f.n)) + '</span></div>').join('');
+          return '<div class="opt"><div class="opt-h"><span class="opt-n">' + L.op + ' ' + (i + 1) + '</span><span class="opt-kc">' + kc + ' kcal</span></div>' + items + '</div>';
+        }).join('');
+        return '<section class="meal"><h2 class="meal-h">' + esc(tm(m.n)) + '</h2><div class="opts">' + opts + '</div></section>';
+      }).join('');
+      const css = '@page{size:A4;margin:11mm 12mm 9mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#111;font-size:10px;line-height:1.28;padding:16px}.hd{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-end}.hd .brand{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#888;font-weight:700}.hd h1{font-size:22px;font-weight:700;margin-top:2px}.hd .sub{font-size:10px;color:#666;margin-top:2px}.hd .r{text-align:right}.hd .kcal{font-size:21px;font-weight:800}.hd .kl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#888}.meal{margin-bottom:11px;break-inside:avoid}.meal-h{font-size:14px;font-weight:700;border-bottom:1px solid #222;padding-bottom:2px;margin-bottom:6px}.opts{column-count:3;column-gap:16px}.opt{break-inside:avoid;margin-bottom:8px}.opt-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dotted #ccc;padding-bottom:1.5px;margin-bottom:2.5px}.opt-n{font-size:9px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:.04em}.opt-kc{font-size:8.5px;color:#aaa;font-weight:600}.food{font-size:10px;padding:1px 0}.food .fq{font-weight:700;color:#111}.food .fn{color:#555}.ft{margin-top:10px;border-top:1px solid #ddd;padding-top:5px;font-size:8px;color:#999;text-align:center}';
+      const doc = '<!doctype html><html lang="' + lang + '"><head><meta charset="utf-8"><title>' + esc(nombre) + ' — ' + L.br + '</title><style>' + css + '</style></head><body><div class="hd"><div class="l"><div class="brand">' + L.br + '</div><h1>' + esc(nombre) + '</h1><div class="sub">' + L.sub + '</div></div><div class="r"><div class="kcal">' + kcal + '</div><div class="kl">' + L.kl + '</div></div></div>' + meals + '<div class="ft">' + L.ft + '</div></body></html>';
+      const w = window.open('', '_blank');
+      if (!w) { this.flash(lang === 'en' ? 'Allow pop-ups to download the diet' : 'Permite las ventanas emergentes para descargar la dieta'); return; }
+      w.document.write(doc); w.document.close(); w.focus();
+      this.later(() => { try { w.print(); } catch (e) {} }, 400);
+    } catch (e) { this.flash('No se pudo generar la dieta'); }
+  };
+
   startWorkout = () => {
     this.setState({ wOpen: true, wIn: false, tab: 'home' });
     requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ wIn: true })));
@@ -1698,7 +1732,7 @@ class Component extends DCLogic {
         tareasHoy: T('Tareas de hoy'), resumenSemanal: T('Resumen semanal'),
         pautaAlim: T('Pauta alimenticia'), cumplGlobal: T('Cumplimiento global'),
         bibliotecaTecnica: T('Biblioteca de técnica'),
-        finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'),
+        finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
         registroSemanal: T('Registro semanal'), regCadaSemana: T('Registrado cada semana en su check-in.'),
@@ -1712,7 +1746,7 @@ class Component extends DCLogic {
         videoTecnica: T('Vídeo de técnica'), noPuedoEjercicio: T('No puedo hacer este ejercicio'),
         volverOriginal: T('Volver al ejercicio original'), siNoMaterial: T('Si no dispone del material')
       },
-      pickEs: this.setLang('es'), pickEn: this.setLang('en'),
+      pickEs: this.setLang('es'), pickEn: this.setLang('en'), printDiet: this.printDiet,
       langEsBg: !isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEsFg: !isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEsBd: !isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
       langEnBg: isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEnFg: isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEnBd: isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
       isHome: st.tab === 'home', isDiet: st.tab === 'diet', isTrain: st.tab === 'train', isEvo: st.tab === 'evo',
