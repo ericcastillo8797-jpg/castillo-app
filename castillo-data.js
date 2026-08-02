@@ -98,7 +98,7 @@
     // Face ID / reapertura: reusa la sesión; si caducó, reentra solo con las credenciales guardadas
     restoreSession: function () {
       var s = readSession(), creds = readCreds();
-      var necesitaCorreo = function () { try { localStorage.removeItem(LS); } catch (e) {} return Promise.reject(new Error('Entra una vez con tu correo y el Face ID ya te abrirá solo')); };
+      var pideCorreo = Promise.reject(new Error('Entra una vez con tu correo y el Face ID ya te abrirá solo'));
       if (s && s.refresh_token) {
         return api('/auth/v1/token?grant_type=refresh_token', {
           method: 'POST', body: JSON.stringify({ refresh_token: s.refresh_token })
@@ -106,11 +106,12 @@
           saveSession(ns);
           return loadData(ns.access_token, (ns.user && ns.user.email) || s.email);
         }).catch(function () {
-          // refresh caducado -> reentra con credenciales guardadas; si no hay, pide correo (NO intenta el token viejo, que se quedaba colgado)
-          return creds ? passwordLogin(creds.e, creds.p) : necesitaCorreo();
+          // refresh caducado: 1º credenciales guardadas, 2º intenta el token que haya (no borra nada), 3º pide correo
+          if (creds) return passwordLogin(creds.e, creds.p);
+          return loadData(s.access_token, s.email).catch(function () { return pideCorreo; });
         });
       }
-      return creds ? passwordLogin(creds.e, creds.p) : necesitaCorreo();
+      return creds ? passwordLogin(creds.e, creds.p) : pideCorreo;
     },
     logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); } catch (e) {} window.__DATA = null; },
     registrarComida: registrarComida,
