@@ -119,10 +119,24 @@
     },
     logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); } catch (e) {} window.__DATA = null; },
     registrarComida: registrarComida,
+    // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
+    reload: function () {
+      if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+      return loadData(_ctx.token, _ctx.email);
+    },
     // guarda el entreno de HOY que apunta el cliente en su app (mismo sitio que el CRM: entreno_registros)
     registrarEntreno: function (titulo, ejercicios, completo) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, titulo: titulo || 'Entrenamiento', ejercicios: ejercicios || [], estado: completo ? 'completado' : 'en_progreso', registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
+        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+      }, _ctx.token);
+    },
+    // marca/desmarca el cardio de un día (se guarda en la MISMA fila diaria de entreno_registros, columna cardio)
+    registrarCardio: function (fecha, done) {
+      if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+      var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+      var row = { cliente_email: _ctx.email, fecha: f, cardio: !!done, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);

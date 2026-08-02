@@ -105,6 +105,15 @@
       slot.items.push({ type: e.type, title: e.title, done: !!e.completed, dt: dt });
     });
 
+    // ---------- REGISTROS DEL CLIENTE por fecha (lo que él marca en la app: entreno / cardio) ----------
+    var regByDate = {};
+    regList.forEach(function (r) {
+      var k = (r.fecha || '').slice(0, 10); if (!k) return;
+      var o = regByDate[k] || (regByDate[k] = { workout: false, cardio: false });
+      if (r.estado === 'completado' || (Array.isArray(r.ejercicios) && r.ejercicios.length)) o.workout = true;
+      if (r.cardio) o.cardio = true;
+    });
+
     // ---------- DAYS / WEEKS (semana actual + navegación) ----------
     var mon = mondayOf(now);
     var todayKey = now.getFullYear() + '-' + d2(now.getMonth() + 1) + '-' + d2(now.getDate());
@@ -123,6 +132,10 @@
         var cardio = sItems.filter(function (x) { return x.type === 'cardio'; })[0];
         var statsItem = sItems.filter(function (x) { return x.type === 'bodyStats'; })[0];
         var photoItem = sItems.filter(function (x) { return x.type === 'bodyPhoto'; })[0];
+        // lo que el cliente ya registró ese día cuenta como hecho (aunque el entrenador no lo haya marcado)
+        var regDay = regByDate[key] || {};
+        if (wkItem && regDay.workout) wkItem.done = true;
+        if (cardio && regDay.cardio) cardio.done = true;
         var isToday = key === todayKey;
         var wkKey = wkItem ? slug(wkItem.title) : 'descanso';
         var title = wkItem ? wkItem.title : (cardio ? cardio.title : 'Descanso');
@@ -345,10 +358,11 @@
     var todayItems = (byDay[todayKey] && byDay[todayKey].items) || [];
     function hasT(type) { return todayItems.some(function (x) { return x.type === type; }); }
     function doneT(type) { return todayItems.some(function (x) { return x.type === type && x.done; }); }
-    var entrenoHecho = !!(registro && registro.estado === 'completado') || doneT('workout');
+    var regToday = regByDate[todayKey] || {};
+    var entrenoHecho = regToday.workout || doneT('workout');
     var todayTasks = [];
     if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') });
-    if (hasT('cardio')) todayTasks.push({ key: 'cardio', label: 'Registrar cardio', sub: (todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}).title || 'Caminar', done: doneT('cardio') });
+    if (hasT('cardio')) todayTasks.push({ key: 'cardio', label: 'Registrar cardio', sub: (todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}).title || 'Caminar', done: doneT('cardio') || !!regToday.cardio });
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Registrar entreno', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     todayTasks.push({ key: 'nutricion', label: 'Registrar pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.length > 0 && DIET.every(function (m) { return mealsSel[m.id] != null; }) });
     var trainDoneN = todayTasks.filter(function (t) { return t.done; }).length;
@@ -356,7 +370,18 @@
     // cumplimiento semanal (planificado vs completado en la semana actual)
     var wkEnd = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7);
     var weekEv = events.filter(function (e) { if (e.removed) return false; var dt = new Date(ms(e.date)); return dt >= mon && dt < wkEnd; });
-    function compl(types) { var pl = weekEv.filter(function (e) { return types.indexOf(e.type) >= 0; }); var dn = pl.filter(function (e) { return e.completed; }); return { done: dn.length, total: pl.length, pct: pl.length ? Math.round(dn.length / pl.length * 100) : 0 }; }
+    function compl(types) {
+      var pl = weekEv.filter(function (e) { return types.indexOf(e.type) >= 0; });
+      var dn = pl.filter(function (e) {
+        if (e.completed) return true;
+        var dt = new Date(ms(e.date)); var k = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
+        var reg = regByDate[k] || {};
+        if (types.indexOf('workout') >= 0 && reg.workout) return true;
+        if (types.indexOf('cardio') >= 0 && reg.cardio) return true;
+        return false;
+      });
+      return { done: dn.length, total: pl.length, pct: pl.length ? Math.round(dn.length / pl.length * 100) : 0 };
+    }
     var cEntreno = compl(['workout']), cCardio = compl(['cardio']), cMetricas = compl(['bodyStats', 'bodyPhoto']);
     var totPl = cEntreno.total + cCardio.total + cMetricas.total, totDn = cEntreno.done + cCardio.done + cMetricas.done;
     var weekSummary = {
