@@ -51,14 +51,16 @@
     var pReg = api('/rest/v1/entreno_registros?select=*&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
       .catch(function () { return []; });
     var hoy = new Date(); var hoyStr = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
-    var pCom = api('/rest/v1/comida_registros?select=*&cliente_email=ilike.' + e + '&fecha=eq.' + hoyStr, {}, token)
+    // TODOS los registros de comida (para el cumplimiento SEMANAL de nutrición, no solo hoy)
+    var pCom = api('/rest/v1/comida_registros?select=*&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
       .catch(function () { return []; });
     return Promise.all([pRow, pProg, pEx, pReg, pCom]).then(function (res) {
       var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
-      var comReg = (res[4] || [])[0] || null;
+      var comAll = res[4] || [];
+      var comReg = comAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
       if (!rows.length) throw new Error('No encontramos tu ficha. Avisa a Alex.');
       if (!window.buildAppData) throw new Error('Falta el transformador de datos');
-      var data = window.buildAppData(rows[0], programs, ejercicios, registros);
+      var data = window.buildAppData(rows[0], programs, ejercicios, registros, comAll);
       data.mealsReg = (comReg && comReg.comidas) || {};   // { meal_id: opcion } registradas HOY (bloqueadas)
       _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
       window.__DATA = data;

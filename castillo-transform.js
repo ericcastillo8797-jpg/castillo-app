@@ -30,9 +30,13 @@
     return ' g';
   }
 
-  function buildAppData(row, programs, ejercicios, registros) {
+  function buildAppData(row, programs, ejercicios, registros, comidaRegs) {
     // 4º arg puede ser un solo registro (compat) o el histórico completo (array)
     var regList = Array.isArray(registros) ? registros : (registros ? [registros] : []);
+    // 5º arg: histórico de comida_registros (para el cumplimiento SEMANAL de nutrición)
+    var comList = Array.isArray(comidaRegs) ? comidaRegs : (comidaRegs ? [comidaRegs] : []);
+    var comByDate = {};
+    comList.forEach(function (cr) { var k = (cr.fecha || '').slice(0, 10); if (k) comByDate[k] = cr.comidas || {}; });
     row = row || {};
     var now = new Date();
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
@@ -364,7 +368,8 @@
     if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') });
     if (hasT('cardio')) todayTasks.push({ key: 'cardio', label: 'Registrar cardio', sub: (todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}).title || 'Caminar', done: doneT('cardio') || !!regToday.cardio });
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Registrar entreno', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
-    todayTasks.push({ key: 'nutricion', label: 'Registrar pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.length > 0 && DIET.every(function (m) { return mealsSel[m.id] != null; }) });
+    var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
+    todayTasks.push({ key: 'nutricion', label: 'Registrar pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.length > 0 && DIET.every(function (m) { return comHoy[m.id] != null; }) });
     var trainDoneN = todayTasks.filter(function (t) { return t.done; }).length;
     var planHoyPct = todayTasks.length ? Math.round(trainDoneN / todayTasks.length * 100) : 0;
     // cumplimiento semanal (planificado vs completado en la semana actual)
@@ -383,9 +388,20 @@
       return { done: dn.length, total: pl.length, pct: pl.length ? Math.round(dn.length / pl.length * 100) : 0 };
     }
     var cEntreno = compl(['workout']), cCardio = compl(['cardio']), cMetricas = compl(['bodyStats', 'bodyPhoto']);
-    var totPl = cEntreno.total + cCardio.total + cMetricas.total, totDn = cEntreno.done + cCardio.done + cMetricas.done;
+    // nutrición semanal: días de ESTA semana con TODAS las comidas registradas ÷ 7 (cumplimiento semanal, no 100% por día)
+    var nutDone = 0;
+    if (DIET.length) {
+      for (var _di = 0; _di < 7; _di++) {
+        var _dd2 = new Date(mon); _dd2.setDate(mon.getDate() + _di);
+        var _dk = _dd2.getFullYear() + '-' + d2(_dd2.getMonth() + 1) + '-' + d2(_dd2.getDate());
+        var _com = comByDate[_dk] || {};
+        if (DIET.every(function (m) { return _com[m.id] != null; })) nutDone++;
+      }
+    }
+    var cNutricion = { done: nutDone, total: DIET.length ? 7 : 0, pct: DIET.length ? Math.round(nutDone / 7 * 100) : 0 };
+    var totPl = cEntreno.total + cCardio.total + cMetricas.total + cNutricion.total, totDn = cEntreno.done + cCardio.done + cMetricas.done + cNutricion.done;
     var weekSummary = {
-      entrenos: cEntreno, cardio: cCardio, metricas: cMetricas,
+      entrenos: cEntreno, cardio: cCardio, metricas: cMetricas, nutricion: cNutricion,
       global: { done: totDn, total: totPl, pct: totPl ? Math.round(totDn / totPl * 100) : 0 },
       kcal: (plan && plan.valuesTarget && plan.valuesTarget.energy) ? Math.round(plan.valuesTarget.energy) : 0
     };
