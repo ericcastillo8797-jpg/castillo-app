@@ -389,12 +389,21 @@
       global: { done: totDn, total: totPl, pct: totPl ? Math.round(totDn / totPl * 100) : 0 },
       kcal: (plan && plan.valuesTarget && plan.valuesTarget.energy) ? Math.round(plan.valuesTarget.energy) : 0
     };
+    // macros objetivo del plan de nutrición (para el resumen de la pantalla de inicio)
+    var _vt = (plan && plan.valuesTarget) || {};
+    var macros = {
+      kcal: _vt.energy != null ? Math.round(_vt.energy) : 0,
+      protein: _vt.protein != null ? Math.round(_vt.protein) : 0,
+      carbs: _vt.carbs != null ? Math.round(_vt.carbs) : 0,
+      fat: _vt.fat != null ? Math.round(_vt.fat) : 0,
+      plan: (plan && plan.name) || ''
+    };
 
     return {
       DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID,
       WEIGHTS: WEIGHTS, chartLabels: chartLabels, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header, logsInit: logsInit,
-      todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary,
+      todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary, macros: macros,
       WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG
     };
   }
