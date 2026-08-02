@@ -7,9 +7,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=19"></script>
-<script src="./castillo-transform.js?v=19"></script>
-<script src="./castillo-data.js?v=19"></script>
+<script src="./castillo-i18n.js?v=20"></script>
+<script src="./castillo-transform.js?v=20"></script>
+<script src="./castillo-data.js?v=20"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1279,6 +1279,12 @@ class Component extends DCLogic {
     if (this._sc) this._sc.scrollTop = 0;
     if (t === 'evo') this.playEvo();
   };
+  // abre la dieta; por defecto en el día de hoy (la tira de días permite ir a días pasados a rellenar)
+  openDiet = fecha => () => {
+    const t = DAYS.find(d => d.today);
+    this.setState({ tab: 'diet', day: t ? t.d : this.state.day });
+    if (this._sc) this._sc.scrollTop = 0;
+  };
   shiftWeek = dir => () => {
     const weeks = (WEEKS && WEEKS.length) ? WEEKS : [{ days: DAYS }];
     this.setState(s => {
@@ -1344,11 +1350,18 @@ class Component extends DCLogic {
   openSheet = s => { this.setState({ sheet: s, sheetIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ sheetIn: true }))); };
   closeSheet = () => { this.setState({ sheetIn: false }); this.later(() => this.setState({ sheet: null }), 480); };
   pickMeal = (id, i) => () => {
-    if (this.state.mealsLocked[id]) return;   // ya registrada hoy -> no se puede cambiar
-    this.setState(s => ({ meals: Object.assign({}, s.meals, { [id]: i }), mealsLocked: Object.assign({}, s.mealsLocked, { [id]: true }) }));
+    const dd = DAYS.find(d => d.d === this.state.day) || DAYS.find(d => d.today) || {};
+    const fecha = dd.fecha;
+    // no se puede rellenar un día futuro
+    const tIdx = DAYS.findIndex(d => d.today), sIdx = DAYS.findIndex(d => d.d === this.state.day);
+    if (tIdx >= 0 && sIdx > tIdx) return;
+    const byDate = (window.__DATA && window.__DATA.mealsByDate) || {};
+    const day = byDate[fecha] || {};
+    if (day[id] != null) return;   // ya registrada ese día -> no se puede modificar
     if (window.CastilloData && window.CastilloData.registrarComida) {
-      window.CastilloData.registrarComida(id, i).then(() => { this.flash('Comida registrada'); this.refreshData(); }, () => {});
+      window.CastilloData.registrarComida(id, i, fecha).then(() => { this.flash('Comida registrada'); this.refreshData(); }, () => {});
     }
+    this.setState({});   // refresco inmediato (registrarComida ya actualizó __DATA.mealsByDate)
     this.later(this.closeSheet, 430);
   };
 
@@ -1575,7 +1588,7 @@ class Component extends DCLogic {
     // --- Plan de hoy (tareas + progreso) + Resumen semanal ---
     const _dd = (typeof window !== 'undefined' && window.__DATA) || {};
     const _todayFecha = (DAYS.find(d => d.today) || {}).fecha || 'hoy';
-    const _acts = { entreno: this.startWorkout, nutricion: this.go('diet'), metricas: this.openCheckin, cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
+    const _acts = { entreno: this.startWorkout, nutricion: this.openDiet(_todayFecha), metricas: this.openCheckin, cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
     const planTasks = (_dd.todayTasks || []).map(tk => {
       const marked = st.marks[_todayFecha + '|' + tk.key];
       const done = tk.done || !!marked;
@@ -1614,8 +1627,12 @@ class Component extends DCLogic {
     const dietSub = _hdr ? (_hdr.nMeals + ' comidas · varias opciones cada una') : 'Comidas · varias opciones cada una';
     const evoCounts = _hdr ? (_hdr.nPhotos + ' fotos · ' + _hdr.nMetrics + ' métricas') : 'Fotos · métricas';
 
+    // día seleccionado en la pantalla de dieta (la tira de días fija st.day) y comidas REGISTRADAS ese día
+    const _selDayObj = DAYS.find(d => d.d === st.day) || DAYS.find(d => d.today) || {};
+    const _selFecha = _selDayObj.fecha || _todayFecha;
+    const _selMeals = ((_dd.mealsByDate) || {})[_selFecha] || {};   // { meal_id: opcion } registradas ese día
     const mealRows = DIET.map(m => {
-      const i = meals[m.id], has = i !== undefined;
+      const i = _selMeals[m.id], has = i != null;
       return {
         h: m.h, n: tMeal(m.n), done: has, pending: !has,
         sub: has ? foodSub(m, i) : T('Sin registrar — toque para elegir'),
@@ -1625,9 +1642,9 @@ class Component extends DCLogic {
 
     const sh = st.sheet || {};
     const sm = sh.k === 'meal' ? DIET.find(m => m.id === sh.id) : null;
-    const smLocked = sm ? !!st.mealsLocked[sm.id] : false;
+    const smLocked = sm ? (_selMeals[sm.id] != null) : false;
     const mealSheet = sm ? { h: sm.h, n: tMeal(sm.n), locked: smLocked, lockNote: smLocked ? T('Ya registrado · no editable') : T('Elija una opción'), opts: sm.o.map((o, i) => {
-      const sel = meals[sm.id] === i;
+      const sel = _selMeals[sm.id] === i;
       const foods = F(o).map(f => ({ n: tFood(f.n), q: f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '' }));
       const kcalTotal = F(o).reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
       const dim = smLocked && !sel;   // si está bloqueada, atenúa las no elegidas
@@ -1799,20 +1816,23 @@ class Component extends DCLogic {
     const _sIdx = DAYS.findIndex(d => d.d === st.day);
     const dietToday = _tIdx >= 0 && _sIdx === _tIdx;
     const dietPast = _tIdx >= 0 && _sIdx >= 0 && _sIdx < _tIdx;
-    const dietRows = DIET.map((m, ix) => {
-      if (dietToday) {
-        const i = meals[m.id], has = i !== undefined;
-        return { n: tMeal(m.n), done: has, pending: !has, locked: false, cursor: 'pointer', fg: 'inherit',
-          sub: has ? foodSub(m, i) : T('Sin registrar — toque para elegir'),
-          open: () => this.openSheet({ k: 'meal', id: m.id }) };
+    const dietFuture = _tIdx >= 0 && _sIdx > _tIdx;
+    // hoy y días pasados: lo YA registrado se ve y queda bloqueado; lo vacío se puede rellenar. Futuro: bloqueado.
+    const dietRows = DIET.map((m) => {
+      const reg = _selMeals[m.id];               // opción registrada ese día (o undefined)
+      const has = reg != null;
+      if (has) {
+        return { n: tMeal(m.n), done: true, pending: false, locked: true, cursor: 'default', fg: 'inherit',
+          sub: foodSub(m, reg), open: null };
       }
-      if (dietPast) {
-        const i = (ix * 2 + st.day) % 7;
-        return { n: tMeal(m.n), done: false, pending: false, locked: true, cursor: 'default', fg: 'inherit',
-          sub: foodSub(m, i), open: null };
+      if (dietFuture) {
+        return { n: tMeal(m.n), done: false, pending: false, locked: true, cursor: 'default', fg: A + '.5)',
+          sub: T('Se abre ese día'), open: null };
       }
-      return { n: tMeal(m.n), done: false, pending: false, locked: true, cursor: 'default', fg: A + '.5)',
-        sub: T('Se abre ese día'), open: null };
+      // hoy o día pasado sin registrar -> se puede rellenar
+      return { n: tMeal(m.n), done: false, pending: true, locked: false, cursor: 'pointer', fg: 'inherit',
+        sub: T('Sin registrar — toque para elegir'),
+        open: () => this.openSheet({ k: 'meal', id: m.id }) };
     });
 
     const xe = sh.k === 'exh' ? sh.e : null;
@@ -1951,9 +1971,10 @@ class Component extends DCLogic {
       isMetSheet: sh.k === 'met', metSheet,
       isVarSheet: sh.k === 'var', varSheet,
       dietRows,
-      dietState: dietToday ? T('Hoy · editable') : (dietPast ? T('Registro cerrado') : T('Programada')),
-      dietNote: dietToday ? T('Marque cada comida con la opción que ha tomado.')
-        : (dietPast ? T('Lo registrado en días anteriores no puede modificarse.') : T('Podrá registrarla el mismo día.')),
+      dietState: dietFuture ? T('Programada') : (dietToday ? T('Hoy · editable') : T('Editable')),
+      dietNote: dietFuture ? T('Podrá registrarla ese día.')
+        : (dietToday ? T('Marque cada comida con la opción que ha tomado.')
+          : T('Puede rellenar lo que quedó sin marcar; lo ya registrado no se puede cambiar.')),
       isExhSheet: sh.k === 'exh', exhSheet,
       isConf: st.tab === 'conf', goConf: this.go('conf'), cConf: tabColor('conf'),
       isDark: theme === 'dark',

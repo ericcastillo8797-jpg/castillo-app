@@ -69,13 +69,17 @@
   }
 
   var _ctx = { token: null, email: null, hoy: null };
-  // registra (bloquea) una comida de HOY: mergea meal_id->opcion en comida_registros
-  function registrarComida(mealId, opcion) {
+  // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
+  function registrarComida(mealId, opcion, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
-    var cur = (window.__DATA && window.__DATA.mealsReg) || {};
-    var comidas = Object.assign({}, cur); comidas[mealId] = opcion;
-    if (window.__DATA) window.__DATA.mealsReg = comidas;
-    var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, comidas: comidas, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+    var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+    var byDate = (window.__DATA && window.__DATA.mealsByDate) || {};
+    var comidas = Object.assign({}, byDate[f] || {}); comidas[mealId] = opcion;
+    if (window.__DATA) {
+      window.__DATA.mealsByDate = Object.assign({}, byDate, { [f]: comidas });
+      if (f === _ctx.hoy) window.__DATA.mealsReg = comidas;   // compat pantalla de hoy
+    }
+    var row = { cliente_email: _ctx.email, fecha: f, comidas: comidas, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
     return api('/rest/v1/comida_registros?on_conflict=cliente_email,fecha', {
       method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
     }, _ctx.token);

@@ -420,6 +420,7 @@
       WEIGHTS: WEIGHTS, chartLabels: chartLabels, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header, logsInit: logsInit,
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary, macros: macros,
+      mealsByDate: comByDate,
       WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG
     };
   }
