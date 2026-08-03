@@ -7,9 +7,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=21"></script>
-<script src="./castillo-transform.js?v=21"></script>
-<script src="./castillo-data.js?v=21"></script>
+<script src="./castillo-i18n.js?v=22"></script>
+<script src="./castillo-transform.js?v=22"></script>
+<script src="./castillo-data.js?v=22"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1251,6 +1251,7 @@ class Component extends DCLogic {
       patch.mealsLocked = lk;
     }
     if (d && d.logsInit && Object.keys(d.logsInit).length) patch.logs = d.logsInit;
+    if (d && d.checkinHoy && Object.keys(d.checkinHoy).length) patch.ck = Object.assign({}, this.state.ck, d.checkinHoy);   // prerellena el check-in de hoy
     var today = (d && d.DAYS || []).filter(function (x) { return x.today; })[0];
     if (today) patch.day = today.d;
     if (d && typeof d.curWeekIdx === 'number') patch.weekIdx = d.curWeekIdx;
@@ -1334,6 +1335,7 @@ class Component extends DCLogic {
         const lk = Object.assign({}, this.state.mealsLocked); Object.keys(d.mealsReg).forEach(k => { lk[k] = true; }); patch.mealsLocked = lk;
       }
       if (d && d.logsInit && Object.keys(d.logsInit).length) patch.logs = Object.assign({}, this.state.logs, d.logsInit);
+      if (d && d.checkinHoy && Object.keys(d.checkinHoy).length) patch.ck = Object.assign({}, this.state.ck, d.checkinHoy);
       this.setState(patch);
     }, () => {});
   };
@@ -1526,7 +1528,15 @@ class Component extends DCLogic {
 
   openCheckin = () => this.openSheet({ k: 'ck' });
   tapPhoto = id => () => this.setState(s => ({ ckPhotos: Object.assign({}, s.ckPhotos, { [id]: !s.ckPhotos[id] }) }));
-  submitCheckin = () => { this.closeSheet(); this.flash('Check-in enviado · semana 30'); };
+  submitCheckin = () => {
+    const src = this.state.ck || {}, vals = {};
+    Object.keys(src).forEach(k => { if (src[k] != null && String(src[k]).trim() !== '') vals[k] = src[k]; });
+    if (!Object.keys(vals).length) { this.flash('Escribe al menos un dato'); return; }
+    this.closeSheet();
+    if (window.CastilloData && window.CastilloData.registrarCheckin) {
+      window.CastilloData.registrarCheckin(vals).then(() => { this.flash('Check-in guardado'); this.refreshData(); }, () => this.flash('No se pudo guardar'));
+    } else { this.flash('Check-in guardado'); }
+  };
 
   renderVals() {
     const st = this.state, stage = this.stage, logs = st.logs, meals = st.meals;

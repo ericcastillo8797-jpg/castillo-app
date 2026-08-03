@@ -54,14 +54,19 @@
     // TODOS los registros de comida (para el cumplimiento SEMANAL de nutrición, no solo hoy)
     var pCom = api('/rest/v1/comida_registros?select=*&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
       .catch(function () { return []; });
-    return Promise.all([pRow, pProg, pEx, pReg, pCom]).then(function (res) {
+    // check-ins del cliente (peso/medidas que apunta él en la app)
+    var pChk = api('/rest/v1/checkin_registros?select=*&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
+      .catch(function () { return []; });
+    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk]).then(function (res) {
       var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
-      var comAll = res[4] || [];
+      var comAll = res[4] || [], chkAll = res[5] || [];
       var comReg = comAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
       if (!rows.length) throw new Error('No encontramos tu ficha. Avisa a Alex.');
       if (!window.buildAppData) throw new Error('Falta el transformador de datos');
-      var data = window.buildAppData(rows[0], programs, ejercicios, registros, comAll);
+      var data = window.buildAppData(rows[0], programs, ejercicios, registros, comAll, chkAll);
       data.mealsReg = (comReg && comReg.comidas) || {};   // { meal_id: opcion } registradas HOY (bloqueadas)
+      var chkHoy = chkAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
+      data.checkinHoy = (chkHoy && chkHoy.valores) || {};   // valores ya registrados hoy (para prerellenar)
       _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
       window.__DATA = data;
       return data;
@@ -131,6 +136,15 @@
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, titulo: titulo || 'Entrenamiento', ejercicios: ejercicios || [], estado: completo ? 'completado' : 'en_progreso', registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
+        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+      }, _ctx.token);
+    },
+    // guarda el check-in de HOY (peso, medidas...) que apunta el cliente
+    registrarCheckin: function (valores) {
+      if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, valores: valores || {}, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      if (window.__DATA) window.__DATA.checkinHoy = valores || {};
+      return api('/rest/v1/checkin_registros?on_conflict=cliente_email,fecha', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);
     },

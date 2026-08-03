@@ -30,13 +30,17 @@
     return ' g';
   }
 
-  function buildAppData(row, programs, ejercicios, registros, comidaRegs) {
+  function buildAppData(row, programs, ejercicios, registros, comidaRegs, checkinRegs) {
     // 4º arg puede ser un solo registro (compat) o el histórico completo (array)
     var regList = Array.isArray(registros) ? registros : (registros ? [registros] : []);
     // 5º arg: histórico de comida_registros (para el cumplimiento SEMANAL de nutrición)
     var comList = Array.isArray(comidaRegs) ? comidaRegs : (comidaRegs ? [comidaRegs] : []);
     var comByDate = {};
     comList.forEach(function (cr) { var k = (cr.fecha || '').slice(0, 10); if (k) comByDate[k] = cr.comidas || {}; });
+    // 6º arg: check-ins del cliente (peso/medidas) -> key -> [{fecha,val}] ordenado
+    var chkList = (Array.isArray(checkinRegs) ? checkinRegs : []).filter(function (c) { return c.fecha; }).slice().sort(function (a, b) { return (a.fecha < b.fecha ? -1 : 1); });
+    var chkByKey = {};
+    chkList.forEach(function (c) { var v = c.valores || {}; Object.keys(v).forEach(function (k) { if (v[k] != null && v[k] !== '') { (chkByKey[k] || (chkByKey[k] = [])).push({ fecha: (c.fecha || '').slice(0, 10), val: v[k] }); } }); });
     row = row || {};
     var now = new Date();
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
@@ -272,6 +276,29 @@
     var chartLabels = WDATES.length
       ? [WDATES[0], WDATES[Math.floor((WDATES.length - 1) / 2)], WDATES[WDATES.length - 1]]
       : ['', '', ''];
+
+    // ---------- MERGE de los CHECK-INS del cliente (lo que apunta él en la app) ----------
+    if (Object.keys(chkByKey).length) {
+      var dtOf = function (fecha) { return new Date(fecha + 'T00:00:00'); };
+      fields.forEach(function (f) {
+        var arr = chkByKey[f.k]; if (!arr || !arr.length) return;
+        var last = arr[arr.length - 1], prev = arr.length >= 2 ? arr[arr.length - 2] : null;
+        f.v = comma(last.val);
+        if (prev) f.p = comma(prev.val);
+        arr.slice().reverse().forEach(function (pt) {
+          var raw = parseFloat(String(pt.val).replace(',', '.')); if (isNaN(raw)) return;
+          f.hist.unshift({ v: comma(pt.val), raw: raw, weekLabel: 'Semana ' + isoWeek(dtOf(pt.fecha)), range: weekRange(dtOf(pt.fecha)) });
+        });
+        f.hist = f.hist.slice(0, 12);
+      });
+      var wField = fields.filter(function (f) { return /peso|weight/i.test(f.l) || f.k === 'peso'; })[0];
+      var wKey = wField ? wField.k : (chkByKey['peso'] ? 'peso' : null);
+      if (wKey && chkByKey[wKey]) {
+        chkByKey[wKey].forEach(function (pt) { var n = parseFloat(String(pt.val).replace(',', '.')); if (!isNaN(n) && n > 0) { WEIGHTS.push(n); WDATES.push(fmtShort(dtOf(pt.fecha).getTime())); } });
+        if (WEIGHTS.length === 1) { WEIGHTS = [WEIGHTS[0], WEIGHTS[0]]; WDATES = [WDATES[0] || '', WDATES[0] || '']; }
+        chartLabels = WDATES.length ? [WDATES[0], WDATES[Math.floor((WDATES.length - 1) / 2)], WDATES[WDATES.length - 1]] : ['', '', ''];
+      }
+    }
 
     // ---------- PHOTOSETS (fotos de progreso) ----------
     var photos = (row.evolution && row.evolution.photos) || [];
