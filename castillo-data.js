@@ -67,6 +67,7 @@
       data.mealsReg = (comReg && comReg.comidas) || {};   // { meal_id: opcion } registradas HOY (bloqueadas)
       var chkHoy = chkAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
       data.checkinHoy = (chkHoy && chkHoy.valores) || {};   // valores ya registrados hoy (para prerellenar)
+      data.checkinFotosHoy = (chkHoy && chkHoy.fotos) || {};   // fotos ya subidas hoy
       _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
       window.__DATA = data;
       return data;
@@ -139,14 +140,26 @@
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);
     },
-    // guarda el check-in de HOY (peso, medidas...) que apunta el cliente
-    registrarCheckin: function (valores) {
+    // guarda el check-in de HOY (peso, medidas y fotos) que apunta el cliente
+    registrarCheckin: function (valores, fotos) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
-      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, valores: valores || {}, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
-      if (window.__DATA) window.__DATA.checkinHoy = valores || {};
+      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, valores: valores || {}, fotos: fotos || {}, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      if (window.__DATA) { window.__DATA.checkinHoy = valores || {}; window.__DATA.checkinFotosHoy = fotos || {}; }
       return api('/rest/v1/checkin_registros?on_conflict=cliente_email,fecha', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);
+    },
+    // sube una FOTO de progreso al almacenamiento (bucket 'progreso') y devuelve su URL pública
+    subirFotoProgreso: function (file, slot) {
+      if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+      var safe = ((file && file.name) || 'foto').replace(/[^a-zA-Z0-9._-]/g, '_');
+      var carpeta = _ctx.email.replace(/[^a-z0-9]/gi, '_');
+      var path = carpeta + '/' + _ctx.hoy + '-' + (slot || 'foto') + '-' + Date.now() + '-' + safe;
+      return fetch(SUPA + '/storage/v1/object/progreso/' + encodeURI(path), {
+        method: 'POST',
+        headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': (file && file.type) || 'application/octet-stream', 'x-upsert': 'true' },
+        body: file
+      }).then(function (r) { if (!r.ok) throw new Error('No se pudo subir la foto'); return SUPA + '/storage/v1/object/public/progreso/' + encodeURI(path); });
     },
     // marca/desmarca el cardio de un día (se guarda en la MISMA fila diaria de entreno_registros, columna cardio)
     registrarCardio: function (fecha, done) {
