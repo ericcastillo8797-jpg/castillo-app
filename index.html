@@ -164,7 +164,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
         </sc-for>
       </div>
-      <div onClick="{{ goDiet }}" style="margin-top:15px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
+      <div onClick="{{ openDietAll }}" style="margin-top:15px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
         <span style="font-size:13.5px;font-weight:600">{{ L.verMiDieta }}</span>
         <svg width="13" height="13" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
       </div>
@@ -648,6 +648,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 <div style="position:absolute;inset:0;z-index:11">
   <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(0,0,0,.42);transition:opacity .46s cubic-bezier(.32,.72,0,1);opacity:{{ sheetDim }}"></div>
   <div style="position:absolute;left:0;right:0;bottom:0;max-height:88%;display:flex;flex-direction:column;background:var(--s4,#111114);border:.5px solid rgba(var(--fgc,255,255,255),.13);border-bottom:none;border-radius:30px 30px 0 0;transition:transform .5s cubic-bezier(.32,.72,0,1);transform:{{ sheetY }};box-shadow:0 -20px 60px rgba(0,0,0,.42)">
+    <div onClick="{{ closeSheet }}" style="position:absolute;top:12px;left:14px;z-index:3;width:30px;height:30px;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l7 7M9 2l-7 7"></path></svg>
+    </div>
     <div style="padding:11px 0 0;display:flex;justify-content:center;flex:none"><div style="width:38px;height:4.5px;border-radius:4px;background:rgba(var(--fgc,255,255,255),.22)"></div></div>
 
     <sc-if value="{{ isMealSheet }}" hint-placeholder-val="{{ false }}">
@@ -682,6 +685,54 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
             <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
           </div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isDietAllSheet }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Toda mi dieta" style="display:flex;flex-direction:column;min-height:0">
+      <div style="padding:14px 20px 14px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.nutricion }}</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1;margin-top:4px">{{ L.tuDieta }}</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:14px">
+          <sc-for list="{{ dietAll.macros }}" as="m" hint-placeholder-count="4">
+          <div style="text-align:center;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.06);border-radius:12px;padding:9px 3px 8px">
+            <div style="font-family:'Instrument Serif',serif;font-size:19px;line-height:1">{{ m.v }}</div>
+            <div style="font-size:8.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:1px">{{ m.u }}</div>
+            <div style="font-size:8.5px;font-weight:600;color:rgba(var(--fgc,255,255,255),.6);margin-top:5px;line-height:1.15">{{ m.l }}</div>
+          </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="overflow-y:auto;padding:6px 20px 28px">
+        <sc-for list="{{ dietAll.meals }}" as="m" hint-placeholder-count="5">
+        <div style="margin-top:16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+            <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ m.h }}</div>
+            <div style="font-size:15px;font-weight:600">{{ m.n }}</div>
+            <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.08)"></div>
+          </div>
+          <sc-for list="{{ m.opts }}" as="o" hint-placeholder-count="2">
+          <div style="border-radius:16px;padding:13px 14px;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.07);margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div style="font-family:'Instrument Serif',serif;font-size:12px;letter-spacing:.2em;color:rgba(var(--fgc,255,255,255),.45)">{{ o.rom }}</div>
+              <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.1)"></div>
+            </div>
+            <sc-for list="{{ o.foods }}" as="f" hint-placeholder-count="3">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0">
+              <div style="flex:1;min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92)">{{ f.n }}</div>
+              <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:64px;text-align:right">{{ f.q }}</div>
+              <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:70px;text-align:right">{{ f.kcalLabel }}</div>
+            </div>
+            </sc-for>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:.5px solid rgba(var(--fgc,255,255,255),.1)">
+              <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
+              <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
+            </div>
+          </div>
+          </sc-for>
         </div>
         </sc-for>
       </div>
@@ -1619,13 +1670,17 @@ class Component extends DCLogic {
     const _dd = (typeof window !== 'undefined' && window.__DATA) || {};
     const _todayFecha = (DAYS.find(d => d.today) || {}).fecha || 'hoy';
     const _acts = { entreno: this.startWorkout, nutricion: this.openDiet(_todayFecha), metricas: this.openCheckin, cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
+    // Colores por tipo de tarea (estilo Harbiz: un color por cosa) — se usan en el tick de hoy, los anillos del resumen y los puntos de la agenda
+    const TASK_COL = { entreno: '#5B8CFF', workout: '#5B8CFF', cardio: '#FF6B5C', nutricion: '#3DD68C', nutrition: '#3DD68C', metricas: '#C084FC', metrics: '#C084FC' };
+    const taskColor = k => TASK_COL[k] || 'rgba(var(--fgc,255,255,255),.55)';
     const planTasks = (_dd.todayTasks || []).map(tk => {
       const marked = st.marks[_todayFecha + '|' + tk.key];
       const done = tk.done || !!marked;
+      const _c = taskColor(tk.key);
       return {
         label: tr(tk.label), sub: tr(tk.sub), done,
-        ckBg: done ? 'var(--fg,#fff)' : 'transparent', ckFg: done ? 'var(--bg,#000)' : 'transparent',
-        ckBd: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.24)',
+        ckBg: done ? _c : 'transparent', ckFg: done ? '#0C0C0E' : 'transparent',
+        ckBd: done ? _c : 'rgba(var(--fgc,255,255,255),.24)',
         open: _acts[tk.key] || (() => {})
       };
     });
@@ -1639,12 +1694,12 @@ class Component extends DCLogic {
     ].map(r => ({ ...r, bar: r.pct + '%' }));
     const wsGlobal = (_ws.global || {}).pct || 0;
     const wsKcal = _ws.kcal || 0;
-    // resumen semanal en formato redondo (anillos concéntricos, blanco/negro de marca)
-    const _ringR = [62, 50, 38, 26], _ringOp = [1, 0.7, 0.46, 0.28];
+    // resumen semanal en formato redondo (anillos concéntricos, un color por tarea estilo Harbiz)
+    const _ringR = [62, 50, 38, 26], _ringCol = ['#5B8CFF', '#FF6B5C', '#3DD68C', '#C084FC'];
     const wsRings = wsRows.map((r, i) => {
       const rad = _ringR[i], C = 2 * Math.PI * rad, pct = Math.max(0, Math.min(100, r.pct || 0));
       return { l: r.l, sub: r.sub, pct, r: rad, dash: (C * pct / 100).toFixed(1) + ' ' + C.toFixed(1),
-        col: 'rgba(var(--fgc,255,255,255),' + _ringOp[i] + ')' };
+        col: _ringCol[i] || 'rgba(var(--fgc,255,255,255),.55)' };
     });
     // macros objetivo del cliente (Nutrición)
     const _mac = _dd.macros || {};
@@ -1669,6 +1724,16 @@ class Component extends DCLogic {
         open: () => this.openSheet({ k: 'meal', id: m.id })
       };
     });
+
+    // "Ver toda mi dieta": vista COMPLETA de la pauta (todas las comidas y todas sus opciones) para el sheet desplegable
+    const dietAll = { macros: macroCards, meals: DIET.map(m => ({
+      h: m.h, n: tMeal(m.n),
+      opts: m.o.map((o, i) => {
+        const foods = F(o).map(f => ({ n: tFood(f.n), q: f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '' }));
+        const kcalTotal = F(o).reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
+        return { rom: T('OPCIÓN') + ' ' + (i + 1), foods, kcalTotal: kcalTotal + ' kcal' };
+      })
+    })) };
 
     const sh = st.sheet || {};
     const sm = sh.k === 'meal' ? DIET.find(m => m.id === sh.id) : null;
@@ -1742,10 +1807,11 @@ class Component extends DCLogic {
       else if (a.type === 'cardio') open = this.toggleMark(dS.fecha, 'cardio', 'Cardio marcado');
       else { open = this.startWorkout; const first = (WK[a.wk] || [])[0]; const exr = first ? EX.find(e => e.n === first.split('|')[0]) : null; thumb = (exr && exr.y) ? THUMB(exr.y) : ''; }
       const done = a.done || !!st.marks[dS.fecha + '|' + a.type];
+      const _c = taskColor(a.type);
       return {
         type: a.type, label: a.type === 'workout' ? a.label : tr(a.label), sub: tr(a.sub), done, open, thumb,
-        ckBg: done ? 'var(--fg,#fff)' : 'transparent', ckFg: done ? 'var(--bg,#000)' : 'transparent',
-        ckBd: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.24)'
+        ckBg: done ? _c : 'transparent', ckFg: done ? '#0C0C0E' : 'transparent',
+        ckBd: done ? _c : 'rgba(var(--fgc,255,255,255),.24)'
       };
     });
     const daySel = {
@@ -1754,14 +1820,12 @@ class Component extends DCLogic {
     };
     const weekDays = _agDays.map(d => {
       const sel = d.d === st.day;
-      const nActs = (d.acts || []).length;
-      const dotC = sel ? 'rgba(var(--bgc,0,0,0),.55)' : 'rgba(var(--fgc,255,255,255),.6)';
       return {
         w: d.w, d: d.d, pick: () => this.setState({ day: d.d }),
         bg: sel ? 'var(--fg,#fff)' : (d.today ? 'rgba(var(--fgc,255,255,255),.07)' : 'transparent'),
         fg: sel ? 'var(--bg,#000)' : (d.today ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.58)'),
         bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
-        dots: Array.from({ length: nActs }, () => ({ c: dotC }))
+        dots: (d.acts || []).map(a => ({ c: taskColor(a.type) }))
       };
     });
 
@@ -1952,7 +2016,7 @@ class Component extends DCLogic {
         pautaAlim: T('Pauta alimenticia'), cumplGlobal: T('Cumplimiento global'), global: T('Global'),
         bibliotecaTecnica: T('Biblioteca de técnica'),
         sincroniza: T('Sincroniza tu actividad'), sincronizaSub: T('Conecta tu dispositivo para volcar tu actividad automáticamente'), conectar: T('Conectar'),
-        nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'),
+        nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'),
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
@@ -2039,6 +2103,7 @@ class Component extends DCLogic {
       toast: st.toast,
       sheet: st.sheet, sheetDim: dim, sheetY: st.sheetIn ? 'none' : 'translateY(100%)', closeSheet: this.closeSheet,
       isMealSheet: sh.k === 'meal', mealSheet, isVideoSheet: sh.k === 'vid', videoSheet,
+      isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => this.openSheet({ k: 'dietall' }),
       isCkSheet: sh.k === 'ck', ckShots, ckGroups, submitCheckin: this.submitCheckin,
 
       pad: st.pad, padDim: st.padIn ? 1 : 0, padY: st.padIn ? 'none' : 'translateY(100%)',
