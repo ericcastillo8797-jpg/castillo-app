@@ -7,9 +7,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=23"></script>
-<script src="./castillo-transform.js?v=23"></script>
-<script src="./castillo-data.js?v=23"></script>
+<script src="./castillo-i18n.js?v=24"></script>
+<script src="./castillo-transform.js?v=24"></script>
+<script src="./castillo-data.js?v=24"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -283,49 +283,18 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:22px 18px;text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.34)">Día de descanso — sin actividades asignadas.</div>
       </sc-if>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 2px 10px">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.pautaAlim }}</div>
-        <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.34)">{{ dietState }}</div>
-      </div>
-      <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
-        <sc-for list="{{ dietRows }}" as="m" hint-placeholder-count="7">
-        <div onClick="{{ m.open }}" style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:{{ m.cursor }};transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14.5px;font-weight:500;color:{{ m.fg }}">{{ m.n }}</div>
-            <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.sub }}</div>
-          </div>
-          <sc-if value="{{ m.done }}" hint-placeholder-val="{{ false }}">
-          <div style="width:24px;height:24px;flex:none;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center;animation:cPop .42s cubic-bezier(.2,.8,.2,1) both">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
-          </div>
-          </sc-if>
-          <sc-if value="{{ m.pending }}" hint-placeholder-val="{{ true }}">
-          <div style="width:24px;height:24px;flex:none;border-radius:50%;border:1.2px dashed rgba(var(--fgc,255,255,255),.24)"></div>
-          </sc-if>
-          <sc-if value="{{ m.locked }}" hint-placeholder-val="{{ false }}">
-          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".3" stroke-width="1.4" style="flex:none"><rect x="2" y="5.2" width="8" height="5.6" rx="1.4"></rect><path d="M4 5.2V3.8a2 2 0 0 1 4 0v1.4"></path></svg>
-          </sc-if>
-        </div>
-        </sc-for>
-      </div>
-      <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:14px">{{ dietNote }}</div>
-      <div style="display:flex;gap:10px;margin-top:14px">
-        <div onClick="{{ printDiet }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:100px;padding:13px;font-size:13px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5V2h6v3M4 10.5H3a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V9.5a1 1 0 0 1-1 1h-1M4 8.5h6v3.5H4z"></path></svg>
-          {{ L.imprimirDieta }}
-        </div>
-        <div onClick="{{ shareDiet }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:13px;font-size:13px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.5V2M4.5 4.2 7 1.7l2.5 2.5"></path><path d="M2.5 8v3.5a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V8"></path></svg>
-          {{ L.compartirDieta }}
-        </div>
-      </div>
     </div>
   </div>
   </sc-if>
 
   <sc-if value="{{ isEvo }}" hint-placeholder-val="{{ false }}">
   <div data-screen-label="Evolucion" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 20px 132px">
-    <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">{{ L.evolucion }}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">{{ L.evolucion }}</div>
+      <div onClick="{{ openCheckin }}" title="{{ L.registrarEvo }}" style="width:46px;height:46px;flex:none;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1);box-shadow:0 6px 18px rgba(0,0,0,.25)" style-active="transform:scale(.9)">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </div>
+    </div>
 
     <div style="margin-top:18px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 18px 12px">
       <div style="display:flex;align-items:flex-end;justify-content:space-between">
@@ -1354,8 +1323,8 @@ class Component extends DCLogic {
   };
   // abre la dieta; por defecto en el día de hoy (la tira de días permite ir a días pasados a rellenar)
   openDiet = fecha => () => {
-    const t = DAYS.find(d => d.today);
-    this.setState({ tab: 'diet', day: t ? t.d : this.state.day });
+    const d = DAYS.find(x => x.fecha === fecha) || DAYS.find(x => x.today);
+    this.setState({ tab: 'diet', day: d ? d.d : this.state.day });
     if (this._sc) this._sc.scrollTop = 0;
   };
   shiftWeek = dir => () => {
@@ -1834,6 +1803,14 @@ class Component extends DCLogic {
         ckBd: done ? _c : 'rgba(var(--fgc,255,255,255),.24)'
       };
     });
+    // Nutrición como una tarea más del día (verde), que lleva a registrar las comidas (lo pidió Alex)
+    if (DIET && DIET.length) {
+      const _nf = dS.fecha;
+      const _nm = ((_dd.mealsByDate) || {})[_nf] || {};
+      const _nd = DIET.every(function (m) { return _nm[m.id] != null; });
+      dayActs.push({ type: 'nutricion', label: T('Nutrición'), sub: T('Marca lo que has comido'), done: _nd, open: this.openDiet(_nf), thumb: '',
+        ckBg: _nd ? '#3DD68C' : 'transparent', ckFg: _nd ? '#0C0C0E' : 'transparent', ckBd: _nd ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.24)' });
+    }
     const daySel = {
       long: tD(dS.long), rom: dS.rom, t: dS.t, s: tr(dS.s), ses: dS.ses, isToday: !!dS.today,
       acts: dayActs, hasActs: dayActs.length > 0, rest: dayActs.length === 0
@@ -2036,7 +2013,7 @@ class Component extends DCLogic {
         pautaAlim: T('Pauta alimenticia'), cumplGlobal: T('Cumplimiento global'), global: T('Global'),
         bibliotecaTecnica: T('Biblioteca de técnica'),
         sincroniza: T('Sincroniza tu actividad'), sincronizaSub: T('Conecta tu dispositivo para volcar tu actividad automáticamente'), conectar: T('Conectar'),
-        nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'), composicionMedidas: T('Composición y medidas'), tamanoTexto: T('Tamaño de texto'),
+        nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'), composicionMedidas: T('Composición y medidas'), tamanoTexto: T('Tamaño de texto'), registrarEvo: T('Registrar evolución'),
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),

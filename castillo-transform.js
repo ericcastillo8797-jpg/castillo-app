@@ -393,10 +393,10 @@
     var entrenoHecho = regToday.workout || doneT('workout');
     var todayTasks = [];
     if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') });
-    if (hasT('cardio')) todayTasks.push({ key: 'cardio', label: 'Registrar cardio', sub: (todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}).title || 'Caminar', done: doneT('cardio') || !!regToday.cardio });
-    if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Registrar entreno', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
+    if (hasT('cardio')) todayTasks.push({ key: 'cardio', label: 'Cardio', sub: (todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}).title || 'Caminar', done: doneT('cardio') || !!regToday.cardio });
+    if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
-    todayTasks.push({ key: 'nutricion', label: 'Registrar pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.length > 0 && DIET.every(function (m) { return comHoy[m.id] != null; }) });
+    todayTasks.push({ key: 'nutricion', label: 'Pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.length > 0 && DIET.every(function (m) { return comHoy[m.id] != null; }) });
     var trainDoneN = todayTasks.filter(function (t) { return t.done; }).length;
     var planHoyPct = todayTasks.length ? Math.round(trainDoneN / todayTasks.length * 100) : 0;
     // cumplimiento semanal (planificado vs completado en la semana actual)

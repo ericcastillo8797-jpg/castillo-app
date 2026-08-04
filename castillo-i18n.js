@@ -149,7 +149,7 @@
     'Cardio': 'Cardio', 'Caminar': 'Walk', 'Entrenamiento': 'Workout', 'Cardio marcado': 'Cardio logged',
     'Entrenos': 'Workouts', 'Métricas': 'Metrics',
     // Agenda
-    'Pauta alimenticia': 'Nutrition plan', 'Día de descanso — sin actividades asignadas.': 'Rest day — no activities assigned.',
+    'Pauta alimenticia': 'Nutrition plan', 'Nutrición': 'Nutrition', 'Marca lo que has comido': 'Mark what you ate', 'Registrar evolución': 'Record progress', 'Día de descanso — sin actividades asignadas.': 'Rest day — no activities assigned.',
     'Descanso': 'Rest', 'Sin sesión': 'No session',
     'Hoy · editable': 'Today · editable', 'Registro cerrado': 'Closed', 'Programada': 'Scheduled',
     'Marque cada comida con la opción que ha tomado.': 'Mark each meal with the option you had.',
