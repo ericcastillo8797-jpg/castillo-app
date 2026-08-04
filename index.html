@@ -361,9 +361,14 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
     <sc-if value="{{ evoMetrics }}" hint-placeholder-val="{{ true }}">
     <div style="animation:cFade .4s both">
+      <div onClick="{{ toggleEvoComp }}" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin:22px 2px 4px" style-active="opacity:.7">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.composicionMedidas }}</div>
+        <svg width="15" height="15" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .32s cubic-bezier(.32,.72,0,1);transform:{{ evoCompChevron }}"><path d="M2.5 4.5 6 8 9.5 4.5"></path></svg>
+      </div>
+      <sc-if value="{{ evoCompOpen }}" hint-placeholder-val="{{ true }}">
       <sc-for list="{{ metGroups }}" as="g" hint-placeholder-count="4">
       <div>
-        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:24px 2px 10px">{{ g.g }}</div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 10px">{{ g.g }}</div>
         <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
           <sc-for list="{{ g.f }}" as="f" hint-placeholder-count="3">
           <div onClick="{{ f.open }}" style="display:flex;align-items:center;padding:13px 16px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
@@ -380,6 +385,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
       </div>
       </sc-for>
+      </sc-if>
     </div>
     </sc-if>
 
@@ -1252,7 +1258,7 @@ class Component extends DCLogic {
     wOpen: false, wIn: false, exClosed: {},
     logs: {}, pad: null, padIn: false,
     rest: 0, restMax: 90,
-    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp',
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: false,
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, toast: null, marks: {}, mealsLocked: {},
     lang: (function () { try { return localStorage.getItem('castillo_lang') || 'es'; } catch (e) { return 'es'; } })()
@@ -1852,7 +1858,7 @@ class Component extends DCLogic {
         sessions: e.sessions + ' ' + (e.sessions === 1 ? T('sesión') : T('sesiones')),
         deltaLabel: (up ? '+' : '') + String(e.delta).replace('.', ',') + ' kg',
         deltaFg: up ? '#7fd6a3' : (down ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.4)'),
-        hasProg: vals.length > 1,
+        hasProg: vals.length >= 1,
         bars: e.points.slice(-8).map(p => ({
           h: (p.top != null ? (14 + Math.round((p.top - mn) / rng * 34)) : 3) + 'px',
           date: p.date ? p.date.slice(8, 10) + '/' + p.date.slice(5, 7) : '',
@@ -2016,7 +2022,7 @@ class Component extends DCLogic {
         pautaAlim: T('Pauta alimenticia'), cumplGlobal: T('Cumplimiento global'), global: T('Global'),
         bibliotecaTecnica: T('Biblioteca de técnica'),
         sincroniza: T('Sincroniza tu actividad'), sincronizaSub: T('Conecta tu dispositivo para volcar tu actividad automáticamente'), conectar: T('Conectar'),
-        nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'),
+        nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'), composicionMedidas: T('Composición y medidas'),
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
@@ -2051,6 +2057,7 @@ class Component extends DCLogic {
       weekDays, daySel, appts: APPTS,
       vidCats, vidList,
       evoTabs, evoMetrics: st.evoTab === 'comp', evoPhotos: st.evoTab === 'comp', evoEjercicio: st.evoTab === 'ejercicio',
+      evoCompOpen: st.evoCompOpen, evoCompChevron: st.evoCompOpen ? 'rotate(180deg)' : 'rotate(0deg)', toggleEvoComp: () => this.setState({ evoCompOpen: !st.evoCompOpen }),
       exProgList, exProgEmpty: exProgList.length === 0,
       chart, metGroups,
       photoSets: PHOTOSETS.map(p => Object.assign({}, p, {
