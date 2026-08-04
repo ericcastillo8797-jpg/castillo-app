@@ -48,7 +48,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 </helmet>
 <div style="height:100vh;height:100dvh;position:relative;overflow:hidden;background:#08080A">
 
-<div style="height:100%;position:relative;overflow:hidden;background:var(--bg,#000);color:var(--fg,#fff);font-family:-apple-system,BlinkMacSystemFont,'Geist','Helvetica Neue',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.01em;{{ themeVars }}">
+<div style="height:{{ appWH }};width:{{ appWH }};zoom:{{ appZoom }};position:relative;overflow:hidden;background:var(--bg,#000);color:var(--fg,#fff);font-family:-apple-system,BlinkMacSystemFont,'Geist','Helvetica Neue',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.01em;{{ themeVars }}">
 
 <div style="position:absolute;inset:0;transform-origin:50% 0%;overflow:hidden;transition:transform .5s cubic-bezier(.32,.72,0,1),opacity .55s cubic-bezier(.32,.72,0,1),border-radius .5s cubic-bezier(.32,.72,0,1);{{ appLayerStyle }}">
 
@@ -361,9 +361,14 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
     <sc-if value="{{ evoMetrics }}" hint-placeholder-val="{{ true }}">
     <div style="animation:cFade .4s both">
-      <div onClick="{{ toggleEvoComp }}" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin:22px 2px 4px" style-active="opacity:.7">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.composicionMedidas }}</div>
-        <svg width="15" height="15" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .32s cubic-bezier(.32,.72,0,1);transform:{{ evoCompChevron }}"><path d="M2.5 4.5 6 8 9.5 4.5"></path></svg>
+      <div onClick="{{ toggleEvoComp }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;margin:22px 0 12px;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.16);border-radius:16px;padding:15px 17px" style-active="transform:scale(.985)">
+        <div style="min-width:0">
+          <div style="font-size:15px;font-weight:600">{{ L.composicionMedidas }}</div>
+          <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.44);margin-top:2px">{{ evoCompHint }}</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1)">
+          <svg width="15" height="15" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".85" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .32s cubic-bezier(.32,.72,0,1);transform:{{ evoCompChevron }}"><path d="M2.5 4.5 6 8 9.5 4.5"></path></svg>
+        </div>
       </div>
       <sc-if value="{{ evoCompOpen }}" hint-placeholder-val="{{ true }}">
       <sc-for list="{{ metGroups }}" as="g" hint-placeholder-count="4">
@@ -498,6 +503,13 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <div style="display:flex;gap:11px">
       <div onClick="{{ pickEs }}" style="flex:1;text-align:center;padding:14px 0;border-radius:16px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ langEsBg }};color:{{ langEsFg }};border:1px solid {{ langEsBd }}" style-active="transform:scale(.97)">{{ L.espanol }}</div>
       <div onClick="{{ pickEn }}" style="flex:1;text-align:center;padding:14px 0;border-radius:16px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ langEnBg }};color:{{ langEnFg }};border:1px solid {{ langEnBd }}" style-active="transform:scale(.97)">{{ L.ingles }}</div>
+    </div>
+
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.tamanoTexto }}</div>
+    <div style="display:flex;gap:11px;align-items:stretch">
+      <sc-for list="{{ fontSizes }}" as="s" hint-placeholder-count="3">
+      <div onClick="{{ s.pick }}" style="flex:1;text-align:center;padding:14px 4px;border-radius:16px;font-weight:600;line-height:1;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ s.bg }};color:{{ s.fg }};border:1px solid {{ s.bd }};font-size:{{ s.fs }}" style-active="transform:scale(.97)">{{ s.n }}</div>
+      </sc-for>
     </div>
 
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.aplicacion }}</div>
@@ -1259,11 +1271,13 @@ class Component extends DCLogic {
     logs: {}, pad: null, padIn: false,
     rest: 0, restMax: 90,
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: false,
+    fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, toast: null, marks: {}, mealsLocked: {},
     lang: (function () { try { return localStorage.getItem('castillo_lang') || 'es'; } catch (e) { return 'es'; } })()
   };
   setLang = l => () => { try { localStorage.setItem('castillo_lang', l); } catch (e) {} this.setState({ lang: l }); };
+  setFontScale = v => () => { try { localStorage.setItem('castillo_fontscale', String(v)); } catch (e) {} this.setState({ fontScale: v }); };
 
   componentWillUnmount() { cancelAnimationFrame(this._raf); clearInterval(this._iv); (this._to || []).forEach(clearTimeout);
     if (this._shTS) { document.removeEventListener('touchstart', this._shTS); document.removeEventListener('touchmove', this._shTM); document.removeEventListener('touchend', this._shTE); } }
@@ -2022,7 +2036,7 @@ class Component extends DCLogic {
         pautaAlim: T('Pauta alimenticia'), cumplGlobal: T('Cumplimiento global'), global: T('Global'),
         bibliotecaTecnica: T('Biblioteca de técnica'),
         sincroniza: T('Sincroniza tu actividad'), sincronizaSub: T('Conecta tu dispositivo para volcar tu actividad automáticamente'), conectar: T('Conectar'),
-        nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'), composicionMedidas: T('Composición y medidas'),
+        nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'), composicionMedidas: T('Composición y medidas'), tamanoTexto: T('Tamaño de texto'),
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
@@ -2058,6 +2072,12 @@ class Component extends DCLogic {
       vidCats, vidList,
       evoTabs, evoMetrics: st.evoTab === 'comp', evoPhotos: st.evoTab === 'comp', evoEjercicio: st.evoTab === 'ejercicio',
       evoCompOpen: st.evoCompOpen, evoCompChevron: st.evoCompOpen ? 'rotate(180deg)' : 'rotate(0deg)', toggleEvoComp: () => this.setState({ evoCompOpen: !st.evoCompOpen }),
+      evoCompHint: st.evoCompOpen ? T('Toca para ocultar') : T('Toca para ver todas tus medidas'),
+      appZoom: st.fontScale || 1, appWH: (100 / (st.fontScale || 1)) + '%',
+      fontSizes: [[T('Normal'), 1, 13], [T('Grande'), 1.18, 16], [T('Más grande'), 1.38, 19]].map(([n, v, fs]) => {
+        const sel = (st.fontScale || 1) === v;
+        return { n, fs: fs + 'px', pick: this.setFontScale(v), bg: sel ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', fg: sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)' };
+      }),
       exProgList, exProgEmpty: exProgList.length === 0,
       chart, metGroups,
       photoSets: PHOTOSETS.map(p => Object.assign({}, p, {
