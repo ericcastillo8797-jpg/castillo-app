@@ -415,13 +415,13 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </div>
         </div>
         <sc-if value="{{ e.hasProg }}" hint-placeholder-val="{{ true }}">
-        <div style="display:flex;align-items:flex-end;gap:6px;height:52px;margin-top:14px;padding-top:6px;border-top:.5px solid rgba(var(--fgc,255,255,255),.06)">
-          <sc-for list="{{ e.bars }}" as="b" hint-placeholder-count="6">
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0">
-            <div style="width:100%;max-width:22px;height:{{ b.h }};border-radius:4px;background:linear-gradient(180deg,#fff,#6b6b70)"></div>
-            <div style="font-size:8px;color:rgba(var(--fgc,255,255,255),.32)">{{ b.date }}</div>
-          </div>
-          </sc-for>
+        <div style="margin-top:12px;padding-top:8px;border-top:.5px solid rgba(var(--fgc,255,255,255),.06)">
+          <svg viewBox="0 0 300 44" preserveAspectRatio="none" style="width:100%;height:48px;overflow:visible">
+            <defs><linearGradient id="cgex" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".16"></stop><stop offset="1" stop-color="currentColor" stop-opacity="0"></stop></linearGradient></defs>
+            <polygon points="{{ e.area }}" fill="url(#cgex)"></polygon>
+            <polyline points="{{ e.line }}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
+            <circle cx="{{ e.lx }}" cy="{{ e.ly }}" r="2.8" fill="currentColor" vector-effect="non-scaling-stroke"></circle>
+          </svg>
         </div>
         </sc-if>
       </div>
@@ -672,6 +672,51 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
             <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
           </div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isDietDaySheet }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Nutricion del dia" style="display:flex;flex-direction:column;min-height:0">
+      <div style="padding:14px 20px 12px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.nutricion }}</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1;margin-top:4px">{{ daySel.long }}</div>
+      </div>
+      <div style="overflow-y:auto;padding:6px 20px 26px">
+        <sc-for list="{{ dietDaySheet.meals }}" as="m" hint-placeholder-count="4">
+        <div style="margin-top:16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+            <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ m.h }}</div>
+            <div style="font-size:15px;font-weight:600">{{ m.n }}</div>
+            <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.08)"></div>
+            <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.34)">{{ m.lockNote }}</div>
+          </div>
+          <sc-for list="{{ m.opts }}" as="o" hint-placeholder-count="2">
+          <div onClick="{{ o.pick }}" style="border-radius:18px;padding:14px 15px;margin-bottom:9px;cursor:{{ o.cursor }};opacity:{{ o.op }};transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ o.bg }};border:1px solid {{ o.bd }}" style-active="transform:scale(.98)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+              <div style="font-family:'Instrument Serif',serif;font-size:12px;letter-spacing:.2em;color:{{ o.numFg }}">{{ o.rom }}</div>
+              <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.1)"></div>
+              <sc-if value="{{ o.sel }}" hint-placeholder-val="{{ false }}">
+              <div style="width:21px;height:21px;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center;animation:cPop .4s cubic-bezier(.2,.8,.2,1) both">
+                <svg width="11" height="11" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
+              </div>
+              </sc-if>
+            </div>
+            <sc-for list="{{ o.foods }}" as="f" hint-placeholder-count="3">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0">
+              <div style="flex:1;min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92)">{{ f.n }}</div>
+              <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:64px;text-align:right">{{ f.q }}</div>
+              <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:70px;text-align:right">{{ f.kcalLabel }}</div>
+            </div>
+            </sc-for>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:9px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.1)">
+              <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
+              <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
+            </div>
+          </div>
+          </sc-for>
         </div>
         </sc-for>
       </div>
@@ -1742,6 +1787,23 @@ class Component extends DCLogic {
       };
     }) } : {};
 
+    // Nutrición desplegable (sheet): todas las comidas del día con sus opciones marcables (como el sheet de una comida, pero todas juntas)
+    const dietDaySheet = { meals: DIET.map(m => {
+      const locked = _selMeals[m.id] != null;
+      return { h: m.h, n: tMeal(m.n), locked, lockNote: locked ? T('Ya registrado') : '', opts: m.o.map((o, i) => {
+        const sel = _selMeals[m.id] === i;
+        const foods = F(o).map(f => ({ n: tFood(f.n), q: f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '' }));
+        const kcalTotal = F(o).reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
+        const dim = locked && !sel;
+        return { rom: T('OPCIÓN') + ' ' + (i + 1), sel, foods, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.03) + 's',
+          bg: sel ? 'rgba(var(--fgc,255,255,255),.1)' : 'var(--s2,#17171B)',
+          bd: sel ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.07)',
+          numFg: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)',
+          cursor: locked ? 'default' : 'pointer', op: dim ? '0.4' : '1',
+          pick: locked ? (() => {}) : this.pickMeal(m.id, i) };
+      }) };
+    }) };
+
     const vs = sh.k === 'vid' ? sh.v : null;
     const videoSheet = vs ? { t: vs.t, g: vs.g, src: EMBED(vs.y), pts: PTS.map((t, i) => ({ rom: ROM[i], t })) } : {};
 
@@ -1808,7 +1870,7 @@ class Component extends DCLogic {
       const _nf = dS.fecha;
       const _nm = ((_dd.mealsByDate) || {})[_nf] || {};
       const _nd = DIET.every(function (m) { return _nm[m.id] != null; });
-      dayActs.push({ type: 'nutricion', label: T('Nutrición'), sub: T('Marca lo que has comido'), done: _nd, open: this.openDiet(_nf), thumb: '',
+      dayActs.push({ type: 'nutricion', label: T('Nutrición'), sub: T('Marca lo que has comido'), done: _nd, open: () => this.openSheet({ k: 'dietday' }), thumb: '',
         ckBg: _nd ? '#3DD68C' : 'transparent', ckFg: _nd ? '#0C0C0E' : 'transparent', ckBd: _nd ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.24)' });
     }
     const daySel = {
@@ -1850,11 +1912,21 @@ class Component extends DCLogic {
         deltaLabel: (up ? '+' : '') + String(e.delta).replace('.', ',') + ' kg',
         deltaFg: up ? '#7fd6a3' : (down ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.4)'),
         hasProg: vals.length >= 1,
-        bars: e.points.slice(-8).map(p => ({
-          h: (p.top != null ? (14 + Math.round((p.top - mn) / rng * 34)) : 3) + 'px',
-          date: p.date ? p.date.slice(8, 10) + '/' + p.date.slice(5, 7) : '',
-          val: p.top != null ? String(p.top).replace('.', ',') : '—'
-        }))
+        ...(function () {
+          // gráfico LINEAL de la progresión (mismo estilo que el peso corporal), no barras
+          const lp = e.points.filter(p => p.top != null);
+          const W = 300, H = 44, pad = 6, flat = (mx === mn) || lp.length < 2;
+          const yOf = v => flat ? H / 2 : (H - pad) - ((v - mn) / (mx - mn)) * (H - 2 * pad);
+          let xs, ys;
+          if (lp.length <= 1) { const y = lp.length ? yOf(lp[0].top) : H / 2; xs = [pad, W - pad]; ys = [y, y]; }
+          else { xs = lp.map((_, i) => pad + (i / (lp.length - 1)) * (W - 2 * pad)); ys = lp.map(p => yOf(p.top)); }
+          const pairs = xs.map((x, i) => x.toFixed(1) + ',' + ys[i].toFixed(1));
+          return {
+            line: pairs.join(' '),
+            area: pairs.join(' ') + ' ' + xs[xs.length - 1].toFixed(1) + ',' + H + ' ' + xs[0].toFixed(1) + ',' + H,
+            lx: xs[xs.length - 1].toFixed(1), ly: ys[ys.length - 1].toFixed(1)
+          };
+        })()
       };
     });
 
@@ -2108,6 +2180,7 @@ class Component extends DCLogic {
       sheet: st.sheet, sheetDim: dim, sheetY: st.sheetIn ? 'none' : 'translateY(100%)', closeSheet: this.closeSheet,
       isMealSheet: sh.k === 'meal', mealSheet, isVideoSheet: sh.k === 'vid', videoSheet,
       isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => this.openSheet({ k: 'dietall' }),
+      isDietDaySheet: sh.k === 'dietday', dietDaySheet,
       isCkSheet: sh.k === 'ck', ckShots, ckGroups, submitCheckin: this.submitCheckin,
 
       pad: st.pad, padDim: st.padIn ? 1 : 0, padY: st.padIn ? 'none' : 'translateY(100%)',
