@@ -1728,7 +1728,7 @@ class Component extends DCLogic {
         label: tr(tk.label), sub: tr(tk.sub), done,
         ckBg: done ? _c : 'transparent', ckFg: done ? '#0C0C0E' : 'transparent',
         ckBd: done ? _c : 'rgba(var(--fgc,255,255,255),.24)',
-        open: _acts[tk.key] || (() => {})
+        open: (tk.key === 'cardio' && done) ? (() => {}) : (_acts[tk.key] || (() => {}))
       };
     });
     const planPct = planTasks.length ? Math.round(planTasks.filter(t => t.done).length / planTasks.length * 100) : 0;
@@ -1867,11 +1867,13 @@ class Component extends DCLogic {
 
     const dS = _agDays.find(d => d.d === st.day) || _agDays[2] || _agDays[0];
     const dayActs = (dS.acts || []).map(a => {
+      // hecho = lo dice el programa, o lo marcó el cliente (incluye el entreno recién finalizado)
+      const done = a.done || !!st.marks[dS.fecha + '|' + a.type] || (a.type === 'workout' && !!st.marks[dS.fecha + '|entreno']);
       let open, thumb = '';
       if (a.type === 'metricas') open = this.openCheckin;
-      else if (a.type === 'cardio') open = this.toggleMark(dS.fecha, 'cardio', 'Cardio marcado');
+      // cardio: una vez marcado ya NO se puede desmarcar (ni hoy ni en días pasados)
+      else if (a.type === 'cardio') open = done ? (() => {}) : this.toggleMark(dS.fecha, 'cardio', 'Cardio marcado');
       else { open = this.startWorkout; const first = (WK[a.wk] || [])[0]; const exr = first ? EX.find(e => e.n === first.split('|')[0]) : null; thumb = (exr && exr.y) ? THUMB(exr.y) : ''; }
-      const done = a.done || !!st.marks[dS.fecha + '|' + a.type];
       const _c = taskColor(a.type);
       return {
         type: a.type, label: a.type === 'workout' ? a.label : tr(a.label), sub: tr(a.sub), done, open, thumb,
