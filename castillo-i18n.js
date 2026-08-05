@@ -175,6 +175,11 @@
     'Serie más pesada': 'Heaviest set', 'Historial de cargas': 'Load history',
     // entreno
     'Finalizar': 'Finish', 'series': 'series', 'Series': 'Sets', 'Repeticiones': 'Reps', 'Peso': 'Weight',
+    'Peso de la sesión anterior': 'Last session weight', 'Descanso': 'Rest',
+    // ajustes / integraciones / nutrición
+    'Normal': 'Normal', 'Grande': 'Large', 'Más grande': 'Larger', 'Tamaño de texto': 'Text size',
+    'Sincroniza tu actividad': 'Sync your activity', 'Conecta tu dispositivo para volcar tu actividad automáticamente': 'Connect your device to sync your activity automatically', 'Conectar': 'Connect',
+    'Tus objetivos diarios': 'Your daily targets', 'Calorías': 'Calories', 'Proteínas': 'Protein', 'Carbohidratos': 'Carbs', 'Grasas': 'Fats',
     'completado': 'completed', 'No puedo hacer este ejercicio': "I can't do this exercise",
     'Variante en uso · ver otras': 'Variant in use · see others', 'Vídeo de técnica': 'Technique video',
     'Volver al ejercicio original': 'Back to original exercise', 'Si no dispone del material': "If you don't have the equipment",
