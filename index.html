@@ -556,6 +556,12 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
         <sc-if value="{{ e.open }}" hint-placeholder-val="{{ false }}">
         <div style="animation:cFade .34s both;padding:0 16px 16px">
+          <sc-if value="{{ e.vidPlaying }}" hint-placeholder-val="{{ false }}">
+          <div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;border:.5px solid rgba(var(--fgc,255,255,255),.1)">
+            <iframe src="{{ e.src }}" title="{{ e.n }}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="true" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block"></iframe>
+          </div>
+          </sc-if>
+          <sc-if value="{{ e.vidThumb }}" hint-placeholder-val="{{ true }}">
           <div onClick="{{ e.play }}" style="position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#0A0A0C;border:.5px solid rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.985)">
             <sc-if value="{{ e.thumb }}" hint-placeholder-val="{{ false }}"><img src="{{ e.thumb }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.62" /></sc-if>
             <div style="position:relative;width:46px;height:46px;border-radius:50%;border:.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.4);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;color:#fff">
@@ -563,6 +569,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             </div>
             <div style="position:absolute;bottom:9px;left:12px;font-size:8.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72)">{{ L.videoTecnica }}</div>
           </div>
+          </sc-if>
           <div style="display:flex;margin-top:13px;background:var(--s3,#151519);border:.5px solid rgba(var(--fgc,255,255,255),.08);border-radius:14px;overflow:hidden">
             <div style="flex:1;padding:11px 13px"><div style="font-size:8.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.3)">Series</div><div style="font-size:16px;font-weight:600;margin-top:4px">{{ e.nS }}</div></div>
             <div style="width:.5px;background:rgba(var(--fgc,255,255,255),.08)"></div>
@@ -832,19 +839,19 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="overflow-y:auto;padding:14px 20px 30px;display:flex;flex-direction:column;gap:11px">
         <sc-for list="{{ varSheet.opts }}" as="v" hint-placeholder-count="3">
         <div style="border-radius:18px;overflow:hidden;background:var(--s1,#0C0C0E);border:1px solid {{ v.bd }};animation:cRise .48s cubic-bezier(.2,.8,.2,1) both;animation-delay:{{ v.delay }}">
-          <div onClick="{{ v.play }}" style="position:relative;aspect-ratio:16/9;background:#0A0A0C;display:flex;align-items:center;justify-content:center;cursor:pointer">
-            <sc-if value="{{ v.thumb }}" hint-placeholder-val="{{ false }}"><img src="{{ v.thumb }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6" /></sc-if>
-            <div style="position:relative;width:42px;height:42px;border-radius:50%;border:.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff">
-              <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
+          <div style="display:flex;gap:12px;padding:13px 14px;align-items:center">
+            <div onClick="{{ v.play }}" style="position:relative;width:96px;height:60px;flex:none;border-radius:12px;overflow:hidden;background:#0A0A0C;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.96)">
+              <sc-if value="{{ v.thumb }}" hint-placeholder-val="{{ false }}"><img src="{{ v.thumb }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.62" /></sc-if>
+              <div style="position:relative;width:30px;height:30px;border-radius:50%;border:.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;color:#fff">
+                <svg width="10" height="12" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
+              </div>
             </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:13px 15px">
             <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:500;line-height:1.25">{{ v.n }}</div>
-              <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.4);margin-top:3px">{{ v.note }}</div>
+              <div style="font-size:14px;font-weight:600;line-height:1.25">{{ v.n }}</div>
+              <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.42);margin-top:3px">{{ v.note }}</div>
             </div>
-            <div onClick="{{ v.use }}" style="flex:none;padding:9px 15px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1);background:{{ v.btnBg }};color:{{ v.btnFg }};border:1px solid {{ v.btnBd }}" style-active="transform:scale(.95)">{{ v.btn }}</div>
           </div>
+          <div onClick="{{ v.use }}" style="margin:0 14px 14px;text-align:center;padding:12px;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1);background:{{ v.btnBg }};color:{{ v.btnFg }};border:1px solid {{ v.btnBd }}" style-active="transform:scale(.97)">{{ v.btn }}</div>
         </div>
         </sc-for>
         <sc-if value="{{ varSheet.swapped }}" hint-placeholder-val="{{ false }}">
@@ -1284,7 +1291,7 @@ class Component extends DCLogic {
     wOpen: false, wIn: false, exClosed: {},
     logs: {}, pad: null, padIn: false,
     rest: 0, restMax: 90,
-    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: false,
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: false, playEx: null,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, toast: null, marks: {}, mealsLocked: {},
@@ -1831,7 +1838,8 @@ class Component extends DCLogic {
         meta: dn + ' de ' + e.s + ' series' + (dn === e.s ? ' · completado' : ''),
         chev: isOpen ? 'rotate(180deg)' : 'none',
         toggle: this.toggleEx(e.id),
-        play: () => this.openSheet({ k: 'vid', v: { t: st.swaps[e.id] || e.n, g: 'Técnica', y: e.y } }),
+        play: () => this.setState({ playEx: st.playEx === e.id ? null : e.id }),
+        vidPlaying: st.playEx === e.id, vidThumb: st.playEx !== e.id, src: EMBED(e.y),
         sets: Array.from({ length: e.s }, (_, i) => {
           const l = arr[i] || {}, done = !!l.done;
           const act = st.pad && st.pad.t === 'set' && st.pad.ex === e.id && st.pad.i === i;
@@ -1969,14 +1977,14 @@ class Component extends DCLogic {
         opts: (VAR[ve.id] || []).map((x, i) => {
           const parts = x.split('|'), on = cur === parts[0];
           return { n: parts[0], thumb: THUMB(parts[1]), delay: (0.03 + i * 0.05) + 's',
-            note: on ? 'Variante seleccionada' : 'Misma serie y repeticiones',
+            note: on ? 'Es la que se registrará' : 'Misma serie y repeticiones · toca elegir',
             play: () => this.openSheet({ k: 'vid', v: { t: parts[0], g: 'Variante', y: parts[1] } }),
             use: this.useVar(ve.id, parts[0]),
-            btn: on ? 'En uso' : 'Usar',
+            btn: on ? '✓ Variante elegida' : 'Elegir esta variante',
             bd: on ? A + '.45)' : A + '.07)',
-            btnBg: on ? 'var(--fg,#fff)' : 'transparent',
-            btnFg: on ? 'var(--bg,#000)' : 'inherit',
-            btnBd: on ? 'var(--fg,#fff)' : A + '.2)' };
+            btnBg: on ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.09)',
+            btnFg: on ? 'var(--bg,#000)' : 'var(--fg,#fff)',
+            btnBd: on ? 'var(--fg,#fff)' : A + '.16)' };
         })
       };
     }
