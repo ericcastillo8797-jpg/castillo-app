@@ -1372,6 +1372,12 @@ class Component extends DCLogic {
     this.setState({ tab: 'diet', day: d ? d.d : this.state.day });
     if (this._sc) this._sc.scrollTop = 0;
   };
+  // registrar nutrición SIEMPRE en un sheet que sube desde abajo (como el entreno), sin cambiar de pantalla
+  openDietSheet = fecha => () => {
+    const d = DAYS.find(x => x.fecha === fecha) || DAYS.find(x => x.today);
+    this.setState({ day: d ? d.d : this.state.day });
+    this.openSheet({ k: 'dietday' });
+  };
   shiftWeek = dir => () => {
     const weeks = (WEEKS && WEEKS.length) ? WEEKS : [{ days: DAYS }];
     this.setState(s => {
@@ -1703,7 +1709,7 @@ class Component extends DCLogic {
     // --- Plan de hoy (tareas + progreso) + Resumen semanal ---
     const _dd = (typeof window !== 'undefined' && window.__DATA) || {};
     const _todayFecha = (DAYS.find(d => d.today) || {}).fecha || 'hoy';
-    const _acts = { entreno: this.startWorkout, nutricion: this.openDiet(_todayFecha), metricas: this.openCheckin, cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
+    const _acts = { entreno: this.startWorkout, nutricion: this.openDietSheet(_todayFecha), metricas: this.openCheckin, cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
     // Colores por tipo de tarea (estilo Harbiz: un color por cosa) — se usan en el tick de hoy, los anillos del resumen y los puntos de la agenda
     const TASK_COL = { entreno: '#5B8CFF', workout: '#5B8CFF', cardio: '#FF6B5C', nutricion: '#3DD68C', nutrition: '#3DD68C', metricas: '#C084FC', metrics: '#C084FC' };
     const taskColor = k => TASK_COL[k] || 'rgba(var(--fgc,255,255,255),.55)';
@@ -1870,7 +1876,7 @@ class Component extends DCLogic {
       const _nf = dS.fecha;
       const _nm = ((_dd.mealsByDate) || {})[_nf] || {};
       const _nd = DIET.every(function (m) { return _nm[m.id] != null; });
-      dayActs.push({ type: 'nutricion', label: T('Nutrición'), sub: T('Marca lo que has comido'), done: _nd, open: () => this.openSheet({ k: 'dietday' }), thumb: '',
+      dayActs.push({ type: 'nutricion', label: T('Nutrición'), sub: T('Marca lo que has comido'), done: _nd, open: this.openDietSheet(_nf), thumb: '',
         ckBg: _nd ? '#3DD68C' : 'transparent', ckFg: _nd ? '#0C0C0E' : 'transparent', ckBd: _nd ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.24)' });
     }
     const daySel = {
