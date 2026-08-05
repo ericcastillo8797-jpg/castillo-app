@@ -642,7 +642,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 <div style="position:absolute;inset:0;z-index:11">
   <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(0,0,0,.42);transition:opacity .46s cubic-bezier(.32,.72,0,1);opacity:{{ sheetDim }}"></div>
   <div style="position:absolute;left:0;right:0;bottom:0;max-height:88%;display:flex;flex-direction:column;background:var(--s4,#111114);border:.5px solid rgba(var(--fgc,255,255,255),.13);border-bottom:none;border-radius:30px 30px 0 0;transition:transform .5s cubic-bezier(.32,.72,0,1);transform:{{ sheetY }};box-shadow:0 -20px 60px rgba(0,0,0,.42)">
-    <div onClick="{{ closeSheet }}" style="position:absolute;top:12px;left:14px;z-index:3;width:30px;height:30px;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)">
+    <div onClick="{{ closeSheet }}" style="position:absolute;top:12px;right:14px;z-index:3;width:30px;height:30px;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)">
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l7 7M9 2l-7 7"></path></svg>
     </div>
     <div style="padding:11px 0 0;display:flex;justify-content:center;flex:none"><div style="width:38px;height:4.5px;border-radius:4px;background:rgba(var(--fgc,255,255,255),.22)"></div></div>
@@ -839,19 +839,16 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="overflow-y:auto;padding:14px 20px 30px;display:flex;flex-direction:column;gap:11px">
         <sc-for list="{{ varSheet.opts }}" as="v" hint-placeholder-count="3">
         <div style="border-radius:18px;overflow:hidden;background:var(--s1,#0C0C0E);border:1px solid {{ v.bd }};animation:cRise .48s cubic-bezier(.2,.8,.2,1) both;animation-delay:{{ v.delay }}">
-          <div style="display:flex;gap:12px;padding:13px 14px;align-items:center">
-            <div onClick="{{ v.play }}" style="position:relative;width:96px;height:60px;flex:none;border-radius:12px;overflow:hidden;background:#0A0A0C;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.96)">
-              <sc-if value="{{ v.thumb }}" hint-placeholder-val="{{ false }}"><img src="{{ v.thumb }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.62" /></sc-if>
-              <div style="position:relative;width:30px;height:30px;border-radius:50%;border:.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;color:#fff">
-                <svg width="10" height="12" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
-              </div>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:600;line-height:1.25">{{ v.n }}</div>
-              <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.42);margin-top:3px">{{ v.note }}</div>
+          <div onClick="{{ v.play }}" style="position:relative;aspect-ratio:16/9;background:#0A0A0C;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.99)">
+            <sc-if value="{{ v.thumb }}" hint-placeholder-val="{{ false }}"><img src="{{ v.thumb }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6" /></sc-if>
+            <div style="position:relative;width:42px;height:42px;border-radius:50%;border:.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff">
+              <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
             </div>
           </div>
-          <div onClick="{{ v.use }}" style="margin:0 14px 14px;text-align:center;padding:12px;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1);background:{{ v.btnBg }};color:{{ v.btnFg }};border:1px solid {{ v.btnBd }}" style-active="transform:scale(.97)">{{ v.btn }}</div>
+          <div style="padding:12px 14px 14px">
+            <div style="font-size:14.5px;font-weight:600;line-height:1.25;margin-bottom:11px">{{ v.n }}</div>
+            <div onClick="{{ v.use }}" style="text-align:center;padding:12px;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1);background:{{ v.btnBg }};color:{{ v.btnFg }};border:1px solid {{ v.btnBd }}" style-active="transform:scale(.97)">{{ v.btn }}</div>
+          </div>
         </div>
         </sc-for>
         <sc-if value="{{ varSheet.swapped }}" hint-placeholder-val="{{ false }}">
@@ -1464,7 +1461,16 @@ class Component extends DCLogic {
       window.CastilloData.registrarComida(id, i, fecha).then(() => { this.flash('Comida registrada'); this.refreshData(); }, () => {});
     }
     this.setState({});   // refresco inmediato (registrarComida ya actualizó __DATA.mealsByDate)
-    this.later(this.closeSheet, 430);
+    const sk = (this.state.sheet || {}).k;
+    if (sk === 'dietday') {
+      // menú de TODAS las comidas: no cerrar; solo se cierra solo cuando ya están todas marcadas
+      const dm = (window.__DATA && window.__DATA.mealsByDate && window.__DATA.mealsByDate[fecha]) || {};
+      const now = Object.assign({}, dm, { [id]: i });
+      const allDone = DIET.length > 0 && DIET.every(m => now[m.id] != null);
+      if (allDone) this.later(this.closeSheet, 550);
+    } else {
+      this.later(this.closeSheet, 430);
+    }
   };
 
   // HTML común de la dieta (diseño 3 columnas, 1 hoja) — lo usan Imprimir y Compartir
@@ -1833,8 +1839,12 @@ class Component extends DCLogic {
       const arr = logs[e.id] || [];
       const dn = arr.slice(0, e.s).filter(x => x && x.done).length;
       const isOpen = !st.exClosed[e.id];
+      // si hay una variante elegida, usa SU vídeo/miniatura (no solo el título)
+      const _swap = st.swaps[e.id];
+      let _vy = e.y;
+      if (_swap) { const _f = (VAR[e.id] || []).map(x => x.split('|')).find(p => p[0] === _swap); if (_f && _f[1]) _vy = _f[1]; }
       return {
-        n: st.swaps[e.id] || e.n, p: e.p, rest: e.rest, open: isOpen, thumb: THUMB(e.y),
+        n: _swap || e.n, p: e.p, rest: e.rest, open: isOpen, thumb: THUMB(_vy),
         openVar: this.openVar(e),
         varLabel: st.swaps[e.id] ? T('Variante en uso · ver otras') : T('No puedo hacer este ejercicio'),
         nS: String(e.s), reps: e.p.split('×').pop().trim(),
@@ -1847,7 +1857,7 @@ class Component extends DCLogic {
         chev: isOpen ? 'rotate(180deg)' : 'none',
         toggle: this.toggleEx(e.id),
         play: () => this.setState({ playEx: st.playEx === e.id ? null : e.id }),
-        vidPlaying: st.playEx === e.id, vidThumb: st.playEx !== e.id, src: EMBED(e.y),
+        vidPlaying: st.playEx === e.id, vidThumb: st.playEx !== e.id, src: EMBED(_vy),
         sets: Array.from({ length: e.s }, (_, i) => {
           const l = arr[i] || {}, done = !!l.done;
           const act = st.pad && st.pad.t === 'set' && st.pad.ex === e.id && st.pad.i === i;
@@ -2147,7 +2157,7 @@ class Component extends DCLogic {
       evoCompOpen: st.evoCompOpen, evoCompChevron: st.evoCompOpen ? 'rotate(180deg)' : 'rotate(0deg)', toggleEvoComp: () => this.setState({ evoCompOpen: !st.evoCompOpen }),
       evoCompHint: st.evoCompOpen ? T('Toca para ocultar') : T('Toca para ver todas tus medidas'),
       appZoom: st.fontScale || 1, appWH: (100 / (st.fontScale || 1)) + '%',
-      fontSizes: [[T('Normal'), 1, 13], [T('Grande'), 1.18, 16], [T('Más grande'), 1.38, 19]].map(([n, v, fs]) => {
+      fontSizes: [[T('Normal'), 1, 13], [T('Grande'), 1.1, 15], [T('Más grande'), 1.22, 17]].map(([n, v, fs]) => {
         const sel = (st.fontScale || 1) === v;
         return { n, fs: fs + 'px', pick: this.setFontScale(v), bg: sel ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', fg: sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)' };
       }),
