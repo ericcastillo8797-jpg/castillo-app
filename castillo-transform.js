@@ -225,7 +225,7 @@
           return foods.concat(recs).join(';');
         }).filter(function (s) { return s; });
         if (!opts.length) return;
-        DIET.push({ id: id, h: MEAL_H[meal.type] || '', n: MEAL_ES[meal.type] || meal.mealDescription || ('Comida ' + (idx + 1)), o: opts });
+        DIET.push({ id: id, h: '', n: MEAL_ES[meal.type] || meal.mealDescription || ('Comida ' + (idx + 1)), o: opts });
         mealsSel[id] = typeof meal.selectedOption === 'number' ? meal.selectedOption : 0;
       });
     }
