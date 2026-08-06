@@ -41,6 +41,8 @@
     var chkList = (Array.isArray(checkinRegs) ? checkinRegs : []).filter(function (c) { return c.fecha; }).slice().sort(function (a, b) { return (a.fecha < b.fecha ? -1 : 1); });
     var chkByKey = {};
     chkList.forEach(function (c) { var v = c.valores || {}; Object.keys(v).forEach(function (k) { if (v[k] != null && v[k] !== '') { (chkByKey[k] || (chkByKey[k] = [])).push({ fecha: (c.fecha || '').slice(0, 10), val: v[k] }); } }); });
+    // días en los que el cliente pasó un check-in (métricas o fotos) -> cuentan como "métricas hechas"
+    var chkDates = {}; chkList.forEach(function (c) { if ((c.valores && Object.keys(c.valores).length) || (c.fotos && Object.keys(c.fotos).length)) chkDates[(c.fecha || '').slice(0, 10)] = true; });
     row = row || {};
     var now = new Date();
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
@@ -152,7 +154,7 @@
         var hh = wkItem ? d2(wkItem.dt.getHours()) + ':' + d2(wkItem.dt.getMinutes()) : '';
         // lista de actividades del día (como Harbiz > Planificación): métricas (foto incluida) / cardio / entreno
         var acts = [];
-        if (statsItem || photoItem) acts.push({ type: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: !!((statsItem && statsItem.done) || (photoItem && photoItem.done)) });
+        if (statsItem || photoItem) acts.push({ type: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: !!((statsItem && statsItem.done) || (photoItem && photoItem.done) || chkDates[key]) });
         if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: 'Cardio', done: !!cardio.done });
         if (wkItem) acts.push({ type: 'workout', label: wkItem.title, sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
         out.push({
@@ -245,7 +247,7 @@
     }
     function isoWeek(dt) { var j = new Date(dt.getFullYear(), 0, 1); return Math.ceil((((startOfDay(dt) - j) / 86400000) + j.getDay() + 1) / 7); }
     function weekRange(dt) { var m0 = mondayOf(dt), e = new Date(m0); e.setDate(m0.getDate() + 6); return m0.getDate() + ' ' + MO[m0.getMonth()].slice(0, 3) + ' – ' + e.getDate() + ' ' + MO[e.getMonth()].slice(0, 3); }
-    var fields = metrics.filter(function (m) { return metVal(m) != null; }).map(function (m) {
+    var fields = metrics.filter(function (m) { return metVal(m) != null && !/grasa|body\s?fat/i.test(m.name || ''); }).map(function (m) {
       // histórico REAL de la métrica (más reciente primero) con etiqueta de semana + rango de fechas
       var pts = (m.data || []).filter(function (p) { return p && p.t != null && p.y != null && !isNaN(parseFloat(String(p.y).replace(',', '.'))); })
         .map(function (p) { return { t: ms(p.t), y: p.y }; });
@@ -301,13 +303,25 @@
     }
 
     // ---------- PHOTOSETS (fotos de progreso) ----------
-    var photos = (row.evolution && row.evolution.photos) || [];
-    var PHOTOSETS = photos.slice().sort(function (a, b) { return ms(b.date) - ms(a.date); }).slice(0, 3).map(function (p) {
-      var dt = new Date(ms(p.date));
-      return { w: 'Semana ' + Math.ceil((dt.getDate()) / 7 + (dt.getMonth()) * 4.34), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: wm && wm.current ? comma(wm.current) + ' kg' : '' };
-    });
-    var SHOTS = ['Frontal', 'Espalda', 'Lateral'];
-    var SESS = photos.slice().sort(function (a, b) { return ms(b.date) - ms(a.date); }).slice(0, 5).map(function (p) { var dt = new Date(ms(p.date)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
+    var SHOTS = ['Frontal', 'Lateral', 'Espalda'];
+    // PHOTOSETS: PRIMERO las fotos que el propio cliente sube en sus check-ins (URL real), más recientes primero
+    var chkPhotos = chkList.filter(function (c) { return c.fotos && Object.keys(c.fotos).length; }).slice().reverse();
+    var PHOTOSETS, SESS;
+    if (chkPhotos.length) {
+      PHOTOSETS = chkPhotos.slice(0, 8).map(function (c) {
+        var dt = dtOf(c.fecha);
+        var pw = (c.valores && (c.valores['peso-corporal'] || c.valores['peso'] || c.valores['peso_corporal'])) || '';
+        return { w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pw ? comma(pw) + ' kg' : '', fotos: c.fotos };
+      });
+      SESS = PHOTOSETS.map(function (p) { return p.date; });
+    } else {
+      var photos = (row.evolution && row.evolution.photos) || [];
+      PHOTOSETS = photos.slice().sort(function (a, b) { return ms(b.date) - ms(a.date); }).slice(0, 3).map(function (p) {
+        var dt = new Date(ms(p.date));
+        return { w: 'Semana ' + Math.ceil((dt.getDate()) / 7 + (dt.getMonth()) * 4.34), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: wm && wm.current ? comma(wm.current) + ' kg' : '' };
+      });
+      SESS = photos.slice().sort(function (a, b) { return ms(b.date) - ms(a.date); }).slice(0, 5).map(function (p) { var dt = new Date(ms(p.date)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
+    }
     var DATES = (wm && wm.data ? wm.data : []).slice().reverse().slice(0, 10).map(function (p) { var dt = new Date(ms(p.t)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
     if (!DATES.length) DATES = SESS.slice();
 
@@ -392,7 +406,7 @@
     var regToday = regByDate[todayKey] || {};
     var entrenoHecho = regToday.workout || doneT('workout');
     var todayTasks = [];
-    if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') });
+    if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') || !!chkDates[todayKey] });
     if (hasT('cardio')) todayTasks.push({ key: 'cardio', label: 'Cardio', sub: (todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}).title || 'Caminar', done: doneT('cardio') || !!regToday.cardio });
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)

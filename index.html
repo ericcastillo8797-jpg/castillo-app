@@ -7,9 +7,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=26"></script>
-<script src="./castillo-transform.js?v=26"></script>
-<script src="./castillo-data.js?v=26"></script>
+<script src="./castillo-i18n.js?v=27"></script>
+<script src="./castillo-transform.js?v=27"></script>
+<script src="./castillo-data.js?v=27"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -377,10 +377,11 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center">
               <svg width="42" height="62" viewBox="0 0 42 62" fill="currentColor" opacity=".14"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg>
             </div>
-            <div style="position:absolute;top:7px;right:7px;width:17px;height:17px;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center">
-              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".65" stroke-width="1.4"><rect x="2" y="5.2" width="8" height="5.6" rx="1.4"></rect><path d="M4 5.2V3.8a2 2 0 0 1 4 0v1.4"></path></svg>
+            <sc-if value="{{ s.img }}" hint-placeholder-val="{{ false }}"><img src="{{ s.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
+            <div style="position:absolute;top:7px;right:7px;z-index:2;width:17px;height:17px;border-radius:50%;background:rgba(var(--bgc,0,0,0),.35);display:flex;align-items:center;justify-content:center">
+              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".8" stroke-width="1.4"><rect x="2" y="5.2" width="8" height="5.6" rx="1.4"></rect><path d="M4 5.2V3.8a2 2 0 0 1 4 0v1.4"></path></svg>
             </div>
-            <div style="position:absolute;bottom:0;left:0;right:0;padding:14px 6px 6px;text-align:center;font-size:8.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.5);background:linear-gradient(to top,rgba(var(--bgc,0,0,0),.55),transparent)">{{ s.n }}</div>
+            <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:14px 6px 6px;text-align:center;font-size:8.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);background:linear-gradient(to top,rgba(var(--bgc,0,0,0),.55),transparent)">{{ s.n }}</div>
           </div>
           </sc-for>
         </div>
@@ -839,16 +840,19 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="overflow-y:auto;padding:14px 20px 30px;display:flex;flex-direction:column;gap:11px">
         <sc-for list="{{ varSheet.opts }}" as="v" hint-placeholder-count="3">
         <div style="border-radius:18px;overflow:hidden;background:var(--s1,#0C0C0E);border:1px solid {{ v.bd }};animation:cRise .48s cubic-bezier(.2,.8,.2,1) both;animation-delay:{{ v.delay }}">
-          <div onClick="{{ v.play }}" style="position:relative;aspect-ratio:16/9;background:#0A0A0C;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.99)">
-            <sc-if value="{{ v.thumb }}" hint-placeholder-val="{{ false }}"><img src="{{ v.thumb }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6" /></sc-if>
-            <div style="position:relative;width:42px;height:42px;border-radius:50%;border:.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff">
-              <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
+          <div style="display:flex;gap:12px;padding:12px 12px 0">
+            <div onClick="{{ v.play }}" style="position:relative;width:132px;height:82px;flex:none;border-radius:12px;overflow:hidden;background:#0A0A0C;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.97)">
+              <sc-if value="{{ v.thumb }}" hint-placeholder-val="{{ false }}"><img src="{{ v.thumb }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72" /></sc-if>
+              <div style="position:relative;width:30px;height:30px;border-radius:50%;border:.5px solid rgba(255,255,255,.42);background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;color:#fff">
+                <svg width="10" height="12" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
+              </div>
+            </div>
+            <div style="flex:1;min-width:0;padding-top:3px">
+              <div style="font-size:14.5px;font-weight:600;line-height:1.25">{{ v.n }}</div>
+              <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:5px">{{ v.series }}</div>
             </div>
           </div>
-          <div style="padding:12px 14px 14px">
-            <div style="font-size:14.5px;font-weight:600;line-height:1.25;margin-bottom:11px">{{ v.n }}</div>
-            <div onClick="{{ v.use }}" style="text-align:center;padding:12px;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1);background:{{ v.btnBg }};color:{{ v.btnFg }};border:1px solid {{ v.btnBd }}" style-active="transform:scale(.97)">{{ v.btn }}</div>
-          </div>
+          <div onClick="{{ v.use }}" style="margin:12px;text-align:center;padding:11px;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1);background:{{ v.btnBg }};color:{{ v.btnFg }};border:1px solid {{ v.btnBd }}" style-active="transform:scale(.97)">{{ v.btn }}</div>
         </div>
         </sc-for>
         <sc-if value="{{ varSheet.swapped }}" hint-placeholder-val="{{ false }}">
@@ -863,7 +867,8 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <div data-screen-label="Fotografia archivada" style="padding:14px 20px 30px">
       <div style="position:relative;aspect-ratio:3/4;max-height:52vh;border-radius:20px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.1);display:flex;align-items:flex-end;justify-content:center">
         <svg width="120" height="178" viewBox="0 0 42 62" fill="currentColor" opacity=".13"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg>
-        <div style="position:absolute;top:12px;left:14px;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:100px;background:rgba(var(--bgc,0,0,0),.45);backdrop-filter:blur(10px)">
+        <sc-if value="{{ photoSheet.img }}" hint-placeholder-val="{{ false }}"><img src="{{ photoSheet.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
+        <div style="position:absolute;top:12px;left:14px;z-index:2;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:100px;background:rgba(var(--bgc,0,0,0),.45);backdrop-filter:blur(10px)">
           <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".7" stroke-width="1.5"><rect x="2" y="5.2" width="8" height="5.6" rx="1.4"></rect><path d="M4 5.2V3.8a2 2 0 0 1 4 0v1.4"></path></svg>
           <span style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.72)">Registro cerrado</span>
         </div>
@@ -940,10 +945,19 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
             </div>
             </sc-if>
+            <sc-if value="{{ s.uploading }}" hint-placeholder-val="{{ false }}">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" style="animation:cSpin .8s linear infinite;opacity:.75"><path d="M12 3a9 9 0 1 0 9 9"></path></svg>
+            <div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.55)">Cargando…</div>
+            </sc-if>
             <sc-if value="{{ s.pending }}" hint-placeholder-val="{{ true }}">
             <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" opacity=".32" stroke-width="1.3"><path d="M11 4.5c2 0 2.6-1.6 2.6-1.6h2.9c1 0 1.9.8 1.9 1.9v11.4c0 1-.8 1.9-1.9 1.9H5.5c-1 0-1.9-.8-1.9-1.9V4.8c0-1 .8-1.9 1.9-1.9h2.9S9 4.5 11 4.5Z"></path><circle cx="11" cy="11.6" r="3.4"></circle></svg>
             </sc-if>
+            <sc-if value="{{ s.done }}" hint-placeholder-val="{{ false }}">
             <div style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:{{ s.fg }}">{{ s.n }}</div>
+            </sc-if>
+            <sc-if value="{{ s.pending }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:{{ s.fg }}">{{ s.n }}</div>
+            </sc-if>
           </div>
           </sc-for>
         </div>
@@ -1199,8 +1213,7 @@ let APPTS = [
 
 let MET = [
   { g:'Composición', f:[
-    { k:'peso', l:'Peso corporal', u:'kg', v:'84,2', p:'84,9' },
-    { k:'grasa', l:'Grasa corporal', u:'%', v:'14,8', p:'15,6' } ] },
+    { k:'peso', l:'Peso corporal', u:'kg', v:'84,2', p:'84,9' } ] },
   { g:'Tronco', f:[
     { k:'cuello', l:'Cuello', u:'cm', v:'39,0', p:'39,2' },
     { k:'hombros', l:'Hombros', u:'cm', v:'122,5', p:'121,8' },
@@ -1249,7 +1262,7 @@ const PTS = [
 
 let WEIGHTS = [88.6,88.1,87.6,87.4,86.9,86.5,86.2,85.8,85.4,85.0,84.9,84.2];
 let chartLabels = ['22 may','19 jun','24 jul'];
-let SHOTS = ['Frontal','Espalda','Lateral'];
+let SHOTS = ['Frontal','Lateral','Espalda'];
 let SESS = ['22 jul','15 jul','08 jul','01 jul','24 jun'];
 let DATES = ['24 jul','17 jul','10 jul','03 jul','26 jun','19 jun','12 jun','05 jun','29 may','22 may'];
 let PHOTOSETS = [
@@ -1291,7 +1304,7 @@ class Component extends DCLogic {
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: false, playEx: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
-    ck: {}, ckPhotos: {}, toast: null, marks: {}, mealsLocked: {},
+    ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {},
     lang: (function () { try { return localStorage.getItem('castillo_lang') || 'es'; } catch (e) { return 'es'; } })()
   };
   setLang = l => () => { try { localStorage.setItem('castillo_lang', l); } catch (e) {} this.setState({ lang: l }); };
@@ -1640,12 +1653,12 @@ class Component extends DCLogic {
     inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
     inp.onchange = () => {
       const f = inp.files && inp.files[0]; if (!f) return;
-      this.flash('Subiendo foto…');
+      this.setState(s => ({ ckUploading: Object.assign({}, s.ckUploading, { [id]: true }) }));   // "Cargando…" hasta que suba
       if (window.CastilloData && window.CastilloData.subirFotoProgreso) {
         window.CastilloData.subirFotoProgreso(f, id).then(url => {
-          this.setState(s => ({ ckPhotos: Object.assign({}, s.ckPhotos, { [id]: url }) }));
+          this.setState(s => { const up = Object.assign({}, s.ckUploading); delete up[id]; return { ckPhotos: Object.assign({}, s.ckPhotos, { [id]: url }), ckUploading: up }; });
           this.flash('Foto añadida');
-        }, () => this.flash('No se pudo subir la foto'));
+        }, () => { this.setState(s => { const up = Object.assign({}, s.ckUploading); delete up[id]; return { ckUploading: up }; }); this.flash('No se pudo subir la foto'); });
       }
     };
     inp.click();
@@ -1657,6 +1670,8 @@ class Component extends DCLogic {
     Object.keys(cp).forEach(k => { if (cp[k]) fotos[k] = cp[k]; });   // solo las que son URL (subidas)
     if (!Object.keys(vals).length && !Object.keys(fotos).length) { this.flash('Escribe algún dato o añade una foto'); return; }
     this.closeSheet();
+    const _tf = (DAYS.find(d => d.today) || {}).fecha;   // marca "métricas" hecho al instante (sin esperar al refresh)
+    if (_tf) this.setState(s => ({ marks: Object.assign({}, s.marks, { [_tf + '|metricas']: true }) }));
     if (window.CastilloData && window.CastilloData.registrarCheckin) {
       window.CastilloData.registrarCheckin(vals, fotos).then(() => { this.flash('Check-in guardado'); this.refreshData(); }, () => this.flash('No se pudo guardar'));
     } else { this.flash('Check-in guardado'); }
@@ -1992,11 +2007,13 @@ class Component extends DCLogic {
     let varSheet = {};
     if (ve) {
       const cur = st.swaps[ve.id];
+      const _reps = String(ve.p || '').split('×').pop().trim();
+      const _serTxt = (ve.s ? ve.s + ' series' : '') + (_reps ? ' · ' + _reps + ' reps' : '');
       varSheet = {
         n: ve.n, swapped: !!cur, reset: this.resetVar(ve.id),
         opts: (VAR[ve.id] || []).map((x, i) => {
           const parts = x.split('|'), on = cur === parts[0];
-          return { n: parts[0], thumb: THUMB(parts[1]), delay: (0.03 + i * 0.05) + 's',
+          return { n: parts[0], thumb: THUMB(parts[1]), delay: (0.03 + i * 0.05) + 's', series: _serTxt,
             note: on ? 'Es la que se registrará' : 'Misma serie y repeticiones · toca elegir',
             play: () => this.openSheet({ k: 'vid', v: { t: parts[0], g: 'Variante', y: parts[1] } }),
             use: this.useVar(ve.id, parts[0]),
@@ -2090,8 +2107,9 @@ class Component extends DCLogic {
 
     const ckShots = SHOTS.map(n => {
       const url = st.ckPhotos[n];
-      const done = !!url;
-      return { n, done, pending: !done, tap: this.tapPhoto(n),
+      const uploading = !!(st.ckUploading && st.ckUploading[n]);
+      const done = !!url && !uploading;
+      return { n, done, uploading, pending: !url && !uploading, tap: this.tapPhoto(n),
         bg: done ? ('center/cover no-repeat url("' + url + '")') : 'var(--s2,#121215)',
         bd: done ? 'rgba(var(--fgc,255,255,255),.45)' : 'rgba(var(--fgc,255,255,255),.09)',
         fg: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.3)' };
@@ -2165,10 +2183,10 @@ class Component extends DCLogic {
       exProgList, exProgEmpty: exProgList.length === 0,
       chart, metGroups,
       photoSets: PHOTOSETS.map(p => Object.assign({}, p, {
-        shots: SHOTS.map(n => ({ n, open: this.openPhoto(p, n) }))
+        shots: SHOTS.map(n => ({ n, img: (p.fotos && p.fotos[n]) || '', open: this.openPhoto(p, n) }))
       })),
       isPhotoSheet: sh.k === 'photo',
-      photoSheet: sh.k === 'photo' ? { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, view: sh.view } : {},
+      photoSheet: sh.k === 'photo' ? { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, view: sh.view, img: (sh.p.fotos && sh.p.fotos[sh.view]) || '' } : {},
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoDelta,
       chartArea: chart.area, chartLine: chart.line, chartLx: chart.lx, chartLy: chart.ly,
