@@ -7,9 +7,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=31"></script>
-<script src="./castillo-transform.js?v=31"></script>
-<script src="./castillo-data.js?v=31"></script>
+<script src="./castillo-i18n.js?v=32"></script>
+<script src="./castillo-transform.js?v=32"></script>
+<script src="./castillo-data.js?v=32"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -921,6 +921,11 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="position:relative;aspect-ratio:3/4;max-height:52vh;border-radius:20px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.1);display:flex;align-items:flex-end;justify-content:center">
         <svg width="120" height="178" viewBox="0 0 42 62" fill="currentColor" opacity=".13"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg>
         <sc-if value="{{ photoSheet.img }}" hint-placeholder-val="{{ false }}"><img src="{{ photoSheet.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
+        <sc-if value="{{ photoSheet.hasNav }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ photoSheet.prev }}" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);z-index:3;width:42px;height:42px;border-radius:50%;background:rgba(var(--bgc,0,0,0),.5);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:24px;line-height:1;font-weight:300" style-active="transform:translateY(-50%) scale(.88)">‹</div>
+          <div onClick="{{ photoSheet.next }}" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:3;width:42px;height:42px;border-radius:50%;background:rgba(var(--bgc,0,0,0),.5);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:24px;line-height:1;font-weight:300" style-active="transform:translateY(-50%) scale(.88)">›</div>
+          <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:3;font-size:10px;font-weight:600;letter-spacing:.1em;color:rgba(255,255,255,.85);background:rgba(var(--bgc,0,0,0),.5);padding:3px 11px;border-radius:100px">{{ photoSheet.pos }}</div>
+        </sc-if>
         <div style="position:absolute;top:12px;left:14px;z-index:2;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:100px;background:rgba(var(--bgc,0,0,0),.45);backdrop-filter:blur(10px)">
           <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".7" stroke-width="1.5"><rect x="2" y="5.2" width="8" height="5.6" rx="1.4"></rect><path d="M4 5.2V3.8a2 2 0 0 1 4 0v1.4"></path></svg>
           <span style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.72)">Registro cerrado</span>
@@ -1475,6 +1480,14 @@ class Component extends DCLogic {
   openMet = f => () => this.openSheet({ k: 'met', f });
   openHist = e => () => this.openSheet({ k: 'exh', e });
   openPhoto = (p, view) => () => this.openSheet({ k: 'photo', p, view });
+  photoNav = (dir) => () => {
+    const sh = this.state.sheet; if (!sh || sh.k !== 'photo') return;
+    const order = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]);
+    if (order.length < 2) return;
+    let i = order.indexOf(sh.view); if (i < 0) i = 0;
+    const ni = (i + dir + order.length) % order.length;
+    this.setState({ sheet: Object.assign({}, sh, { view: order[ni] }) });
+  };
   openVar = e => () => this.openSheet({ k: 'var', e });
   useVar = (id, n) => () => {
     this.setState(s => ({ swaps: Object.assign({}, s.swaps, { [id]: n }) }));
@@ -2250,7 +2263,7 @@ class Component extends DCLogic {
         shots: SHOTS.map(n => ({ n, img: (p.fotos && p.fotos[n]) || '', open: this.openPhoto(p, n) }))
       })),
       isPhotoSheet: sh.k === 'photo',
-      photoSheet: sh.k === 'photo' ? { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, view: sh.view, img: (sh.p.fotos && sh.p.fotos[sh.view]) || '' } : {},
+      photoSheet: sh.k === 'photo' ? (() => { const order = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]); const i = Math.max(0, order.indexOf(sh.view)); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, view: sh.view, img: (sh.p.fotos && sh.p.fotos[sh.view]) || '', hasNav: order.length > 1, pos: (i + 1) + ' / ' + order.length, prev: this.photoNav(-1), next: this.photoNav(1) }; })() : {},
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoDelta,
       chartArea: chart.area, chartLine: chart.line, chartLx: chart.lx, chartLy: chart.ly,
