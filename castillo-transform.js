@@ -304,24 +304,22 @@
 
     // ---------- PHOTOSETS (fotos de progreso) ----------
     var SHOTS = ['Frontal', 'Lateral', 'Espalda'];
-    // PHOTOSETS: PRIMERO las fotos que el propio cliente sube en sus check-ins (URL real), más recientes primero
-    var chkPhotos = chkList.filter(function (c) { return c.fotos && Object.keys(c.fotos).length; }).slice().reverse();
-    var PHOTOSETS, SESS;
-    if (chkPhotos.length) {
-      PHOTOSETS = chkPhotos.slice(0, 8).map(function (c) {
-        var dt = dtOf(c.fecha);
-        var pw = (c.valores && (c.valores['peso-corporal'] || c.valores['peso'] || c.valores['peso_corporal'])) || '';
-        return { w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pw ? comma(pw) + ' kg' : '', fotos: c.fotos };
-      });
-      SESS = PHOTOSETS.map(function (p) { return p.date; });
-    } else {
-      var photos = (row.evolution && row.evolution.photos) || [];
-      PHOTOSETS = photos.slice().sort(function (a, b) { return ms(b.date) - ms(a.date); }).slice(0, 3).map(function (p) {
-        var dt = new Date(ms(p.date));
-        return { w: 'Semana ' + Math.ceil((dt.getDate()) / 7 + (dt.getMonth()) * 4.34), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: wm && wm.current ? comma(wm.current) + ' kg' : '' };
-      });
-      SESS = photos.slice().sort(function (a, b) { return ms(b.date) - ms(a.date); }).slice(0, 5).map(function (p) { var dt = new Date(ms(p.date)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
-    }
+    // FUSIÓN de las dos fuentes: (1) fotos que el cliente sube en sus check-ins y (2) fotos históricas de Harbiz.
+    // Cada semana muestra sus 3 fotos; antes, si había 1 check-in, se ocultaban TODAS las de Harbiz.
+    var setsClient = chkList.filter(function (c) { return c.fotos && Object.keys(c.fotos).length; }).map(function (c) {
+      var dt = dtOf(c.fecha);
+      var pw = (c.valores && (c.valores['peso-corporal'] || c.valores['peso'] || c.valores['peso_corporal'])) || '';
+      return { key: (c.fecha || '').slice(0, 10), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pw ? comma(pw) + ' kg' : '', fotos: c.fotos };
+    });
+    var setsHarbiz = ((row.evolution && row.evolution.photos) || []).filter(function (p) { return p.front_url || p.side_url || p.back_url; }).map(function (p) {
+      var dt = new Date(ms(p.date));
+      return { key: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: '', fotos: { Frontal: p.front_url, Lateral: p.side_url, Espalda: p.back_url } };
+    });
+    var seenD = {};
+    var PHOTOSETS = setsClient.concat(setsHarbiz).sort(function (a, b) { return b.t - a.t; })
+      .filter(function (s) { if (seenD[s.key]) return false; seenD[s.key] = 1; return true; })
+      .slice(0, 12).map(function (s) { return { w: s.w, date: s.date, kg: s.kg, fotos: s.fotos }; });
+    var SESS = PHOTOSETS.map(function (p) { return p.date; });
     var DATES = (wm && wm.data ? wm.data : []).slice().reverse().slice(0, 10).map(function (p) { var dt = new Date(ms(p.t)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
     if (!DATES.length) DATES = SESS.slice();
 

@@ -7,9 +7,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=28"></script>
-<script src="./castillo-transform.js?v=28"></script>
-<script src="./castillo-data.js?v=28"></script>
+<script src="./castillo-i18n.js?v=29"></script>
+<script src="./castillo-transform.js?v=29"></script>
+<script src="./castillo-data.js?v=29"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -169,6 +169,16 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <svg width="13" height="13" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
       </div>
       <div style="text-align:center;font-size:11px;color:rgba(var(--fgc,255,255,255),.4);margin-top:10px">{{ L.verDietaSub }}</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <div onClick="{{ printDiet }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:100px;padding:11px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5V2h6v3M4 10.5H3a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V9.5a1 1 0 0 1-1 1h-1M4 8.5h6v3.5H4z"></path></svg>
+          <span style="font-size:12px;font-weight:600">{{ L.imprimirDieta }}</span>
+        </div>
+        <div onClick="{{ shareDiet }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:11px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.5V2M4.5 4.2 7 1.7l2.5 2.5"></path><path d="M2.5 8v3.5a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V8"></path></svg>
+          <span style="font-size:12px;font-weight:600">{{ L.compartirDieta }}</span>
+        </div>
+      </div>
     </div>
   </div>
   </sc-if>
@@ -511,7 +521,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <span style="font-size:9px;font-weight:500">{{ L.evolucion }}</span>
     </div>
     <div onClick="{{ goConf }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .24s cubic-bezier(.2,.8,.2,1);color:{{ cConf }}" style-active="transform:scale(.9)">
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"></circle><path d="M12 2.2v3.1M12 18.7v3.1M2.2 12h3.1M18.7 12h3.1M5.05 5.05l2.2 2.2M16.75 16.75l2.2 2.2M18.95 5.05l-2.2 2.2M7.25 16.75l-2.2 2.2"></path></svg>
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"></circle><path d="M19.4 13a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path></svg>
       <span style="font-size:9px;font-weight:500">{{ L.ajustes }}</span>
     </div>
   </div>
@@ -688,6 +698,14 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
     <sc-if value="{{ isDietDaySheet }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Nutricion del dia" style="display:flex;flex-direction:column;min-height:0">
+      <div style="position:absolute;top:50px;right:14px;z-index:4;display:flex;gap:7px">
+        <div onClick="{{ printDiet }}" title="{{ L.imprimirDieta }}" style="width:32px;height:32px;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5V2h6v3M4 10.5H3a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V9.5a1 1 0 0 1-1 1h-1M4 8.5h6v3.5H4z"></path></svg>
+        </div>
+        <div onClick="{{ shareDiet }}" title="{{ L.compartirDieta }}" style="width:32px;height:32px;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.5V2M4.5 4.2 7 1.7l2.5 2.5"></path><path d="M2.5 8v3.5a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V8"></path></svg>
+        </div>
+      </div>
       <div style="padding:14px 20px 12px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.nutricion }}</div>
         <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1;margin-top:4px">{{ daySel.long }}</div>
