@@ -223,7 +223,69 @@
 
   // normaliza: quita espacios raros (non-breaking  ), colapsa espacios, minúsculas
   function nk(s) { return String(s == null ? '' : s).replace(/ /g, ' ').replace(/\s+/g, ' ').trim().toLowerCase(); }
+  // nombres de ejercicios (tabla + entrenos, ES/mixto) -> EN. Clave normalizada SIN acentos.
+  function nkx(s) { return nk(s).normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  var EX_EN = {
+    'abdominales (sit ups)': 'Sit-ups', 'abdominales con press militar': 'Sit-ups with overhead press', 'abdominales cruzados': 'Cross crunches',
+    'abducciones hombro posterior en poleas': 'Cable rear delt abduction', 'aductor en maquina': 'Adductor machine',
+    'aperturas con mancuernas (banco inclinado)': 'Incline dumbbell flyes', 'aperturas con mancuernas (banco plano)': 'Flat dumbbell flyes',
+    'aperturas de pecho (en casa)': 'Chest flyes (at home)', 'aperturas de pecho en trx': 'TRX chest flyes',
+    'bench press with bar': 'Barbell bench press', 'biceps con mancuerna alterno': 'Alternating dumbbell curls', 'biceps con mancuernas (alterno)': 'Alternating dumbbell curls',
+    'biceps en banco scott': 'Preacher curls', 'biceps en polea baja con barra': 'Low cable bar curls', 'biceps en polea baja con cuerda': 'Low cable rope curls',
+    'biceps en polea con barra': 'Cable bar curls', 'biceps en polea con cuerda': 'Cable rope curls', 'bird dog': 'Bird dog',
+    'bulgarian squat': 'Bulgarian split squat', 'burpees': 'Burpees', 'burpees con salto lateral': 'Burpees with lateral jump',
+    'cierres con banco inclinado en poleas': 'Incline cable flyes', 'cierres en banco inclinado con mancuerna': 'Incline dumbbell flyes',
+    'cierres en polea para pectoral inferior': 'Low cable flyes (lower chest)', 'cierres pectoral en maquina pec deck': 'Pec deck machine flyes',
+    'contractor de pecho (pec deck)': 'Pec deck (chest fly machine)', 'cruces en polea': 'Cable crossover', 'cruces en polea en banco inclinado': 'Incline cable crossover',
+    'crunch cruzado': 'Cross-body crunch', 'curl bayesiano': 'Bayesian curl', 'curl bayesian en polea': 'Bayesian cable curl',
+    'curl femoral sentado': 'Seated leg curl', 'curl femoral tumbado en maquina': 'Lying leg curl machine', 'curl femoral en maquina tumbado': 'Lying leg curl machine',
+    'deltoides posterior en polea': 'Rear delt cable', 'dips on asisted machines': 'Assisted machine dips', 'dominadas': 'Pull-ups',
+    'dominadas agarre neutro': 'Neutral-grip pull-ups', 'dominadas en maquina asistida': 'Assisted machine pull-ups',
+    'elevacion de pierna alterna': 'Alternating leg raise', 'elevacion de piernas desde el suelo': 'Lying leg raises',
+    'elevacion de talon': 'Calf raises', 'elevacion de talones': 'Calf raises', 'elevacion de talones sentado en maquina': 'Seated calf raise machine',
+    'elevacion unilateral en polea': 'Single-arm cable raise', 'elevaciones frontales con mancuernas': 'Dumbbell front raises',
+    'elevaciones laterales': 'Lateral raises', 'elevaciones laterales con mancuerna apoyando el pecho en banco': 'Chest-supported dumbbell lateral raises',
+    'elevaciones laterales con mancuerna de pie': 'Standing dumbbell lateral raises', 'elevaciones laterales con mancuernas para deltoides posterior': 'Rear delt dumbbell raises',
+    'elevaciones laterales con pecho apoyado en banco': 'Chest-supported lateral raises', 'elevaciones para hombros posterior sentado con mancuerna': 'Seated dumbbell rear delt raises',
+    'elevaciones unilateral laterales en polea baja': 'Single-arm low cable lateral raises', 'escaladores (mountain climbers)': 'Mountain climbers',
+    'estiramiento buenos dias (good morning stretch)': 'Good morning stretch', 'estiramiento de la cobra (cobra stretch)': 'Cobra stretch',
+    'estiramiento de pose del nino (child pose stretch)': "Child's pose stretch", 'estiramiento del perro (downward dog stretch)': 'Downward dog stretch',
+    'extension de cuadriceps': 'Leg extension', 'face pull': 'Face pull', 'facepull': 'Face pull',
+    'flexiones': 'Push-ups', 'flexiones declinadas': 'Decline push-ups', 'flexiones en trx': 'TRX push-ups', 'flexiones inclinadas': 'Incline push-ups',
+    'fondos de triceps (dips)': 'Triceps dips', 'fondos en maquina asistida': 'Assisted machine dips', 'hip thrust': 'Hip thrust', 'hip thrust con barra': 'Barbell hip thrust',
+    'hollow position': 'Hollow hold', 'hup thrust con barra': 'Barbell hip thrust', 'isquio en maquina sentado': 'Seated leg curl machine',
+    'jalon al pecho': 'Lat pulldown', 'jalon al pecho (agarre cerrado)': 'Close-grip lat pulldown', 'jalon al pecho agarre prono ancho (wide grip lat pulldown)': 'Wide-grip lat pulldown',
+    'jalon al pecho con barra': 'Barbell lat pulldown', 'jalon al pecho en maquina': 'Machine lat pulldown', 'jalon al pecho unilateral': 'Single-arm lat pulldown', 'jalon unilateral': 'Single-arm lat pulldown',
+    'jumping jacks': 'Jumping jacks', 'jumping lunges': 'Jumping lunges', 'leg extension': 'Leg extension', 'maquina de abductores': 'Abductor machine',
+    'maquina gemelo sentado': 'Seated calf machine', 'maquina press banca plano': 'Flat bench press machine', 'mountain climbers': 'Mountain climbers',
+    'patada de gluteo': 'Glute kickback', 'patada de gluteo en polea': 'Cable glute kickback', 'patada lateral de gluteo': 'Lateral glute kickback',
+    'peso muerto con barra': 'Barbell deadlift', 'peso muerto con mancuerna': 'Dumbbell deadlift', 'peso muerto con mancuernas': 'Dumbbell deadlift', 'peso muerto rumano': 'Romanian deadlift',
+    'plancha abdominal': 'Plank', 'plancha activa (toque de hombro)': 'Active plank (shoulder taps)', 'plancha lateral': 'Side plank', 'posicion hollow': 'Hollow hold',
+    'prensa': 'Leg press', 'prensa de piernas': 'Leg press', 'press banca con barra': 'Barbell bench press', 'press banca con mancuerna': 'Dumbbell bench press',
+    'press banca inclinado con barra': 'Incline barbell bench press', 'press de banca con barra': 'Barbell bench press', 'press de banca con mancuernas': 'Dumbbell bench press',
+    'press de banca declinado con barra': 'Decline barbell bench press', 'press de banca en maquina': 'Machine bench press', 'press en suelo con mancuerna': 'Dumbbell floor press',
+    'press inclinado (en casa)': 'Incline press (at home)', 'press inclinado con barra': 'Incline barbell press', 'press inclinado con mancuerna': 'Incline dumbbell press', 'press inclinado con mancuernas': 'Incline dumbbell press',
+    'press militar': 'Overhead press', 'press militar (en casa)': 'Overhead press (at home)', 'press militar con mancuerna': 'Dumbbell overhead press', 'press militar con mancuernas': 'Dumbbell overhead press',
+    'press pallof': 'Pallof press', 'press z': 'Z press', 'pullover abdominal': 'Ab pullover', 'pullover con mancuerna': 'Dumbbell pullover',
+    'pullover en polea': 'Cable pullover', 'pullover en polea alta con cuerda': 'High cable rope pullover', 'pullover en trx': 'TRX pullover', 'push ups': 'Push-ups',
+    'rare shoulder in cable': 'Rear delt cable', 'remo agarre en t': 'T-bar row', 'remo al menton': 'Upright row', 'remo al menton con mancuernas (en casa)': 'Dumbbell upright row (at home)',
+    'remo con barra': 'Barbell row', 'remo con barra (agarre supino)': 'Underhand barbell row', 'remo con mancuerna unilateral con mano apoyada en el banco': 'Single-arm dumbbell row (hand on bench)',
+    'remo con mancuerna unilateral rodilla apoyada en banco': 'Single-arm dumbbell row (knee on bench)', 'remo con mancuerna unilateral sin apoyos': 'Unsupported single-arm dumbbell row',
+    'remo en maquina': 'Machine row', 'remo en polea (agarre supino)': 'Underhand cable row', 'remo en polea baja/gironda': 'Low cable / Gironda row', 'remo en t': 'T-bar row', 'remo en t en maquina': 'Machine T-bar row', 'remo en trx': 'TRX row',
+    'remo gironda': 'Gironda row', 'remo gironda unilateral': 'Single-arm Gironda row', 'remo unilateral (en casa)': 'Single-arm row (at home)', 'remo unilateral con mancuerna': 'Single-arm dumbbell row',
+    'remo unilateral con mancuerna con rodilla en banco': 'Single-arm dumbbell row (knee on bench)', 'remo unilateral en maquina': 'Single-arm machine row', 'remo unilateral en polea baja': 'Single-arm low cable row',
+    'row machine': 'Machine row', 'salto al cajon': 'Box jump', 'sentadilla a una pierna en trx': 'TRX single-leg squat', 'sentadilla bulgara': 'Bulgarian split squat',
+    'sentadilla con barra': 'Barbell squat', 'sentadilla con press (mancuerna)': 'Dumbbell squat to press', 'sentadilla con salto': 'Jump squat', 'sentadilla con salto en trx': 'TRX jump squat',
+    'sentadilla en maquina smith': 'Smith machine squat', 'sentadilla en maquina smith con banco': 'Smith machine squat with bench', 'sentadilla trasera': 'Back squat',
+    'squat en multipower': 'Smith machine squat', 'squat en multipower con banco': 'Smith machine squat with bench', 'squat press con mancuerna': 'Dumbbell squat to press', 'squat smith machine': 'Smith machine squat',
+    'subida al cajon': 'Box step-up', 'swing ruso': 'Kettlebell swing', 'triceps con peso corporal': 'Bodyweight triceps', 'triceps en polea alta con barra': 'High cable bar triceps pushdown',
+    'triceps en polea alta con cuerda': 'High cable rope triceps pushdown', 'triceps en polea con barra': 'Cable bar triceps pushdown', 'triceps en polea con cuerda': 'Cable rope triceps pushdown',
+    'unilateral dumbbell row with knee in bench': 'Single-arm dumbbell row (knee on bench)', 'unilateral gironda row': 'Single-arm Gironda row',
+    'zancada lateral': 'Lateral lunge', 'zancadas con salto': 'Jumping lunges'
+  };
   w.I18N = {
+    // exercise(): nombre de ejercicio ES/mixto -> EN; si no está, devuelve el original
+    exercise: function (name, lang) { if (lang !== 'en' || !name) return name; var e = EX_EN[nkx(name)]; return e || name; },
     // food(): si no está en el diccionario, devuelve el original tal cual
     food: function (name, lang) {
       if (!name) return name;

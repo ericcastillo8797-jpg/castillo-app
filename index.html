@@ -10,9 +10,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=40"></script>
-<script src="./castillo-transform.js?v=40"></script>
-<script src="./castillo-data.js?v=40"></script>
+<script src="./castillo-i18n.js?v=41"></script>
+<script src="./castillo-transform.js?v=41"></script>
+<script src="./castillo-data.js?v=41"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1796,6 +1796,7 @@ class Component extends DCLogic {
     const T = s => _i18n ? _i18n.t(s, lang) : s;             // UI (clave en español)
     const tFood = n => _i18n ? _i18n.food(n, lang) : n;      // alimento
     const tMeal = n => _i18n ? _i18n.meal(n, lang) : n;      // nombre de comida
+    const tEx = n => _i18n ? _i18n.exercise(n, lang) : n;    // nombre de ejercicio
     const tD = s => _i18n ? _i18n.date(s, lang) : s;         // fecha (meses/días)
     const isEN = lang === 'en';
     const foodSub = (m, i) => T('Opción') + ' ' + (i + 1) + ' · ' + F(m.o[i]).map(f => tFood(f.n)).join(', ');
@@ -1972,7 +1973,7 @@ class Component extends DCLogic {
       let _vy = e.y;
       if (_swap) { const _f = (VAR[e.id] || []).map(x => x.split('|')).find(p => p[0] === _swap); if (_f && _f[1]) _vy = _f[1]; }
       return {
-        n: _swap || e.n, p: e.p, rest: e.rest, open: isOpen, thumb: THUMB(_vy),
+        n: tEx(_swap || e.n), p: e.p, rest: e.rest, open: isOpen, thumb: THUMB(_vy),
         openVar: this.openVar(e),
         varLabel: st.swaps[e.id] ? T('Variante en uso · ver otras') : T('No puedo hacer este ejercicio'),
         nS: String(e.s), reps: e.p.split('×').pop().trim(),
@@ -2055,7 +2056,7 @@ class Component extends DCLogic {
       return { n, pick: () => this.setState({ vidCat: n }), bg: sel ? 'var(--fg,#fff)' : 'var(--s2,#121215)', fg: sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.08)' };
     });
     const vidList = VID.filter(v => st.vidCat === 'Todos' || v.g === st.vidCat)
-      .map(v => ({ t: v.t, g: v.g, thumb: THUMB(v.y), open: () => this.openSheet({ k: 'vid', v }) }));
+      .map(v => ({ t: tEx(v.t), g: v.g, thumb: THUMB(v.y), open: () => this.openSheet({ k: 'vid', v: { t: tEx(v.t), g: v.g, y: v.y } }) }));
 
     const evoTabs = [['comp','Composición y medidas'],['ejercicio','Progreso en el ejercicio']].map(([k, n]) => {
       const sel = st.evoTab === k;
@@ -2067,7 +2068,7 @@ class Component extends DCLogic {
       const mn = vals.length ? Math.min.apply(null, vals) : 0, mx = vals.length ? Math.max.apply(null, vals) : 1;
       const rng = mx - mn || 1;
       return {
-        nombre: e.nombre, thumb: e.y ? THUMB(e.y) : '',
+        nombre: tEx(e.nombre), thumb: e.y ? THUMB(e.y) : '',
         last: e.last != null ? String(e.last).replace('.', ',') : '—',
         lastReps: e.lastReps != null ? (e.lastReps + ' reps') : '',
         sessions: e.sessions + ' ' + (e.sessions === 1 ? T('sesión') : T('sesiones')),
@@ -2123,12 +2124,12 @@ class Component extends DCLogic {
       const _reps = String(ve.p || '').split('×').pop().trim();
       const _serTxt = (ve.s ? ve.s + ' series' : '') + (_reps ? ' · ' + _reps + ' reps' : '');
       varSheet = {
-        n: ve.n, swapped: !!cur, reset: this.resetVar(ve.id),
+        n: tEx(ve.n), swapped: !!cur, reset: this.resetVar(ve.id),
         opts: (VAR[ve.id] || []).map((x, i) => {
           const parts = x.split('|'), on = cur === parts[0];
-          return { n: parts[0], thumb: THUMB(parts[1]), delay: (0.03 + i * 0.05) + 's', series: _serTxt,
+          return { n: tEx(parts[0]), thumb: THUMB(parts[1]), delay: (0.03 + i * 0.05) + 's', series: _serTxt,
             note: on ? 'Es la que se registrará' : 'Misma serie y repeticiones · toca elegir',
-            play: () => this.openSheet({ k: 'vid', v: { t: parts[0], g: 'Variante', y: parts[1] }, back: this.state.sheet }),
+            play: () => this.openSheet({ k: 'vid', v: { t: tEx(parts[0]), g: 'Variante', y: parts[1] }, back: this.state.sheet }),
             use: this.useVar(ve.id, parts[0]),
             btn: on ? '✓ Variante elegida' : 'Elegir esta variante',
             bd: on ? A + '.45)' : A + '.07)',
