@@ -44,6 +44,8 @@
     // días en los que el cliente pasó un check-in (métricas o fotos) -> cuentan como "métricas hechas"
     var chkDates = {}, chkWeeks = {}; chkList.forEach(function (c) { if ((c.valores && Object.keys(c.valores).length) || (c.fotos && Object.keys(c.fotos).length)) { var _f = (c.fecha || '').slice(0, 10); chkDates[_f] = true; var _dd = new Date(_f + 'T00:00:00'); if (!isNaN(_dd)) chkWeeks[_dd.getFullYear() + '-W' + isoWeek(_dd)] = true; } });
     function wkKeyOf(dt) { return dt.getFullYear() + '-W' + isoWeek(dt); }
+    function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+    function cardioSub(item) { var p = item && item.config && item.config.pasos; return p ? (miles(p) + ' pasos') : 'Cardio'; }
     row = row || {};
     var now = new Date();
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
@@ -156,7 +158,7 @@
         // lista de actividades del día (como Harbiz > Planificación): métricas (foto incluida) / cardio / entreno
         var acts = [];
         if (statsItem || photoItem) acts.push({ type: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: !!((statsItem && statsItem.done) || (photoItem && photoItem.done) || chkDates[key] || chkWeeks[wkKeyOf(dt)]) });
-        if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: 'Cardio', done: !!cardio.done });
+        if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: cardioSub(cardio), pasos: (cardio.config && cardio.config.pasos) || '', done: !!cardio.done });
         if (wkItem) acts.push({ type: 'workout', label: wkItem.title, sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
         out.push({
           d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
@@ -321,6 +323,15 @@
       .filter(function (s) { if (seenD[s.key]) return false; seenD[s.key] = 1; return true; })
       .slice(0, 12).map(function (s) { return { w: s.w, date: s.date, kg: s.kg, fotos: s.fotos }; });
     var SESS = PHOTOSETS.map(function (p) { return p.date; });
+    // Comparativa visual para la pantalla de Hoy: las 3 PRIMERAS fotos (primer check-in, fijas) y las 3 ÚLTIMAS (se actualizan)
+    var _shotsOf = function (set) { return SHOTS.map(function (n) { return { n: n, img: (set && set.fotos && set.fotos[n]) || '' }; }); };
+    var progresoFotos = null;
+    if (PHOTOSETS.length) {
+      var _prim = PHOTOSETS[PHOTOSETS.length - 1], _ult = PHOTOSETS[0];
+      progresoFotos = { hay: true, dos: PHOTOSETS.length > 1,
+        primeras: { label: _prim.date, shots: _shotsOf(_prim) },
+        ultimas: { label: _ult.date, shots: _shotsOf(_ult) } };
+    }
     var DATES = (wm && wm.data ? wm.data : []).slice().reverse().slice(0, 10).map(function (p) { var dt = new Date(ms(p.t)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
     if (!DATES.length) DATES = SESS.slice();
 
@@ -407,7 +418,7 @@
     var todayTasks = [];
     var checkinDoneThisWeek = !!chkWeeks[wkKeyOf(now)];
     if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') || !!chkDates[todayKey] || checkinDoneThisWeek });
-    if (hasT('cardio')) todayTasks.push({ key: 'cardio', label: 'Cardio', sub: (todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}).title || 'Caminar', done: doneT('cardio') || !!regToday.cardio });
+    if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: _cItem.title || 'Caminar', sub: cardioSub(_cItem), pasos: (_cItem.config && _cItem.config.pasos) || '', done: doneT('cardio') || !!regToday.cardio }); }
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
     todayTasks.push({ key: 'nutricion', label: 'Pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.length > 0 && DIET.every(function (m) { return comHoy[m.id] != null; }) });
@@ -461,7 +472,7 @@
       WEIGHTS: WEIGHTS, chartLabels: chartLabels, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header, logsInit: logsInit,
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary, macros: macros,
-      mealsByDate: comByDate, checkinDoneThisWeek: checkinDoneThisWeek,
+      mealsByDate: comByDate, checkinDoneThisWeek: checkinDoneThisWeek, progresoFotos: progresoFotos,
       WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG
     };
   }

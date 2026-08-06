@@ -7,9 +7,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=30"></script>
-<script src="./castillo-transform.js?v=30"></script>
-<script src="./castillo-data.js?v=30"></script>
+<script src="./castillo-i18n.js?v=31"></script>
+<script src="./castillo-transform.js?v=31"></script>
+<script src="./castillo-data.js?v=31"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -121,6 +121,41 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </div>
       <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.4);text-align:center;padding:10px 0 12px;margin-top:4px;border-top:.5px solid rgba(var(--fgc,255,255,255),.08)">{{ wsKcalLabel }}</div>
     </div>
+
+    <!-- Tu progreso: 3 primeras fotos (fijas) + 3 últimas (se actualizan) -->
+    <sc-if value="{{ progresoFotos }}" hint-placeholder-val="{{ false }}">
+    <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.progresoTitulo }}</div>
+    <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:16px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px">
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.62)">{{ L.fotoPrimeras }}</div>
+        <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.34)">{{ progresoFotos.primeras.label }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <sc-for list="{{ progresoFotos.primeras.shots }}" as="s" hint-placeholder-count="3">
+        <div style="position:relative;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.09)">
+          <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center"><svg width="32" height="48" viewBox="0 0 42 62" fill="currentColor" opacity=".14"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg></div>
+          <sc-if value="{{ s.img }}" hint-placeholder-val="{{ false }}"><img src="{{ s.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
+          <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 4px 4px;text-align:center;font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.72);background:linear-gradient(to top,rgba(var(--bgc,0,0,0),.55),transparent)">{{ s.n }}</div>
+        </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ progresoFotos.dos }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin:16px 0 9px">
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.62)">{{ L.fotoUltimas }}</div>
+        <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.34)">{{ progresoFotos.ultimas.label }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <sc-for list="{{ progresoFotos.ultimas.shots }}" as="s" hint-placeholder-count="3">
+        <div style="position:relative;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.09)">
+          <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center"><svg width="32" height="48" viewBox="0 0 42 62" fill="currentColor" opacity=".14"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg></div>
+          <sc-if value="{{ s.img }}" hint-placeholder-val="{{ false }}"><img src="{{ s.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
+          <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 4px 4px;text-align:center;font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.72);background:linear-gradient(to top,rgba(var(--bgc,0,0,0),.55),transparent)">{{ s.n }}</div>
+        </div>
+        </sc-for>
+      </div>
+      </sc-if>
+    </div>
+    </sc-if>
 
     <!-- Sincroniza tu actividad (integraciones wearables) -->
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.sincroniza }}</div>
@@ -2167,6 +2202,7 @@ class Component extends DCLogic {
         nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'), composicionMedidas: T('Composición y medidas'), tamanoTexto: T('Tamaño de texto'), registrarEvo: T('Registrar evolución'),
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
+        progresoTitulo: T('Tu progreso'), fotoPrimeras: T('Primeras'), fotoUltimas: T('Últimas'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
         registroSemanal: T('Registro semanal'), regCadaSemana: T('Registrado cada semana en su check-in.'),
         serieMasPesada: T('Serie más pesada'), historialCargas: T('Historial de cargas'),
@@ -2198,6 +2234,7 @@ class Component extends DCLogic {
       startWorkout: this.startWorkout,
 
       weekDays, daySel, appts: APPTS,
+      progresoFotos: _dd.progresoFotos || null,
       vidCats, vidList,
       evoTabs, evoMetrics: st.evoTab === 'comp', evoPhotos: st.evoTab === 'comp', evoEjercicio: st.evoTab === 'ejercicio',
       evoCompOpen: st.evoCompOpen, evoCompChevron: st.evoCompOpen ? 'rotate(180deg)' : 'rotate(0deg)', toggleEvoComp: () => this.setState({ evoCompOpen: !st.evoCompOpen }),
