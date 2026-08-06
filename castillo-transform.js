@@ -115,7 +115,7 @@
       var dt = new Date(ms(e.date));
       var key = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
       var slot = byDay[key] || (byDay[key] = { date: dt, items: [] });
-      slot.items.push({ type: e.type, title: e.title, done: !!e.completed, dt: dt });
+      slot.items.push({ type: e.type, title: e.title, done: !!e.completed, dt: dt, config: e.config });
     });
 
     // ---------- REGISTROS DEL CLIENTE por fecha (lo que él marca en la app: entreno / cardio) ----------
