@@ -42,7 +42,8 @@
     var chkByKey = {};
     chkList.forEach(function (c) { var v = c.valores || {}; Object.keys(v).forEach(function (k) { if (v[k] != null && v[k] !== '') { (chkByKey[k] || (chkByKey[k] = [])).push({ fecha: (c.fecha || '').slice(0, 10), val: v[k] }); } }); });
     // días en los que el cliente pasó un check-in (métricas o fotos) -> cuentan como "métricas hechas"
-    var chkDates = {}; chkList.forEach(function (c) { if ((c.valores && Object.keys(c.valores).length) || (c.fotos && Object.keys(c.fotos).length)) chkDates[(c.fecha || '').slice(0, 10)] = true; });
+    var chkDates = {}, chkWeeks = {}; chkList.forEach(function (c) { if ((c.valores && Object.keys(c.valores).length) || (c.fotos && Object.keys(c.fotos).length)) { var _f = (c.fecha || '').slice(0, 10); chkDates[_f] = true; var _dd = new Date(_f + 'T00:00:00'); if (!isNaN(_dd)) chkWeeks[_dd.getFullYear() + '-W' + isoWeek(_dd)] = true; } });
+    function wkKeyOf(dt) { return dt.getFullYear() + '-W' + isoWeek(dt); }
     row = row || {};
     var now = new Date();
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
@@ -154,7 +155,7 @@
         var hh = wkItem ? d2(wkItem.dt.getHours()) + ':' + d2(wkItem.dt.getMinutes()) : '';
         // lista de actividades del día (como Harbiz > Planificación): métricas (foto incluida) / cardio / entreno
         var acts = [];
-        if (statsItem || photoItem) acts.push({ type: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: !!((statsItem && statsItem.done) || (photoItem && photoItem.done) || chkDates[key]) });
+        if (statsItem || photoItem) acts.push({ type: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: !!((statsItem && statsItem.done) || (photoItem && photoItem.done) || chkDates[key] || chkWeeks[wkKeyOf(dt)]) });
         if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: 'Cardio', done: !!cardio.done });
         if (wkItem) acts.push({ type: 'workout', label: wkItem.title, sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
         out.push({
@@ -404,7 +405,8 @@
     var regToday = regByDate[todayKey] || {};
     var entrenoHecho = regToday.workout || doneT('workout');
     var todayTasks = [];
-    if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') || !!chkDates[todayKey] });
+    var checkinDoneThisWeek = !!chkWeeks[wkKeyOf(now)];
+    if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') || !!chkDates[todayKey] || checkinDoneThisWeek });
     if (hasT('cardio')) todayTasks.push({ key: 'cardio', label: 'Cardio', sub: (todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}).title || 'Caminar', done: doneT('cardio') || !!regToday.cardio });
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
@@ -459,7 +461,7 @@
       WEIGHTS: WEIGHTS, chartLabels: chartLabels, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header, logsInit: logsInit,
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary, macros: macros,
-      mealsByDate: comByDate,
+      mealsByDate: comByDate, checkinDoneThisWeek: checkinDoneThisWeek,
       WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG
     };
   }
