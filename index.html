@@ -10,9 +10,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=39"></script>
-<script src="./castillo-transform.js?v=39"></script>
-<script src="./castillo-data.js?v=39"></script>
+<script src="./castillo-i18n.js?v=40"></script>
+<script src="./castillo-transform.js?v=40"></script>
+<script src="./castillo-data.js?v=40"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -186,19 +186,20 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
         <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WHOOP</div><div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:1px">{{ L.conectar }}</div></div>
       </div>
-      <div onClick="{{ connectHealth }}" style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:18px;padding:13px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
-        <div style="width:38px;height:38px;flex:none;border-radius:11px;background:rgba(var(--fgc,255,255,255),.06);display:flex;align-items:center;justify-content:center">
-          <svg width="21" height="21" viewBox="0 0 24 24"><polygon points="12,4 20.5,19.5 3.5,19.5" fill="none" stroke="rgba(var(--fgc,255,255,255),.92)" stroke-width="2.2" stroke-linejoin="round"/></svg>
-        </div>
-        <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Garmin</div><div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:1px">{{ L.conectar }}</div></div>
-      </div>
-      <div onClick="{{ connectHealth }}" style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:18px;padding:13px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
-        <div style="width:38px;height:38px;flex:none;border-radius:11px;background:rgba(var(--fgc,255,255,255),.06);display:flex;align-items:center;justify-content:center">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(var(--fgc,255,255,255),.92)"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="7.5" r="2"/><circle cx="12" cy="16.5" r="2"/><circle cx="18.5" cy="12" r="2"/><circle cx="12" cy="12" r="2.2"/></svg>
-        </div>
-        <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fitbit</div><div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:1px">{{ L.conectar }}</div></div>
-      </div>
     </div>
+    <div onClick="{{ toggleApps }}" style="margin-top:10px;text-align:center;padding:12px;border-radius:14px;border:.5px solid rgba(var(--fgc,255,255,255),.14);font-size:12.5px;font-weight:600;color:rgba(var(--fgc,255,255,255),.7);cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.98)">{{ appsToggleLabel }}</div>
+    <sc-if value="{{ showAllApps }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+      <sc-for list="{{ moreApps }}" as="a" hint-placeholder-count="6">
+      <div onClick="{{ connectHealth }}" style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:18px;padding:13px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
+        <div style="width:38px;height:38px;flex:none;border-radius:11px;background:rgba(var(--fgc,255,255,255),.06);display:flex;align-items:center;justify-content:center">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--fgc,255,255,255),.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="7" width="12" height="10" rx="3"/><path d="M9 7V4.5h6V7M9 17v2.5h6V17"/></svg>
+        </div>
+        <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</div><div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:1px">{{ L.conectar }}</div></div>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
 
     <!-- Nutrición: macros objetivo + botón a la dieta completa -->
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.nutricion }}</div>
@@ -1378,7 +1379,7 @@ class Component extends DCLogic {
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: false, playEx: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
-    ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {},
+    ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false,
     lang: (function () { try { return localStorage.getItem('castillo_lang') || 'es'; } catch (e) { return 'es'; } })()
   };
   setLang = l => () => { try { localStorage.setItem('castillo_lang', l); } catch (e) {} this.setState({ lang: l }); };
@@ -1504,6 +1505,19 @@ class Component extends DCLogic {
   openMet = f => () => this.openSheet({ k: 'met', f });
   openHist = e => () => this.openSheet({ k: 'exh', e });
   openPhoto = (p, view) => () => this.openSheet({ k: 'photo', p, view });
+  // Comparativa antes/después de UNA vista (frontal/lateral/espalda): primera foto -> deslizar -> última
+  openCompare = (view) => () => {
+    const pf = (typeof window !== 'undefined' && window.__DATA && window.__DATA.progresoFotos) || null;
+    if (!pf) return;
+    const en = this.state.lang === 'en';
+    const a = pf.primeras && pf.primeras.fotos && pf.primeras.fotos[view];
+    const b = pf.ultimas && pf.ultimas.fotos && pf.ultimas.fotos[view];
+    const shots = [];
+    if (a) shots.push({ n: (en ? 'Before' : 'Antes') + ' · ' + view, img: a });
+    if (b) shots.push({ n: (en ? 'Now' : 'Ahora') + ' · ' + view, img: b });
+    if (!shots.length) return;
+    this.openSheet({ k: 'photo', shots: shots, w: view, date: en ? 'Before / now' : 'Antes / ahora' });
+  };
   photoNav = (dir) => () => {
     const sh = this.state.sheet; if (!sh || sh.k !== 'photo') return;
     const order = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]);
@@ -2267,12 +2281,14 @@ class Component extends DCLogic {
       planPct, planPctLabel: planPct + '%', planTasks, wsRows, wsRings, wsGlobal, wsGlobalLabel: wsGlobal + '%', wsKcal,
       wsKcalLabel: wsKcal + ' kcal ' + T('objetivo / día'),
       macroCards, macroPlan: ((_dd.macros || {}).plan) || '', connectHealth: () => this.flash(T('Pronto podrás sincronizar tu actividad automáticamente')),
+      showAllApps: st.showAllApps, toggleApps: () => this.setState({ showAllApps: !st.showAllApps }), appsToggleLabel: st.showAllApps ? T('Ver menos') : T('Ver todas las apps'),
+      moreApps: [{ name: 'Garmin' }, { name: 'Fitbit' }, { name: 'Google Fit' }, { name: 'Samsung Health' }, { name: 'Strava' }, { name: 'Polar' }, { name: 'Oura' }, { name: 'Coros' }],
       workoutCta: setsDone === 0 ? T('Comenzar') : (setsDone === totalSets ? T('Completado') : T('Continuar')),
       startWorkout: this.startWorkout,
 
       weekDays, daySel, appts: APPTS,
       progresoFotos: (() => { const pf = _dd.progresoFotos; if (!pf) return null;
-        const col = set => ({ w: set.w, date: set.date, shots: SHOTS.map(n => ({ n, img: (set.fotos && set.fotos[n]) || '', open: this.openPhoto(set, n) })) });
+        const col = set => ({ w: set.w, date: set.date, shots: SHOTS.map(n => ({ n, img: (set.fotos && set.fotos[n]) || '', open: this.openCompare(n) })) });
         return { dos: pf.dos, primeras: col(pf.primeras), ultimas: col(pf.ultimas) }; })(),
       vidCats, vidList,
       evoTabs, evoMetrics: st.evoTab === 'comp', evoPhotos: st.evoTab === 'comp', evoEjercicio: st.evoTab === 'ejercicio',
@@ -2289,7 +2305,7 @@ class Component extends DCLogic {
         shots: SHOTS.map(n => ({ n, img: (p.fotos && p.fotos[n]) || '', open: this.openPhoto(p, n) }))
       })),
       isPhotoSheet: sh.k === 'photo',
-      photoSheet: sh.k === 'photo' ? (() => { const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n] })); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, shots }; })() : {},
+      photoSheet: sh.k === 'photo' ? (sh.shots ? { w: sh.w || '', date: sh.date || '', kg: '', shots: sh.shots } : (() => { const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n] })); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, shots }; })()) : {},
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoDelta,
       chartArea: chart.area, chartLine: chart.line, chartLx: chart.lx, chartLy: chart.ly,
