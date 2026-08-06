@@ -10,9 +10,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=38"></script>
-<script src="./castillo-transform.js?v=38"></script>
-<script src="./castillo-data.js?v=38"></script>
+<script src="./castillo-i18n.js?v=39"></script>
+<script src="./castillo-transform.js?v=39"></script>
+<script src="./castillo-data.js?v=39"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1550,7 +1550,7 @@ class Component extends DCLogic {
   };
 
   openSheet = s => { this.setState({ sheet: s, sheetIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ sheetIn: true }))); };
-  closeSheet = () => { this.setState({ sheetIn: false }); this.later(() => this.setState({ sheet: null }), 480); };
+  closeSheet = () => { const sh = this.state.sheet; if (sh && sh.back) { this.openSheet(sh.back); return; } this.setState({ sheetIn: false }); this.later(() => this.setState({ sheet: null }), 480); };
   pickMeal = (id, i) => () => {
     const dd = DAYS.find(d => d.d === this.state.day) || DAYS.find(d => d.today) || {};
     const fecha = dd.fecha;
@@ -2114,7 +2114,7 @@ class Component extends DCLogic {
           const parts = x.split('|'), on = cur === parts[0];
           return { n: parts[0], thumb: THUMB(parts[1]), delay: (0.03 + i * 0.05) + 's', series: _serTxt,
             note: on ? 'Es la que se registrará' : 'Misma serie y repeticiones · toca elegir',
-            play: () => this.openSheet({ k: 'vid', v: { t: parts[0], g: 'Variante', y: parts[1] } }),
+            play: () => this.openSheet({ k: 'vid', v: { t: parts[0], g: 'Variante', y: parts[1] }, back: this.state.sheet }),
             use: this.useVar(ve.id, parts[0]),
             btn: on ? '✓ Variante elegida' : 'Elegir esta variante',
             bd: on ? A + '.45)' : A + '.07)',
