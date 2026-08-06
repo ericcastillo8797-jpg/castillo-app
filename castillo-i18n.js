@@ -162,7 +162,7 @@
     'Completado': 'Completed', 'No realizado': 'Not done', 'Programado': 'Scheduled',
     // Evolución
     'Peso corporal': 'Body weight', 'variación': 'change', 'Composición y medidas': 'Body composition',
-    'Tu progreso': 'Your progress', 'Primeras': 'First', 'Últimas': 'Latest',
+    'Tu progreso': 'Your progress', 'Primeras': 'First', 'Últimas': 'Latest', 'Desliza para ver frontal, lateral y espalda': 'Swipe to see front, side and back',
     'Grasa corporal': 'Body fat', 'Cuello': 'Neck', 'Hombros': 'Shoulders', 'Pecho': 'Chest',
     'Cintura': 'Waist', 'Cadera': 'Hip', 'Bíceps izquierdo': 'Left biceps', 'Bíceps derecho': 'Right biceps',
     'Brazo izquierdo': 'Left arm', 'Brazo derecho': 'Right arm', 'Pierna izquierda': 'Left leg', 'Pierna derecha': 'Right leg',

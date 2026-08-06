@@ -10,9 +10,9 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=36"></script>
-<script src="./castillo-transform.js?v=36"></script>
-<script src="./castillo-data.js?v=36"></script>
+<script src="./castillo-i18n.js?v=37"></script>
+<script src="./castillo-transform.js?v=37"></script>
+<script src="./castillo-data.js?v=37"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -908,7 +908,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <sc-for list="{{ varSheet.opts }}" as="v" hint-placeholder-count="3">
         <div style="border-radius:18px;overflow:hidden;background:var(--s1,#0C0C0E);border:1px solid {{ v.bd }};animation:cRise .48s cubic-bezier(.2,.8,.2,1) both;animation-delay:{{ v.delay }}">
           <div style="display:flex;gap:12px;padding:12px 12px 0">
-            <div onClick="{{ v.play }}" style="position:relative;width:132px;height:82px;flex:none;border-radius:12px;overflow:hidden;background:#0A0A0C;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.97)">
+            <div onClick="{{ v.play }}" style="position:relative;width:150px;aspect-ratio:16/9;flex:none;border-radius:12px;overflow:hidden;background:#0A0A0C;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.97)">
               <sc-if value="{{ v.thumb }}" hint-placeholder-val="{{ false }}"><img src="{{ v.thumb }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" /></sc-if>
               <div style="position:relative;width:30px;height:30px;border-radius:50%;border:.5px solid rgba(255,255,255,.42);background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;color:#fff">
                 <svg width="10" height="12" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
@@ -931,30 +931,34 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </sc-if>
 
     <sc-if value="{{ isPhotoSheet }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="Fotografia archivada" style="padding:14px 20px 30px">
-      <div data-photo-swipe style="position:relative;aspect-ratio:3/4;max-height:52vh;border-radius:20px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.1);display:flex;align-items:flex-end;justify-content:center;touch-action:pan-y">
-        <svg width="120" height="178" viewBox="0 0 42 62" fill="currentColor" opacity=".13"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg>
-        <sc-if value="{{ photoSheet.img }}" hint-placeholder-val="{{ false }}"><img src="{{ photoSheet.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
-        <sc-if value="{{ photoSheet.hasNav }}" hint-placeholder-val="{{ false }}">
-          <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:3;font-size:10px;font-weight:600;letter-spacing:.08em;color:rgba(255,255,255,.85);background:rgba(var(--bgc,0,0,0),.5);padding:4px 13px;border-radius:100px">‹ desliza · {{ photoSheet.pos }} ›</div>
-        </sc-if>
-        <div style="position:absolute;top:12px;left:14px;z-index:2;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:100px;background:rgba(var(--bgc,0,0,0),.45);backdrop-filter:blur(10px)">
-          <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".7" stroke-width="1.5"><rect x="2" y="5.2" width="8" height="5.6" rx="1.4"></rect><path d="M4 5.2V3.8a2 2 0 0 1 4 0v1.4"></path></svg>
-          <span style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.72)">Registro cerrado</span>
+    <div data-screen-label="Fotografia archivada" style="padding:14px 0 30px">
+      <!-- Las 3 fotos ABIERTAS en fila; se desliza el carrusel (scroll nativo + snap) -->
+      <div style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0 20px 12px">
+        <sc-for list="{{ photoSheet.shots }}" as="s" hint-placeholder-count="3">
+        <div style="flex:none;width:82%;scroll-snap-align:center">
+          <div style="position:relative;aspect-ratio:3/4;border-radius:20px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.1)">
+            <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center"><svg width="110" height="164" viewBox="0 0 42 62" fill="currentColor" opacity=".13"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg></div>
+            <sc-if value="{{ s.img }}" hint-placeholder-val="{{ false }}"><img src="{{ s.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
+            <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:18px 10px 12px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);background:linear-gradient(to top,rgba(var(--bgc,0,0,0),.62),transparent)">{{ s.n }}</div>
+          </div>
         </div>
+        </sc-for>
       </div>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:18px">
-        <div>
-          <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ photoSheet.w }} · {{ photoSheet.view }}</div>
-          <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ photoSheet.date }}</div>
+      <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.32);margin-top:2px">{{ L.deslizaFotos }}</div>
+      <div style="padding:0 20px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:16px">
+          <div>
+            <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ photoSheet.w }}</div>
+            <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ photoSheet.date }}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:17px;font-weight:600">{{ photoSheet.kg }}</div>
+            <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.36);margin-top:2px">en ese check-in</div>
+          </div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:17px;font-weight:600">{{ photoSheet.kg }}</div>
-          <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.36);margin-top:2px">en ese check-in</div>
-        </div>
+        <div style="height:.5px;background:rgba(var(--fgc,255,255,255),.08);margin:16px 0"></div>
+        <div style="font-size:12.5px;line-height:1.55;color:rgba(var(--fgc,255,255,255),.45);text-wrap:pretty">Enviada en su check-in semanal. Queda archivada para su consulta: no puede modificarse ni eliminarse.</div>
       </div>
-      <div style="height:.5px;background:rgba(var(--fgc,255,255,255),.08);margin:16px 0"></div>
-      <div style="font-size:12.5px;line-height:1.55;color:rgba(var(--fgc,255,255,255),.45);text-wrap:pretty">Enviada en su check-in semanal. Queda archivada para su consulta: no puede modificarse ni eliminarse.</div>
     </div>
     </sc-if>
 
@@ -2235,7 +2239,7 @@ class Component extends DCLogic {
         nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'), composicionMedidas: T('Composición y medidas'), tamanoTexto: T('Tamaño de texto'), registrarEvo: T('Registrar evolución'),
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
-        progresoTitulo: T('Tu progreso'), fotoPrimeras: T('Primeras'), fotoUltimas: T('Últimas'),
+        progresoTitulo: T('Tu progreso'), fotoPrimeras: T('Primeras'), fotoUltimas: T('Últimas'), deslizaFotos: T('Desliza para ver frontal, lateral y espalda'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
         registroSemanal: T('Registro semanal'), regCadaSemana: T('Registrado cada semana en su check-in.'),
         serieMasPesada: T('Serie más pesada'), historialCargas: T('Historial de cargas'),
@@ -2285,7 +2289,7 @@ class Component extends DCLogic {
         shots: SHOTS.map(n => ({ n, img: (p.fotos && p.fotos[n]) || '', open: this.openPhoto(p, n) }))
       })),
       isPhotoSheet: sh.k === 'photo',
-      photoSheet: sh.k === 'photo' ? (() => { const order = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]); const i = Math.max(0, order.indexOf(sh.view)); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, view: sh.view, img: (sh.p.fotos && sh.p.fotos[sh.view]) || '', hasNav: order.length > 1, pos: (i + 1) + ' / ' + order.length, prev: this.photoNav(-1), next: this.photoNav(1) }; })() : {},
+      photoSheet: sh.k === 'photo' ? (() => { const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n] })); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, shots }; })() : {},
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoDelta,
       chartArea: chart.area, chartLine: chart.line, chartLx: chart.lx, chartLy: chart.ly,
