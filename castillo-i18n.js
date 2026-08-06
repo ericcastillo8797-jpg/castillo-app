@@ -165,7 +165,7 @@
     'Tu progreso': 'Your progress', 'Primeras': 'First', 'Últimas': 'Latest', 'Desliza para ver frontal, lateral y espalda': 'Swipe to see front, side and back',
     'Ver todas las apps': 'See all apps', 'Ver menos': 'See less',
     'Cambiar alimento': 'Swap food', 'Mismas calorías, distinto alimento. Toca el que prefieras.': 'Same calories, different food. Tap the one you prefer.', 'Food swapped': 'Food swapped', 'Alimento cambiado': 'Food swapped',
-    'Registrada': 'Registered', 'Registrar esta': 'Register this',
+    'Registrada': 'Registered', 'Registrar esta': 'Register this', 'Registrar': 'Register',
     'Grasa corporal': 'Body fat', 'Cuello': 'Neck', 'Hombros': 'Shoulders', 'Pecho': 'Chest',
     'Cintura': 'Waist', 'Cadera': 'Hip', 'Bíceps izquierdo': 'Left biceps', 'Bíceps derecho': 'Right biceps',
     'Brazo izquierdo': 'Left arm', 'Brazo derecho': 'Right arm', 'Pierna izquierda': 'Left leg', 'Pierna derecha': 'Right leg',
