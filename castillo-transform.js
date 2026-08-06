@@ -230,7 +230,14 @@
           return foods.concat(recs).join(';');
         }).filter(function (s) { return s; });
         if (!opts.length) return;
-        DIET.push({ id: id, h: '', n: MEAL_ES[meal.type] || meal.mealDescription || ('Comida ' + (idx + 1)), o: opts });
+        // ox: mismos alimentos pero como OBJETOS con macros (para las equivalencias/sustituciones)
+        var optsX = (meal.option || []).map(function (op) {
+          return (op.foodInTheMeal || []).map(function (f) {
+            var vq = f.valuesQuantity || {};
+            return { name: f.name || '', qty: (vq.quantity != null ? +vq.quantity : 0), unit: foodUnit(f), kcal: (vq.energy != null ? +vq.energy : 0), p: +vq.protein || 0, c: +vq.carbs || 0, g: +vq.fat || 0 };
+          });
+        });
+        DIET.push({ id: id, h: '', n: MEAL_ES[meal.type] || meal.mealDescription || ('Comida ' + (idx + 1)), o: opts, ox: optsX });
         mealsSel[id] = typeof meal.selectedOption === 'number' ? meal.selectedOption : 0;
       });
     }

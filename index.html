@@ -10,9 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=42"></script>
-<script src="./castillo-transform.js?v=42"></script>
-<script src="./castillo-data.js?v=42"></script>
+<script src="./castillo-i18n.js?v=43"></script>
+<script src="./castillo-transform.js?v=43"></script>
+<script src="./castillo-equiv.js?v=43"></script>
+<script src="./castillo-data.js?v=43"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -730,10 +731,17 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             </sc-if>
           </div>
           <sc-for list="{{ o.foods }}" as="f" hint-placeholder-count="3">
-          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0">
-            <div style="flex:1;min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92)">{{ f.n }}</div>
-            <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:64px;text-align:right">{{ f.q }}</div>
-            <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:70px;text-align:right">{{ f.kcalLabel }}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:7px">
+              <sc-if value="{{ f.canSwap }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ f.openSwap }}" style="width:23px;height:23px;flex:none;border-radius:7px;background:rgba(var(--fgc,255,255,255),.09);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.88)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--fgc,255,255,255),.72)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 4 7l3 3M4 7h13M17 20l3-3-3-3M20 17H7"></path></svg>
+              </div>
+              </sc-if>
+              <div style="min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }}</div>
+            </div>
+            <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:56px;text-align:right">{{ f.q }}</div>
+            <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:62px;text-align:right">{{ f.kcalLabel }}</div>
           </div>
           </sc-for>
           <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:9px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.1)">
@@ -783,16 +791,39 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             </sc-if>
           </div>
           <sc-for list="{{ o.foods }}" as="f" hint-placeholder-count="3">
-          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0">
-            <div style="flex:1;min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92)">{{ f.n }}</div>
-            <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:64px;text-align:right">{{ f.q }}</div>
-            <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:70px;text-align:right">{{ f.kcalLabel }}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:7px">
+              <sc-if value="{{ f.canSwap }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ f.openSwap }}" style="width:23px;height:23px;flex:none;border-radius:7px;background:rgba(var(--fgc,255,255,255),.09);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.88)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--fgc,255,255,255),.72)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 4 7l3 3M4 7h13M17 20l3-3-3-3M20 17H7"></path></svg>
+              </div>
+              </sc-if>
+              <div style="min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }}</div>
+            </div>
+            <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:56px;text-align:right">{{ f.q }}</div>
+            <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:62px;text-align:right">{{ f.kcalLabel }}</div>
           </div>
           </sc-for>
           <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:9px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.1)">
             <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
             <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
           </div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isFoodSwapSheet }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Cambiar alimento" style="padding:14px 20px 30px">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.cambiarAlimento }}</div>
+      <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ foodSwapSheet.origName }}</div>
+      <div style="font-size:12px;line-height:1.5;color:rgba(var(--fgc,255,255,255),.42);margin-top:7px">{{ L.equivExplica }}</div>
+      <div style="display:flex;flex-direction:column;gap:9px;margin-top:18px">
+        <sc-for list="{{ foodSwapSheet.opts }}" as="a" hint-placeholder-count="4">
+        <div onClick="{{ a.choose }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.1);border-radius:14px;padding:15px 16px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.98)">
+          <div style="min-width:0;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</div>
+          <div style="flex:none;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.55);text-align:right">{{ a.detail }}</div>
         </div>
         </sc-for>
       </div>
@@ -1379,7 +1410,7 @@ class Component extends DCLogic {
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: false, playEx: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
-    ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false,
+    ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
     lang: (function () { try { return localStorage.getItem('castillo_lang') || 'es'; } catch (e) { return 'es'; } })()
   };
   setLang = l => () => { try { localStorage.setItem('castillo_lang', l); } catch (e) {} this.setState({ lang: l }); };
@@ -1477,6 +1508,19 @@ class Component extends DCLogic {
     const d = DAYS.find(x => x.fecha === fecha) || DAYS.find(x => x.today);
     this.setState({ day: d ? d.d : this.state.day, dietMealIdx: 0 });
     this.openSheet({ k: 'dietday' });
+  };
+  // abre el selector de equivalencias de un alimento
+  openFoodSwap = (mealId, mealName, optI, foodI, origName, alts) => () => {
+    this.openSheet({ k: 'foodswap', swapKey: mealId + '|' + optI + '|' + foodI, mealName: mealName, origName: origName, alts: alts, back: this.state.sheet });
+  };
+  // elige una alternativa: aplica el cambio + lo registra (lo verá el entrenador)
+  chooseFood = (swapKey, mealName, origName, alt) => () => {
+    this.setState(s => ({ foodSwaps: Object.assign({}, s.foodSwaps, { [swapKey]: { name: alt.name, grams: alt.grams } }) }));
+    if (typeof window !== 'undefined' && window.CastilloData && window.CastilloData.registrarSustitucion) {
+      try { window.CastilloData.registrarSustitucion(mealName, origName, alt.name, alt.grams).catch(function () { }); } catch (e) { }
+    }
+    this.flash(this.state.lang === 'en' ? 'Food swapped' : 'Alimento cambiado');
+    this.closeSheet();
   };
   shiftWeek = dir => () => {
     const weeks = (WEEKS && WEEKS.length) ? WEEKS : [{ days: DAYS }];
@@ -1944,7 +1988,16 @@ class Component extends DCLogic {
       return { n: tMeal(m.n), sel: mi === _dmi, pick: () => this.setState({ dietMealIdx: mi }), locked, lockNote: locked ? T('Ya registrado') : '',
         opts: m.o.map((o, i) => {
           const sel = _selMeals[m.id] === i;
-          const foods = F(o).map(f => ({ n: tFood(f.n), q: f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '' }));
+          const _oxOpt = (m.ox && m.ox[i]) || [];
+          const foods = F(o).map((f, fi) => {
+            const fx = _oxOpt[fi];
+            const alts = (fx && typeof window !== 'undefined' && window.EQUIV) ? window.EQUIV.alternativas(fx, lang) : null;
+            const sw = (st.foodSwaps || {})[m.id + '|' + i + '|' + fi];
+            const canSwap = !!(alts && alts.length);
+            return { n: sw ? sw.name : tFood(f.n), q: sw ? (sw.grams + ' g') : f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '',
+              swapped: !!sw, canSwap: canSwap,
+              openSwap: canSwap ? this.openFoodSwap(m.id, m.n, i, fi, tFood(f.n), alts) : (() => {}) };
+          });
           const kcalTotal = F(o).reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
           const dim = locked && !sel;
           return { rom: T('OPCIÓN') + ' ' + (i + 1), sel, foods, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.03) + 's',
@@ -2257,6 +2310,7 @@ class Component extends DCLogic {
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
         progresoTitulo: T('Tu progreso'), fotoPrimeras: T('Primeras'), fotoUltimas: T('Últimas'), deslizaFotos: T('Desliza para ver frontal, lateral y espalda'),
+        cambiarAlimento: T('Cambiar alimento'), equivExplica: T('Mismas calorías, distinto alimento. Toca el que prefieras.'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
         registroSemanal: T('Registro semanal'), regCadaSemana: T('Registrado cada semana en su check-in.'),
         serieMasPesada: T('Serie más pesada'), historialCargas: T('Historial de cargas'),
@@ -2356,6 +2410,8 @@ class Component extends DCLogic {
       isMealSheet: sh.k === 'meal', mealSheet, isVideoSheet: sh.k === 'vid', videoSheet,
       isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => this.openSheet({ k: 'dietall' }),
       isDietDaySheet: sh.k === 'dietday', dietDaySheet,
+      isFoodSwapSheet: sh.k === 'foodswap',
+      foodSwapSheet: sh.k === 'foodswap' ? { origName: sh.origName, opts: (sh.alts || []).map(a => ({ name: a.name, detail: a.grams + ' g · ~' + a.kcal + ' kcal', choose: this.chooseFood(sh.swapKey, sh.mealName, sh.origName, a) })) } : {},
       isCkSheet: sh.k === 'ck', ckShots, ckGroups, submitCheckin: this.submitCheckin,
 
       pad: st.pad, padDim: st.padIn ? 1 : 0, padY: st.padIn ? 'none' : 'translateY(100%)',

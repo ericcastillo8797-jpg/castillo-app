@@ -149,6 +149,14 @@
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);
     },
+    // registra una sustitución de alimento del día (equivalencias); lo verá el entrenador en el CRM
+    registrarSustitucion: function (comida, original, nuevo, gramos) {
+      if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, comida: comida || '', original: original || '', nuevo: nuevo || '', gramos: (gramos != null ? gramos : null), registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      return api('/rest/v1/sustituciones_dieta?on_conflict=cliente_email,fecha,comida,original', {
+        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+      }, _ctx.token);
+    },
     // sube una FOTO de progreso al almacenamiento (bucket 'progreso') y devuelve su URL pública
     subirFotoProgreso: function (file, slot) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
