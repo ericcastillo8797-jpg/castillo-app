@@ -161,7 +161,7 @@
           d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
           rom: ROM[i], t: title, s: status, wk: wkKey, n: nCount, acts: acts,
           fecha: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()),
-          ses: wkItem ? (hh + ' · Su domicilio') : (cardio ? cardio.title : 'Sin sesión'),
+          ses: wkItem ? 'Su domicilio' : (cardio ? cardio.title : 'Sin sesión'),
           dot: isToday ? 2 : (wkItem && wkItem.done ? 1 : 0), today: isToday
         });
       }
@@ -195,7 +195,7 @@
         if (APPTS.length >= 3) return;
         var w = s.items.filter(function (x) { return x.type === 'workout'; })[0];
         if (!w) return;
-        APPTS.push({ w: WD3[s.date.getDay()], d: d2(s.date.getDate()), t: 'Sesión de entrenamiento', sub: 'Alex Castillo · Su domicilio', h: d2(w.dt.getHours()) + ':' + d2(w.dt.getMinutes()) });
+        APPTS.push({ w: WD3[s.date.getDay()], d: d2(s.date.getDate()), t: 'Sesión de entrenamiento', sub: 'Alex Castillo · Su domicilio', h: '' });
       });
 
     // ---------- DIET (plan de nutrición activo) ----------
