@@ -318,19 +318,20 @@
       var dt = new Date(ms(p.date));
       return { key: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: '', fotos: { Frontal: p.front_url, Lateral: p.side_url, Espalda: p.back_url } };
     });
+    // nº de semana RELATIVO al inicio del cliente (su primera foto = Semana 1), no la semana del año
+    var _allSets = setsClient.concat(setsHarbiz);
+    var _tMin = _allSets.length ? Math.min.apply(null, _allSets.map(function (s) { return s.t; })) : 0;
+    function semRel(t) { return 'Semana ' + (Math.floor((t - _tMin) / (7 * 86400000)) + 1); }
     var seenD = {};
-    var PHOTOSETS = setsClient.concat(setsHarbiz).sort(function (a, b) { return b.t - a.t; })
+    var PHOTOSETS = _allSets.sort(function (a, b) { return b.t - a.t; })
       .filter(function (s) { if (seenD[s.key]) return false; seenD[s.key] = 1; return true; })
-      .slice(0, 12).map(function (s) { return { w: s.w, date: s.date, kg: s.kg, fotos: s.fotos }; });
+      .slice(0, 12).map(function (s) { return { w: semRel(s.t), date: s.date, kg: s.kg, fotos: s.fotos }; });
     var SESS = PHOTOSETS.map(function (p) { return p.date; });
-    // Comparativa visual para la pantalla de Hoy: las 3 PRIMERAS fotos (primer check-in, fijas) y las 3 ÚLTIMAS (se actualizan)
-    var _shotsOf = function (set) { return SHOTS.map(function (n) { return { n: n, img: (set && set.fotos && set.fotos[n]) || '' }; }); };
+    // Comparativa antes/después para Hoy: primer set (más antiguo) vs último (más reciente). El render añade el open de cada foto.
     var progresoFotos = null;
     if (PHOTOSETS.length) {
-      var _prim = PHOTOSETS[PHOTOSETS.length - 1], _ult = PHOTOSETS[0];
       progresoFotos = { hay: true, dos: PHOTOSETS.length > 1,
-        primeras: { label: _prim.date, shots: _shotsOf(_prim) },
-        ultimas: { label: _ult.date, shots: _shotsOf(_ult) } };
+        primeras: PHOTOSETS[PHOTOSETS.length - 1], ultimas: PHOTOSETS[0] };
     }
     var DATES = (wm && wm.data ? wm.data : []).slice().reverse().slice(0, 10).map(function (p) { var dt = new Date(ms(p.t)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
     if (!DATES.length) DATES = SESS.slice();
