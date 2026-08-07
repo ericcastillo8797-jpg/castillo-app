@@ -318,20 +318,50 @@
     // Cada semana muestra sus 3 fotos; antes, si había 1 check-in, se ocultaban TODAS las de Harbiz.
     var SLUG_LABEL = { 'peso-corporal': 'Peso corporal', 'peso': 'Peso corporal', 'peso_corporal': 'Peso corporal', 'pecho': 'Pecho', 'cadera': 'Cadera', 'cuello': 'Cuello', 'cintura': 'Cintura', 'hombros': 'Hombros', 'rollitos': 'Rollitos', 'muslo-derecho': 'Muslo derecho', 'muslo-izquierdo': 'Muslo izquierdo', 'b-ceps-derecho': 'Bíceps derecho', 'b-ceps-izquierdo': 'Bíceps izquierdo', 'gemelo-derecho': 'Gemelo derecho', 'gemelo-izquierdo': 'Gemelo izquierdo', 'antebrazo-derecho': 'Antebrazo derecho', 'antebrazo-izquierdo': 'Antebrazo izquierdo' };
     function unslug(s) { return SLUG_LABEL[s] || String(s).replace(/-/g, ' ').replace(/^./, function (c) { return c.toUpperCase(); }); }
-    function medidasDe(valores) {
-      var m = [];
-      Object.keys(valores || {}).forEach(function (sg) { var v = valores[sg]; if (v == null || v === '') return; var esPeso = sg.indexOf('peso') >= 0; m.push({ label: unslug(sg), valor: comma(v) + (esPeso ? ' kg' : ' cm'), _peso: esPeso }); });
-      m.sort(function (a, b) { return (b._peso ? 1 : 0) - (a._peso ? 1 : 0); }); // peso primero
-      return m;
+    var dtOf2 = function (fecha) { return new Date(String(fecha).slice(0, 10) + 'T00:00:00'); };
+    // Índice unificado de TODAS las medidas por fecha (métricas de Harbiz + check-ins del cliente),
+    // para que CUALQUIER foto (semana con check-in o histórica) muestre TODAS las medidas de esa fecha.
+    var _covered = {};
+    function toMs(x) { var v = ms(x); if (v == null) return NaN; if (typeof v === 'number') return v; var n = new Date(v).getTime(); return n; }
+    var _metSeries = metrics.map(function (m) {
+      var sg = slug(m.name), esPeso = /peso|weight/i.test(m.name || ''); _covered[sg] = 1;
+      var pts = (m.data || []).map(function (p) { return { t: toMs(p.t), y: p.y }; });
+      var cv = metVal(m); if (cv != null && cv !== '') pts.push({ t: now.getTime(), y: cv });
+      var ck = chkByKey[sg]; if (ck) ck.forEach(function (pt) { var d = dtOf2(pt.fecha); if (!isNaN(d)) pts.push({ t: d.getTime(), y: pt.val }); });
+      pts = pts.filter(function (p) { return p.t != null && !isNaN(p.t) && !isNaN(parseFloat(String(p.y).replace(',', '.'))); }).sort(function (a, b) { return a.t - b.t; });
+      return { label: m.name, esPeso: esPeso, unit: m.unit || (esPeso ? 'kg' : 'cm'), pts: pts };
+    }).filter(function (s) { return s.pts.length; });
+    // medidas que el cliente apunta en sus check-ins y que NO existen como métrica de Harbiz
+    Object.keys(chkByKey).forEach(function (sg) {
+      if (_covered[sg]) return;
+      var esPeso = sg.indexOf('peso') >= 0;
+      var pts = chkByKey[sg].map(function (pt) { var d = dtOf2(pt.fecha); return { t: d.getTime(), y: pt.val }; })
+        .filter(function (p) { return !isNaN(p.t) && !isNaN(parseFloat(String(p.y).replace(',', '.'))); }).sort(function (a, b) { return a.t - b.t; });
+      if (pts.length) _metSeries.push({ label: unslug(sg), esPeso: esPeso, unit: esPeso ? 'kg' : 'cm', pts: pts });
+    });
+    _metSeries.sort(function (a, b) { return (b.esPeso ? 1 : 0) - (a.esPeso ? 1 : 0); }); // peso primero
+    // devuelve el valor de cada medida en la fecha de la foto: mismo día exacto → el más reciente hasta esa
+    // fecha (+4 días de margen) → el primero disponible. Así CUALQUIER foto muestra TODAS las medidas.
+    function dayKeyOf(t) { var d = new Date(t); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); }
+    function medidasEnFecha(t) {
+      var dk = dayKeyOf(t), i;
+      return _metSeries.map(function (s) {
+        var hit = null;
+        for (i = s.pts.length - 1; i >= 0; i--) { if (dayKeyOf(s.pts[i].t) === dk) { hit = s.pts[i]; break; } }        // 1) mismo día
+        if (!hit) for (i = s.pts.length - 1; i >= 0; i--) { if (s.pts[i].t <= t + 4 * 86400000) { hit = s.pts[i]; break; } } // 2) más reciente hasta esa fecha
+        if (!hit) hit = s.pts[0];                                                                                          // 3) el primero disponible
+        return hit ? { label: s.label, valor: comma(hit.y) + ' ' + s.unit } : null;
+      }).filter(Boolean);
     }
+    function pesoEnFecha(t) { var m = medidasEnFecha(t).filter(function (x) { return /kg$/.test(x.valor); })[0]; return m ? m.valor : ''; }
     var setsClient = chkList.filter(function (c) { return c.fotos && Object.keys(c.fotos).length; }).map(function (c) {
-      var dt = dtOf(c.fecha);
+      var dt = dtOf2(c.fecha);
       var pw = (c.valores && (c.valores['peso-corporal'] || c.valores['peso'] || c.valores['peso_corporal'])) || '';
-      return { key: (c.fecha || '').slice(0, 10), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pw ? comma(pw) + ' kg' : '', fotos: c.fotos, medidas: medidasDe(c.valores) };
+      return { key: (c.fecha || '').slice(0, 10), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pw ? comma(pw) + ' kg' : pesoEnFecha(dt.getTime()), fotos: c.fotos, medidas: medidasEnFecha(dt.getTime()) };
     });
     var setsHarbiz = ((row.evolution && row.evolution.photos) || []).filter(function (p) { return p.front_url || p.side_url || p.back_url; }).map(function (p) {
       var dt = new Date(ms(p.date));
-      return { key: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: '', fotos: { Frontal: p.front_url, Lateral: p.side_url, Espalda: p.back_url } };
+      return { key: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pesoEnFecha(dt.getTime()), fotos: { Frontal: p.front_url, Lateral: p.side_url, Espalda: p.back_url }, medidas: medidasEnFecha(dt.getTime()) };
     });
     // nº de semana RELATIVO al inicio del cliente (su primera foto = Semana 1), no la semana del año
     var _allSets = setsClient.concat(setsHarbiz);
