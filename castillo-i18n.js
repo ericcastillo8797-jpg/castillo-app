@@ -163,10 +163,12 @@
     // Evolución
     'Peso corporal': 'Body weight', 'variación': 'change', 'Composición y medidas': 'Body composition',
     'Tu progreso': 'Your progress', 'Primeras': 'First', 'Últimas': 'Latest', 'Desliza para ver frontal, lateral y espalda': 'Swipe to see front, side and back',
+    'Empezó en': 'Started at', 'ahora': 'now',
     'Medidas de ese día': 'Measurements that day', 'Enviada en su check-in semanal. Queda archivada para su consulta: no puede modificarse ni eliminarse.': 'Submitted in your weekly check-in. Archived for your reference: it cannot be edited or deleted.', 'en ese check-in': 'in that check-in',
     'Ver todas las apps': 'See all apps', 'Ver menos': 'See less',
     'Cambiar alimento': 'Swap food', 'Mismas calorías, distinto alimento. Toca el que prefieras.': 'Same calories, different food. Tap the one you prefer.', 'Food swapped': 'Food swapped', 'Alimento cambiado': 'Food swapped',
     'Registrada': 'Registered', 'Registrar esta': 'Register this', 'Registrar': 'Register',
+    'Toca la opción marcada para desmarcarla': 'Tap the selected option to unselect it', 'Toca ✓ para desmarcar': 'Tap ✓ to unselect',
     'Grasa corporal': 'Body fat', 'Cuello': 'Neck', 'Hombros': 'Shoulders', 'Pecho': 'Chest',
     'Cintura': 'Waist', 'Cadera': 'Hip', 'Bíceps izquierdo': 'Left biceps', 'Bíceps derecho': 'Right biceps',
     'Brazo izquierdo': 'Left arm', 'Brazo derecho': 'Right arm', 'Pierna izquierda': 'Left leg', 'Pierna derecha': 'Right leg',

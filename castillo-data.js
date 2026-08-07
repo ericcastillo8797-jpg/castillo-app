@@ -91,6 +91,22 @@
     }, _ctx.token);
   }
 
+  // DESmarca una comida de un día (quita el meal_id de comida_registros) — por si el cliente se equivocó
+  function desregistrarComida(mealId, fecha) {
+    if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+    var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+    var byDate = (window.__DATA && window.__DATA.mealsByDate) || {};
+    var comidas = Object.assign({}, byDate[f] || {}); delete comidas[mealId];
+    if (window.__DATA) {
+      window.__DATA.mealsByDate = Object.assign({}, byDate, { [f]: comidas });
+      if (f === _ctx.hoy) window.__DATA.mealsReg = comidas;
+    }
+    var row = { cliente_email: _ctx.email, fecha: f, comidas: comidas, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+    return api('/rest/v1/comida_registros?on_conflict=cliente_email,fecha', {
+      method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+    }, _ctx.token);
+  }
+
   // login con correo+contraseña (guarda sesión + credenciales para el Face ID)
   function passwordLogin(email, pass) {
     return api('/auth/v1/token?grant_type=password', {
@@ -127,6 +143,7 @@
     },
     logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); } catch (e) {} window.__DATA = null; },
     registrarComida: registrarComida,
+    desregistrarComida: desregistrarComida,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
