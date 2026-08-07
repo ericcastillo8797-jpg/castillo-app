@@ -163,6 +163,7 @@
     // Evolución
     'Peso corporal': 'Body weight', 'variación': 'change', 'Composición y medidas': 'Body composition',
     'Tu progreso': 'Your progress', 'Primeras': 'First', 'Últimas': 'Latest', 'Desliza para ver frontal, lateral y espalda': 'Swipe to see front, side and back',
+    'Medidas de ese día': 'Measurements that day', 'Enviada en su check-in semanal. Queda archivada para su consulta: no puede modificarse ni eliminarse.': 'Submitted in your weekly check-in. Archived for your reference: it cannot be edited or deleted.', 'en ese check-in': 'in that check-in',
     'Ver todas las apps': 'See all apps', 'Ver menos': 'See less',
     'Cambiar alimento': 'Swap food', 'Mismas calorías, distinto alimento. Toca el que prefieras.': 'Same calories, different food. Tap the one you prefer.', 'Food swapped': 'Food swapped', 'Alimento cambiado': 'Food swapped',
     'Registrada': 'Registered', 'Registrar esta': 'Register this', 'Registrar': 'Register',

@@ -316,10 +316,18 @@
     var SHOTS = ['Frontal', 'Lateral', 'Espalda'];
     // FUSIÓN de las dos fuentes: (1) fotos que el cliente sube en sus check-ins y (2) fotos históricas de Harbiz.
     // Cada semana muestra sus 3 fotos; antes, si había 1 check-in, se ocultaban TODAS las de Harbiz.
+    var SLUG_LABEL = { 'peso-corporal': 'Peso corporal', 'peso': 'Peso corporal', 'peso_corporal': 'Peso corporal', 'pecho': 'Pecho', 'cadera': 'Cadera', 'cuello': 'Cuello', 'cintura': 'Cintura', 'hombros': 'Hombros', 'rollitos': 'Rollitos', 'muslo-derecho': 'Muslo derecho', 'muslo-izquierdo': 'Muslo izquierdo', 'b-ceps-derecho': 'Bíceps derecho', 'b-ceps-izquierdo': 'Bíceps izquierdo', 'gemelo-derecho': 'Gemelo derecho', 'gemelo-izquierdo': 'Gemelo izquierdo', 'antebrazo-derecho': 'Antebrazo derecho', 'antebrazo-izquierdo': 'Antebrazo izquierdo' };
+    function unslug(s) { return SLUG_LABEL[s] || String(s).replace(/-/g, ' ').replace(/^./, function (c) { return c.toUpperCase(); }); }
+    function medidasDe(valores) {
+      var m = [];
+      Object.keys(valores || {}).forEach(function (sg) { var v = valores[sg]; if (v == null || v === '') return; var esPeso = sg.indexOf('peso') >= 0; m.push({ label: unslug(sg), valor: comma(v) + (esPeso ? ' kg' : ' cm'), _peso: esPeso }); });
+      m.sort(function (a, b) { return (b._peso ? 1 : 0) - (a._peso ? 1 : 0); }); // peso primero
+      return m;
+    }
     var setsClient = chkList.filter(function (c) { return c.fotos && Object.keys(c.fotos).length; }).map(function (c) {
       var dt = dtOf(c.fecha);
       var pw = (c.valores && (c.valores['peso-corporal'] || c.valores['peso'] || c.valores['peso_corporal'])) || '';
-      return { key: (c.fecha || '').slice(0, 10), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pw ? comma(pw) + ' kg' : '', fotos: c.fotos };
+      return { key: (c.fecha || '').slice(0, 10), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pw ? comma(pw) + ' kg' : '', fotos: c.fotos, medidas: medidasDe(c.valores) };
     });
     var setsHarbiz = ((row.evolution && row.evolution.photos) || []).filter(function (p) { return p.front_url || p.side_url || p.back_url; }).map(function (p) {
       var dt = new Date(ms(p.date));
@@ -332,7 +340,7 @@
     var seenD = {};
     var PHOTOSETS = _allSets.sort(function (a, b) { return b.t - a.t; })
       .filter(function (s) { if (seenD[s.key]) return false; seenD[s.key] = 1; return true; })
-      .slice(0, 12).map(function (s) { return { w: semRel(s.t), date: s.date, kg: s.kg, fotos: s.fotos }; });
+      .slice(0, 12).map(function (s) { return { w: semRel(s.t), date: s.date, kg: s.kg, fotos: s.fotos, medidas: s.medidas || [] }; });
     var SESS = PHOTOSETS.map(function (p) { return p.date; });
     // Comparativa antes/después para Hoy: primer set (más antiguo) vs último (más reciente). El render añade el open de cada foto.
     var progresoFotos = null;

@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=46"></script>
-<script src="./castillo-transform.js?v=46"></script>
-<script src="./castillo-equiv.js?v=46"></script>
-<script src="./castillo-data.js?v=46"></script>
+<script src="./castillo-i18n.js?v=47"></script>
+<script src="./castillo-transform.js?v=47"></script>
+<script src="./castillo-equiv.js?v=47"></script>
+<script src="./castillo-data.js?v=47"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -74,7 +74,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </div>
 
     <div style="margin-top:16px;height:6px;border-radius:6px;background:rgba(var(--fgc,255,255,255),.1);overflow:hidden">
-      <div style="height:100%;border-radius:6px;background:linear-gradient(90deg,#8d8d93,#fff);transition:width .8s cubic-bezier(.32,.72,0,1);width:{{ planPct }}%"></div>
+      <div style="height:100%;border-radius:6px;background:linear-gradient(90deg,#8d8d93,#fff);transition:width .8s cubic-bezier(.32,.72,0,1);width:{{ planBar }}%"></div>
     </div>
 
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.tareasHoy }}</div>
@@ -106,8 +106,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             </sc-for>
           </svg>
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
-            <div style="font-family:'Instrument Serif',serif;font-size:19px;line-height:.9">{{ wsGlobalLabel }}</div>
-            <div style="font-size:6.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4);margin-top:2px">{{ L.global }}</div>
+            <div style="font-family:'Instrument Serif',serif;font-size:22px;line-height:.9">{{ wsGlobalLabel }}</div>
           </div>
         </div>
         <div style="flex:1;min-width:0">
@@ -345,11 +344,8 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
   <sc-if value="{{ isEvo }}" hint-placeholder-val="{{ false }}">
   <div data-screen-label="Evolucion" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:64px 20px 132px">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px">
       <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">{{ L.evolucion }}</div>
-      <div onClick="{{ openCheckin }}" title="{{ L.registrarEvo }}" style="width:46px;height:46px;flex:none;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1);box-shadow:0 6px 18px rgba(0,0,0,.25)" style-active="transform:scale(.9)">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-      </div>
     </div>
 
     <div style="margin-top:18px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 18px 12px">
@@ -540,10 +536,6 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.aplicacion }}</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
-      <div onClick="{{ replaySplash }}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
-        <div style="flex:1;font-size:13.5px">{{ L.verAnimacion }}</div>
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5 7.5 6 4 9.5"></path></svg>
-      </div>
       <div onClick="{{ logout }}" style="display:flex;align-items:center;padding:14px 16px;cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
         <div style="flex:1;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.55)">{{ L.cerrarSesion }}</div>
       </div>
@@ -836,33 +828,41 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </sc-for>
         </div>
       </div>
-      <div style="overflow-y:auto;padding:6px 20px 28px">
-        <sc-for list="{{ dietAll.meals }}" as="m" hint-placeholder-count="5">
-        <div style="margin-top:16px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
-            <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ m.h }}</div>
-            <div style="font-size:15px;font-weight:600">{{ m.n }}</div>
-            <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.08)"></div>
+      <div style="flex:none;padding:12px 16px 4px;display:flex;gap:8px;overflow-x:auto">
+        <sc-for list="{{ dietDaySheet.tabs }}" as="tb" hint-placeholder-count="4">
+        <div onClick="{{ tb.pick }}" style="flex:none;padding:9px 15px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .25s cubic-bezier(.32,.72,0,1);background:{{ tb.bg }};color:{{ tb.fg }};border:1px solid {{ tb.bd }}" style-active="transform:scale(.95)">{{ tb.n }}</div>
+        </sc-for>
+      </div>
+      <div style="overflow-y:auto;padding:8px 20px 26px">
+        <div style="display:flex;align-items:center;gap:10px;margin:6px 0 12px">
+          <div style="font-size:17px;font-weight:700">{{ dietDaySheet.meal.n }}</div>
+          <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.08)"></div>
+        </div>
+        <sc-for list="{{ dietDaySheet.meal.opts }}" as="o" hint-placeholder-count="2">
+        <div style="border-radius:18px;padding:14px 15px;margin-bottom:9px;transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ o.bg }};border:1px solid {{ o.bd }}">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+            <div style="font-family:'Instrument Serif',serif;font-size:12px;letter-spacing:.2em;color:{{ o.numFg }}">{{ o.rom }}</div>
+            <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.1)"></div>
+            <div onClick="{{ o.pick }}" style="flex:none;padding:6px 13px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;background:{{ o.selBg }};color:{{ o.selFg }};border:1px solid {{ o.selBd }};transition:all .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.94)">{{ o.pickLabel }}</div>
           </div>
-          <sc-for list="{{ m.opts }}" as="o" hint-placeholder-count="2">
-          <div style="border-radius:16px;padding:13px 14px;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.07);margin-bottom:8px">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <div style="font-family:'Instrument Serif',serif;font-size:12px;letter-spacing:.2em;color:rgba(var(--fgc,255,255,255),.45)">{{ o.rom }}</div>
-              <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.1)"></div>
+          <sc-for list="{{ o.foods }}" as="f" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:7px">
+              <sc-if value="{{ f.canSwap }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ f.openSwap }}" style="width:23px;height:23px;flex:none;border-radius:7px;background:rgba(var(--fgc,255,255,255),.09);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.88)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--fgc,255,255,255),.72)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 4 7l3 3M4 7h13M17 20l3-3-3-3M20 17H7"></path></svg>
+              </div>
+              </sc-if>
+              <div style="min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }}</div>
             </div>
-            <sc-for list="{{ o.foods }}" as="f" hint-placeholder-count="3">
-            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0">
-              <div style="flex:1;min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92)">{{ f.n }}</div>
-              <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:64px;text-align:right">{{ f.q }}</div>
-              <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:70px;text-align:right">{{ f.kcalLabel }}</div>
-            </div>
-            </sc-for>
-            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:.5px solid rgba(var(--fgc,255,255,255),.1)">
-              <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
-              <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
-            </div>
+            <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:56px;text-align:right">{{ f.q }}</div>
+            <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:62px;text-align:right">{{ f.kcalLabel }}</div>
           </div>
           </sc-for>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:9px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.1)">
+            <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
+            <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
+          </div>
         </div>
         </sc-for>
       </div>
@@ -976,11 +976,24 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </div>
           <div style="text-align:right">
             <div style="font-size:17px;font-weight:600">{{ photoSheet.kg }}</div>
-            <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.36);margin-top:2px">en ese check-in</div>
+            <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.36);margin-top:2px">{{ L.enEseCheckin }}</div>
           </div>
         </div>
         <div style="height:.5px;background:rgba(var(--fgc,255,255,255),.08);margin:16px 0"></div>
-        <div style="font-size:12.5px;line-height:1.55;color:rgba(var(--fgc,255,255,255),.45);text-wrap:pretty">Enviada en su check-in semanal. Queda archivada para su consulta: no puede modificarse ni eliminarse.</div>
+        <sc-if value="{{ photoSheet.hasMedidas }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin-bottom:6px">{{ L.medidasEseDia }}</div>
+          <sc-for list="{{ photoSheet.medidas }}" as="m" hint-placeholder-count="4">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06)">
+            <div style="font-size:13.5px;color:rgba(var(--fgc,255,255,255),.66)">{{ m.label }}</div>
+            <div style="font-size:14px;font-weight:600">{{ m.valor }}</div>
+          </div>
+          </sc-for>
+        </div>
+        </sc-if>
+        <sc-if value="{{ photoSheet.noMedidas }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:12.5px;line-height:1.55;color:rgba(var(--fgc,255,255,255),.45);text-wrap:pretty">{{ L.fotoArchivada }}</div>
+        </sc-if>
       </div>
     </div>
     </sc-if>
@@ -1391,7 +1404,7 @@ function applyRealData(d) {
 
 class Component extends DCLogic {
   state = {
-    stage: null, tab: 'home',
+    stage: null, tab: 'home', homeDrawn: false,
     email: '', pass: '', scan: 0,
     meals: { m1: 2, m2: 0, m3: 3 },
     sheet: null, sheetIn: false,
@@ -1414,6 +1427,7 @@ class Component extends DCLogic {
   componentDidMount() {
     if (this.stage === 'splash') this.runSplash();
     if (this.state.tab === 'evo') this.playEvo();
+    if (this.state.tab === 'home') this.playHome();
     // deslizar el tirador del sheet hacia abajo para cerrarlo
     this._grabY = null; this._grabMoved = 0; this._grabX = null; this._grabMovedX = 0; this._swipeMode = null;
     this._shTS = (e) => { const t = e.touches && e.touches[0]; if (!t) { this._grabY = null; this._grabX = null; this._swipeMode = null; return; }
@@ -1464,7 +1478,7 @@ class Component extends DCLogic {
     if (today) patch.day = today.d;
     if (d && typeof d.curWeekIdx === 'number') patch.weekIdx = d.curWeekIdx;
     this.setState(patch);
-    this.later(() => this.setState({ stage: 'app', tab: 'home' }), 900);
+    this.later(() => { this.setState({ stage: 'app', tab: 'home' }); this.playHome(); }, 900);
   };
   doLogin = () => {
     var email = (this.state.email || '').trim(), pass = this.state.pass || '';
@@ -1487,6 +1501,12 @@ class Component extends DCLogic {
     this.setState({ tab: t });
     if (this._sc) this._sc.scrollTop = 0;
     if (t === 'evo') this.playEvo();
+    if (t === 'home') this.playHome();
+  };
+  // rellena los anillos del resumen semanal y la barra del plan de hoy al entrar en Hoy (de 0 → valor)
+  playHome = () => {
+    this.setState({ homeDrawn: false });
+    requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ homeDrawn: true })));
   };
   // abre la dieta; por defecto en el día de hoy (la tira de días permite ir a días pasados a rellenar)
   openDiet = fecha => () => {
@@ -1915,9 +1935,10 @@ class Component extends DCLogic {
     const wsKcal = _ws.kcal || 0;
     // resumen semanal en formato redondo (anillos concéntricos, un color por tarea estilo Harbiz)
     const _ringR = [62, 50, 38, 26], _ringCol = ['#5B8CFF', '#FF6B5C', '#3DD68C', '#C084FC'];
+    const _reveal = !!st.homeDrawn; // arranca en 0 y sube al valor al entrar en Hoy
     const wsRings = wsRows.map((r, i) => {
-      const rad = _ringR[i], C = 2 * Math.PI * rad, pct = Math.max(0, Math.min(100, r.pct || 0));
-      return { l: r.l, sub: r.sub, pct, r: rad, dash: (C * pct / 100).toFixed(1) + ' ' + C.toFixed(1),
+      const rad = _ringR[i], C = 2 * Math.PI * rad, pct = Math.max(0, Math.min(100, r.pct || 0)), pctShown = _reveal ? pct : 0;
+      return { l: r.l, sub: r.sub, pct, r: rad, dash: (C * pctShown / 100).toFixed(1) + ' ' + C.toFixed(1),
         col: _ringCol[i] || 'rgba(var(--fgc,255,255,255),.55)' };
     });
     // macros objetivo del cliente (Nutrición)
@@ -2304,6 +2325,7 @@ class Component extends DCLogic {
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'),
         progresoTitulo: T('Tu progreso'), fotoPrimeras: T('Primeras'), fotoUltimas: T('Últimas'), deslizaFotos: T('Desliza para ver frontal, lateral y espalda'),
+        medidasEseDia: T('Medidas de ese día'), fotoArchivada: T('Enviada en su check-in semanal. Queda archivada para su consulta: no puede modificarse ni eliminarse.'), enEseCheckin: T('en ese check-in'),
         cambiarAlimento: T('Cambiar alimento'), equivExplica: T('Mismas calorías, distinto alimento. Toca el que prefieras.'),
         sinEntrenos: T('Aún no hay entrenos registrados.'), cuandoEntrenador: T('Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.'),
         registroSemanal: T('Registro semanal'), regCadaSemana: T('Registrado cada semana en su check-in.'),
@@ -2329,7 +2351,7 @@ class Component extends DCLogic {
       mealRows, trainPct, trainPctLabel: trainPct + '%',
       headLine, headDay, headMonth, heroRom, heroTitle, heroMeta, entHeader, agendaHdr, agendaSub, dietSub, evoCounts, woTitle,
       prevWeek, nextWeek, prevWeekOpacity, nextWeekOpacity,
-      planPct, planPctLabel: planPct + '%', planTasks, wsRows, wsRings, wsGlobal, wsGlobalLabel: wsGlobal + '%', wsKcal,
+      planPct, planBar: _reveal ? planPct : 0, planPctLabel: planPct + '%', planTasks, wsRows, wsRings, wsGlobal, wsGlobalLabel: wsGlobal + '%', wsKcal,
       wsKcalLabel: wsKcal + ' kcal ' + T('objetivo / día'),
       macroCards, macroPlan: ((_dd.macros || {}).plan) || '', connectHealth: () => this.flash(T('Pronto podrás sincronizar tu actividad automáticamente')),
       showAllApps: st.showAllApps, toggleApps: () => this.setState({ showAllApps: !st.showAllApps }), appsToggleLabel: st.showAllApps ? T('Ver menos') : T('Ver todas las apps'),
@@ -2345,7 +2367,7 @@ class Component extends DCLogic {
       evoTabs, evoMetrics: st.evoTab === 'comp', evoPhotos: st.evoTab === 'comp', evoEjercicio: st.evoTab === 'ejercicio',
       evoCompOpen: st.evoCompOpen, evoCompChevron: st.evoCompOpen ? 'rotate(180deg)' : 'rotate(0deg)', toggleEvoComp: () => this.setState({ evoCompOpen: !st.evoCompOpen }),
       evoCompHint: st.evoCompOpen ? T('Toca para ocultar') : T('Toca para ver todas tus medidas'),
-      appZoom: st.fontScale || 1, appWH: (100 / (st.fontScale || 1)) + '%',
+      appZoom: st.fontScale || 1, appWH: '100%',
       fontSizes: [[T('Normal'), 1, 13], [T('Grande'), 1.1, 15], [T('Más grande'), 1.22, 17]].map(([n, v, fs]) => {
         const sel = (st.fontScale || 1) === v;
         return { n, fs: fs + 'px', pick: this.setFontScale(v), bg: sel ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', fg: sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)' };
@@ -2356,7 +2378,7 @@ class Component extends DCLogic {
         shots: SHOTS.map(n => ({ n, img: (p.fotos && p.fotos[n]) || '', open: this.openPhoto(p, n) }))
       })),
       isPhotoSheet: sh.k === 'photo',
-      photoSheet: sh.k === 'photo' ? (sh.shots ? { w: sh.w || '', date: sh.date || '', kg: '', shots: sh.shots } : (() => { const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n] })); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, shots }; })()) : {},
+      photoSheet: sh.k === 'photo' ? (sh.shots ? { w: sh.w || '', date: sh.date || '', kg: '', shots: sh.shots, medidas: [], hasMedidas: false, noMedidas: true } : (() => { const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n] })); const med = sh.p.medidas || []; return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, shots, medidas: med, hasMedidas: med.length > 0, noMedidas: med.length === 0 }; })()) : {},
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoDelta,
       chartArea: chart.area, chartLine: chart.line, chartLx: chart.lx, chartLy: chart.ly,
@@ -2402,7 +2424,7 @@ class Component extends DCLogic {
       toast: st.toast,
       sheet: st.sheet, sheetDim: dim, sheetY: st.sheetIn ? 'none' : 'translateY(100%)', closeSheet: this.closeSheet,
       isMealSheet: sh.k === 'meal', mealSheet, isVideoSheet: sh.k === 'vid', videoSheet,
-      isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => this.openSheet({ k: 'dietall' }),
+      isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => { this.setState({ dietMealIdx: 0 }); this.openSheet({ k: 'dietall' }); },
       isDietDaySheet: sh.k === 'dietday', dietDaySheet,
       isFoodSwapSheet: sh.k === 'foodswap',
       foodSwapSheet: sh.k === 'foodswap' ? { origName: sh.origName, opts: (sh.alts || []).map((a, i) => ({ name: a.name, detail: a.grams + ' g · ~' + a.kcal + ' kcal', delay: (0.05 + i * 0.05) + 's', choose: this.chooseFood(sh.swapKey, sh.mealName, sh.origName, a) })) } : {},
