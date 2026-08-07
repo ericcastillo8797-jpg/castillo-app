@@ -323,20 +323,22 @@
     // para que CUALQUIER foto (semana con check-in o histórica) muestre TODAS las medidas de esa fecha.
     var _covered = {};
     function toMs(x) { var v = ms(x); if (v == null) return NaN; if (typeof v === 'number') return v; var n = new Date(v).getTime(); return n; }
-    var _metSeries = metrics.map(function (m) {
+    function esGrasa(name) { return /grasa|body\s?fat/i.test(name || ''); } // se excluye (igual que "Composición y medidas")
+    function valNum(y) { return parseFloat(String(y).replace(',', '.')); }
+    var _metSeries = metrics.filter(function (m) { return !esGrasa(m.name); }).map(function (m) {
       var sg = slug(m.name), esPeso = /peso|weight/i.test(m.name || ''); _covered[sg] = 1;
       var pts = (m.data || []).map(function (p) { return { t: toMs(p.t), y: p.y }; });
       var cv = metVal(m); if (cv != null && cv !== '') pts.push({ t: now.getTime(), y: cv });
       var ck = chkByKey[sg]; if (ck) ck.forEach(function (pt) { var d = dtOf2(pt.fecha); if (!isNaN(d)) pts.push({ t: d.getTime(), y: pt.val }); });
-      pts = pts.filter(function (p) { return p.t != null && !isNaN(p.t) && !isNaN(parseFloat(String(p.y).replace(',', '.'))); }).sort(function (a, b) { return a.t - b.t; });
+      pts = pts.filter(function (p) { var n = valNum(p.y); return p.t != null && !isNaN(p.t) && !isNaN(n) && n > 0; }).sort(function (a, b) { return a.t - b.t; }); // sin valores 0/vacíos
       return { label: m.name, esPeso: esPeso, unit: m.unit || (esPeso ? 'kg' : 'cm'), pts: pts };
     }).filter(function (s) { return s.pts.length; });
     // medidas que el cliente apunta en sus check-ins y que NO existen como métrica de Harbiz
     Object.keys(chkByKey).forEach(function (sg) {
-      if (_covered[sg]) return;
+      if (_covered[sg] || esGrasa(sg)) return;
       var esPeso = sg.indexOf('peso') >= 0;
       var pts = chkByKey[sg].map(function (pt) { var d = dtOf2(pt.fecha); return { t: d.getTime(), y: pt.val }; })
-        .filter(function (p) { return !isNaN(p.t) && !isNaN(parseFloat(String(p.y).replace(',', '.'))); }).sort(function (a, b) { return a.t - b.t; });
+        .filter(function (p) { var n = valNum(p.y); return !isNaN(p.t) && !isNaN(n) && n > 0; }).sort(function (a, b) { return a.t - b.t; });
       if (pts.length) _metSeries.push({ label: unslug(sg), esPeso: esPeso, unit: esPeso ? 'kg' : 'cm', pts: pts });
     });
     _metSeries.sort(function (a, b) { return (b.esPeso ? 1 : 0) - (a.esPeso ? 1 : 0); }); // peso primero

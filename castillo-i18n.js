@@ -185,7 +185,7 @@
     'Normal': 'Normal', 'Grande': 'Large', 'Más grande': 'Larger', 'Tamaño de texto': 'Text size',
     'Sincroniza tu actividad': 'Sync your activity', 'Conecta tu dispositivo para volcar tu actividad automáticamente': 'Connect your device to sync your activity automatically', 'Conectar': 'Connect',
     'Tus objetivos diarios': 'Your daily targets', 'Calorías': 'Calories', 'Proteínas': 'Protein', 'Carbohidratos': 'Carbs', 'Grasas': 'Fats',
-    'completado': 'completed', 'No puedo hacer este ejercicio': "I can't do this exercise",
+    'completado': 'completed', 'No puedo hacer este ejercicio': "I can't do this exercise", 'Variantes de este ejercicio': 'Variations of this exercise',
     'Variante en uso · ver otras': 'Variant in use · see others', 'Vídeo de técnica': 'Technique video',
     'Volver al ejercicio original': 'Back to original exercise', 'Si no dispone del material': "If you don't have the equipment",
     'Entreno registrado · enviado al equipo': 'Workout logged · sent to your coach',

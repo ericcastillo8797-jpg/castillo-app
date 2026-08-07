@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=49"></script>
-<script src="./castillo-transform.js?v=49"></script>
-<script src="./castillo-equiv.js?v=49"></script>
-<script src="./castillo-data.js?v=49"></script>
+<script src="./castillo-i18n.js?v=50"></script>
+<script src="./castillo-transform.js?v=50"></script>
+<script src="./castillo-equiv.js?v=50"></script>
+<script src="./castillo-data.js?v=50"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -815,6 +815,14 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
     <sc-if value="{{ isDietAllSheet }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Toda mi dieta" style="display:flex;flex-direction:column;min-height:0">
+      <div style="position:absolute;top:50px;right:14px;z-index:4;display:flex;gap:7px">
+        <div onClick="{{ printDiet }}" title="{{ L.imprimirDieta }}" style="width:32px;height:32px;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5V2h6v3M4 10.5H3a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V9.5a1 1 0 0 1-1 1h-1M4 8.5h6v3.5H4z"></path></svg>
+        </div>
+        <div onClick="{{ shareDiet }}" title="{{ L.compartirDieta }}" style="width:32px;height:32px;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.5V2M4.5 4.2 7 1.7l2.5 2.5"></path><path d="M2.5 8v3.5a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V8"></path></svg>
+        </div>
+      </div>
       <div style="padding:14px 20px 14px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.nutricion }}</div>
         <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1;margin-top:4px">{{ L.tuDieta }}</div>
@@ -955,30 +963,37 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
     <sc-if value="{{ isPhotoSheet }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Fotografia archivada" style="padding:14px 0 30px">
-      <!-- Las 3 fotos ABIERTAS en fila; se desliza el carrusel (scroll nativo + snap) -->
-      <div style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0 20px 12px">
-        <sc-for list="{{ photoSheet.shots }}" as="s" hint-placeholder-count="3">
-        <div style="flex:none;width:82%;scroll-snap-align:center">
-          <div style="position:relative;aspect-ratio:3/4;border-radius:20px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.1)">
-            <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center"><svg width="110" height="164" viewBox="0 0 42 62" fill="currentColor" opacity=".13"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg></div>
-            <sc-if value="{{ s.img }}" hint-placeholder-val="{{ false }}"><img src="{{ s.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
-            <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:18px 10px 12px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);background:linear-gradient(to top,rgba(var(--bgc,0,0,0),.62),transparent)">{{ s.n }}</div>
-          </div>
-          <sc-if value="{{ s.hasMedidas }}" hint-placeholder-val="{{ false }}">
-          <div style="margin-top:10px">
-            <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-bottom:8px">{{ s.sub }}</div>
-            <sc-for list="{{ s.medidas }}" as="m" hint-placeholder-count="4">
-            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06)">
-              <div style="font-size:12.5px;color:rgba(var(--fgc,255,255,255),.66)">{{ m.label }}</div>
-              <div style="font-size:13px;font-weight:600">{{ m.valor }}</div>
+      <!-- Carrusel por JS (transform): fiable en iOS. Se arrastra con el dedo y salta a la siguiente foto -->
+      <div data-photo-swipe style="overflow:hidden;padding:0 20px 12px">
+        <div style="display:flex;transition:{{ photoTrans }};transform:translateX({{ photoShift }})">
+          <sc-for list="{{ photoSheet.shots }}" as="s" hint-placeholder-count="3">
+          <div style="flex:none;width:100%;box-sizing:border-box;padding:0 4px">
+            <div style="position:relative;aspect-ratio:3/4;border-radius:20px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.1)">
+              <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center"><svg width="110" height="164" viewBox="0 0 42 62" fill="currentColor" opacity=".13"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg></div>
+              <sc-if value="{{ s.img }}" hint-placeholder-val="{{ false }}"><img src="{{ s.img }}" alt="" draggable="false" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
+              <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:18px 10px 12px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);background:linear-gradient(to top,rgba(var(--bgc,0,0,0),.62),transparent)">{{ s.n }}</div>
             </div>
-            </sc-for>
+            <sc-if value="{{ s.hasMedidas }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:10px">
+              <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-bottom:8px">{{ s.sub }}</div>
+              <sc-for list="{{ s.medidas }}" as="m" hint-placeholder-count="4">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06)">
+                <div style="font-size:12.5px;color:rgba(var(--fgc,255,255,255),.66)">{{ m.label }}</div>
+                <div style="font-size:13px;font-weight:600">{{ m.valor }}</div>
+              </div>
+              </sc-for>
+            </div>
+            </sc-if>
           </div>
-          </sc-if>
+          </sc-for>
         </div>
+      </div>
+      <div style="display:flex;gap:6px;justify-content:center;margin-top:4px">
+        <sc-for list="{{ photoDots }}" as="d" hint-placeholder-count="3">
+        <div style="width:6px;height:6px;border-radius:50%;transition:all .3s;background:{{ d.bg }};transform:{{ d.scale }}"></div>
         </sc-for>
       </div>
-      <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.32);margin-top:2px">{{ L.deslizaFotos }}</div>
+      <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.32);margin-top:6px">{{ L.deslizaFotos }}</div>
       <div style="padding:0 20px">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:16px">
           <div>
@@ -1416,6 +1431,7 @@ function applyRealData(d) {
 class Component extends DCLogic {
   state = {
     stage: null, tab: 'home', homeDrawn: false, homeAnim: 1,
+    photoIdx: 0, photoDrag: 0,
     email: '', pass: '', scan: 0,
     meals: { m1: 2, m2: 0, m3: 3 },
     sheet: null, sheetIn: false,
@@ -1446,10 +1462,13 @@ class Component extends DCLogic {
       else if (e.target && e.target.closest && e.target.closest('[data-sheet-grab]')) { this._swipeMode = 'close'; this._grabY = t.clientY; this._grabMoved = 0; this._grabX = null; }
       else { this._grabY = null; this._grabX = null; this._swipeMode = null; } };
     this._shTM = (e) => { const t = e.touches && e.touches[0]; if (!t) return;
-      if (this._swipeMode === 'photo' && this._grabX != null) { this._grabMovedX = t.clientX - this._grabX; this._grabMoved = t.clientY - this._grabY; }
+      if (this._swipeMode === 'photo' && this._grabX != null) { this._grabMovedX = t.clientX - this._grabX; this._grabMoved = t.clientY - this._grabY;
+        if (Math.abs(this._grabMovedX) > Math.abs(this._grabMoved)) this.setState({ photoDrag: this._grabMovedX }); } // arrastre en vivo solo si es horizontal
       else if (this._swipeMode === 'close' && this._grabY != null) { this._grabMoved = t.clientY - this._grabY; } };
     this._shTE = () => {
-      if (this._swipeMode === 'photo') { if (Math.abs(this._grabMovedX) > 45 && Math.abs(this._grabMovedX) > Math.abs(this._grabMoved)) { this.photoNav(this._grabMovedX < 0 ? 1 : -1)(); } }
+      if (this._swipeMode === 'photo') {
+        if (Math.abs(this._grabMovedX) > 45 && Math.abs(this._grabMovedX) > Math.abs(this._grabMoved)) { this.photoNav(this._grabMovedX < 0 ? 1 : -1)(); }
+        else if (this.state.photoDrag) { this.setState({ photoDrag: 0 }); } } // vuelve a su sitio
       else if (this._swipeMode === 'close') { if (this._grabY != null && this._grabMoved > 50 && this.state.sheet) this.closeSheet(); }
       this._grabY = null; this._grabX = null; this._grabMoved = 0; this._grabMovedX = 0; this._swipeMode = null; };
     document.addEventListener('touchstart', this._shTS, { passive: true });
@@ -1579,7 +1598,7 @@ class Component extends DCLogic {
   setTheme = t => () => this.setState({ theme: t });
   openMet = f => () => this.openSheet({ k: 'met', f });
   openHist = e => () => this.openSheet({ k: 'exh', e });
-  openPhoto = (p, view) => () => this.openSheet({ k: 'photo', p, view });
+  openPhoto = (p, view) => () => { this.setState({ photoIdx: 0, photoDrag: 0 }); this.openSheet({ k: 'photo', p, view }); };
   // Comparativa antes/después de UNA vista (frontal/lateral/espalda): primera foto -> deslizar -> última
   openCompare = (view) => () => {
     const pf = (typeof window !== 'undefined' && window.__DATA && window.__DATA.progresoFotos) || null;
@@ -1591,15 +1610,15 @@ class Component extends DCLogic {
     if (a) shots.push({ n: (en ? 'Before' : 'Antes') + ' · ' + view, img: a, sub: (pf.primeras.w || '') + ' · ' + (pf.primeras.date || ''), medidas: pf.primeras.medidas || [] });
     if (b) shots.push({ n: (en ? 'Now' : 'Ahora') + ' · ' + view, img: b, sub: (pf.ultimas.w || '') + ' · ' + (pf.ultimas.date || ''), medidas: pf.ultimas.medidas || [] });
     if (!shots.length) return;
+    this.setState({ photoIdx: 0, photoDrag: 0 });
     this.openSheet({ k: 'photo', shots: shots, w: view, date: en ? 'Before / now' : 'Antes / ahora' });
   };
   photoNav = (dir) => () => {
     const sh = this.state.sheet; if (!sh || sh.k !== 'photo') return;
-    const order = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]);
-    if (order.length < 2) return;
-    let i = order.indexOf(sh.view); if (i < 0) i = 0;
-    const ni = (i + dir + order.length) % order.length;
-    this.setState({ sheet: Object.assign({}, sh, { view: order[ni] }) });
+    const n = sh.shots ? sh.shots.length : SHOTS.filter(x => sh.p && sh.p.fotos && sh.p.fotos[x]).length;
+    if (n < 2) return;
+    const i = Math.min(n - 1, Math.max(0, (this.state.photoIdx || 0) + dir));
+    this.setState({ photoIdx: i, photoDrag: 0 });
   };
   openVar = e => () => this.openSheet({ k: 'var', e });
   useVar = (id, n) => () => {
@@ -2066,7 +2085,7 @@ class Component extends DCLogic {
       return {
         n: tEx(_swap || e.n), p: e.p, rest: e.rest, open: isOpen, thumb: THUMB(_vy),
         openVar: this.openVar(e),
-        varLabel: st.swaps[e.id] ? T('Variante en uso · ver otras') : T('No puedo hacer este ejercicio'),
+        varLabel: st.swaps[e.id] ? T('Variante en uso · ver otras') : T('Variantes de este ejercicio'),
         nS: String(e.s), reps: e.p.split('×').pop().trim(),
         prevDate: SESS[0], prevSets: e.l.map(x => x[1]).join('  ·  ') + (e.l[0][1].charAt(0) === '+' ? ' kg de lastre' : ' kg'),
         openHist: this.openHist(e),
@@ -2400,6 +2419,7 @@ class Component extends DCLogic {
       })),
       isPhotoSheet: sh.k === 'photo',
       photoSheet: sh.k === 'photo' ? (sh.shots ? { w: sh.w || '', date: sh.date || '', kg: '', shots: sh.shots.map(s => ({ n: s.n, img: s.img, sub: s.sub || '', medidas: (s.medidas || []).map(m => ({ label: T(m.label), valor: m.valor })), hasMedidas: (s.medidas || []).length > 0 })), medidas: [], hasMedidas: false, noMedidas: false } : (() => { const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n], sub: '', medidas: [], hasMedidas: false })); const med = (sh.p.medidas || []).map(m => ({ label: T(m.label), valor: m.valor })); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, shots, medidas: med, hasMedidas: med.length > 0, noMedidas: med.length === 0 }; })()) : {},
+      ...(() => { const nSh = sh.k === 'photo' ? (sh.shots ? sh.shots.length : SHOTS.filter(n => sh.p && sh.p.fotos && sh.p.fotos[n]).length) : 0; const idx = Math.min(Math.max(0, st.photoIdx || 0), Math.max(0, nSh - 1)); const drag = st.photoDrag || 0; return { photoShift: nSh ? 'calc(' + (-idx * 100 / nSh) + '% + ' + drag + 'px)' : '0px', photoTrans: drag ? 'none' : 'transform .4s cubic-bezier(.32,.72,0,1)', photoDots: Array.from({ length: nSh }, (_, i) => ({ bg: i === idx ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.25)', scale: i === idx ? 'scale(1.25)' : 'scale(1)' })) }; })(),
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoDelta,
       chartArea: chart.area, chartLine: chart.line, chartLx: chart.lx, chartLy: chart.ly,
