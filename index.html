@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=51"></script>
-<script src="./castillo-transform.js?v=51"></script>
-<script src="./castillo-equiv.js?v=51"></script>
-<script src="./castillo-data.js?v=51"></script>
+<script src="./castillo-i18n.js?v=52"></script>
+<script src="./castillo-transform.js?v=52"></script>
+<script src="./castillo-equiv.js?v=52"></script>
+<script src="./castillo-data.js?v=52"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -962,33 +962,22 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </sc-if>
 
     <sc-if value="{{ isPhotoSheet }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="Fotografia archivada" style="padding:14px 0 30px">
-      <!-- Carrusel por JS (transform): fiable en iOS. Se arrastra con el dedo y salta a la siguiente foto -->
-      <div data-photo-swipe style="overflow:hidden;padding:0 20px 12px">
+    <div data-screen-label="Fotografia archivada" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 0 30px">
+      <!-- Carrusel por JS (transform): fiable en iOS. La foto tiene altura contenida y la lista va debajo, en el scroll -->
+      <div data-photo-swipe style="overflow:hidden;padding:0 20px 2px">
         <div style="display:flex;transition:{{ photoTrans }};transform:translateX({{ photoShift }})">
           <sc-for list="{{ photoSheet.shots }}" as="s" hint-placeholder-count="3">
           <div style="flex:none;width:100%;box-sizing:border-box;padding:0 4px">
-            <div style="position:relative;aspect-ratio:3/4;border-radius:20px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.1)">
+            <div style="position:relative;height:50vh;border-radius:20px;overflow:hidden;background:linear-gradient(155deg,var(--s2,#16161A),var(--s1,#0A0A0C));border:.5px solid rgba(var(--fgc,255,255,255),.1)">
               <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center"><svg width="110" height="164" viewBox="0 0 42 62" fill="currentColor" opacity=".13"><circle cx="21" cy="11" r="8"></circle><path d="M21 22c-8 0-13 5-13 12v28h26V34c0-7-5-12-13-12Z"></path></svg></div>
               <sc-if value="{{ s.img }}" hint-placeholder-val="{{ false }}"><img src="{{ s.img }}" alt="" draggable="false" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
               <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:18px 10px 12px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);background:linear-gradient(to top,rgba(var(--bgc,0,0,0),.62),transparent)">{{ s.n }}</div>
             </div>
-            <sc-if value="{{ s.hasMedidas }}" hint-placeholder-val="{{ false }}">
-            <div style="margin-top:10px">
-              <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-bottom:8px">{{ s.sub }}</div>
-              <sc-for list="{{ s.medidas }}" as="m" hint-placeholder-count="4">
-              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06)">
-                <div style="font-size:12.5px;color:rgba(var(--fgc,255,255,255),.66)">{{ m.label }}</div>
-                <div style="font-size:13px;font-weight:600">{{ m.valor }}</div>
-              </div>
-              </sc-for>
-            </div>
-            </sc-if>
           </div>
           </sc-for>
         </div>
       </div>
-      <div style="display:flex;gap:6px;justify-content:center;margin-top:4px">
+      <div style="display:flex;gap:6px;justify-content:center;margin-top:8px">
         <sc-for list="{{ photoDots }}" as="d" hint-placeholder-count="3">
         <div style="width:6px;height:6px;border-radius:50%;transition:all .3s;background:{{ d.bg }};transform:{{ d.scale }}"></div>
         </sc-for>
@@ -1000,25 +989,27 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ photoSheet.w }}</div>
             <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ photoSheet.date }}</div>
           </div>
+          <sc-if value="{{ photoSheet.hasKg }}" hint-placeholder-val="{{ false }}">
           <div style="text-align:right">
             <div style="font-size:17px;font-weight:600">{{ photoSheet.kg }}</div>
             <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.36);margin-top:2px">{{ L.enEseCheckin }}</div>
           </div>
+          </sc-if>
         </div>
         <div style="height:.5px;background:rgba(var(--fgc,255,255,255),.08);margin:16px 0"></div>
-        <sc-if value="{{ photoSheet.hasMedidas }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ photoSheet.hasActive }}" hint-placeholder-val="{{ false }}">
         <div>
-          <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin-bottom:6px">{{ L.medidasEseDia }}</div>
-          <sc-for list="{{ photoSheet.medidas }}" as="m" hint-placeholder-count="4">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px">
+            <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.medidasEseDia }}</div>
+            <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4)">{{ photoSheet.activeSub }}</div>
+          </div>
+          <sc-for list="{{ photoSheet.activeMed }}" as="m" hint-placeholder-count="4">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06)">
             <div style="font-size:13.5px;color:rgba(var(--fgc,255,255,255),.66)">{{ m.label }}</div>
             <div style="font-size:14px;font-weight:600">{{ m.valor }}</div>
           </div>
           </sc-for>
         </div>
-        </sc-if>
-        <sc-if value="{{ photoSheet.noMedidas }}" hint-placeholder-val="{{ false }}">
-        <div style="font-size:12.5px;line-height:1.55;color:rgba(var(--fgc,255,255,255),.45);text-wrap:pretty">{{ L.fotoArchivada }}</div>
         </sc-if>
       </div>
     </div>
@@ -2418,7 +2409,18 @@ class Component extends DCLogic {
         shots: SHOTS.map(n => ({ n, img: (p.fotos && p.fotos[n]) || '', open: this.openPhoto(p, n) }))
       })),
       isPhotoSheet: sh.k === 'photo',
-      photoSheet: sh.k === 'photo' ? (sh.shots ? { w: sh.w || '', date: sh.date || '', kg: '', shots: sh.shots.map(s => ({ n: s.n, img: s.img, sub: s.sub || '', medidas: (s.medidas || []).map(m => ({ label: T(m.label), valor: m.valor })), hasMedidas: (s.medidas || []).length > 0 })), medidas: [], hasMedidas: false, noMedidas: false } : (() => { const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n], sub: '', medidas: [], hasMedidas: false })); const med = (sh.p.medidas || []).map(m => ({ label: T(m.label), valor: m.valor })); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, shots, medidas: med, hasMedidas: med.length > 0, noMedidas: med.length === 0 }; })()) : {},
+      photoSheet: sh.k === 'photo' ? (() => {
+        const idx = Math.max(0, st.photoIdx || 0);
+        if (sh.shots) { // comparativa antes/ahora: las medidas de abajo son las de la foto activa
+          const shots = sh.shots.map(s => ({ n: s.n, img: s.img }));
+          const cur = sh.shots[Math.min(idx, sh.shots.length - 1)] || {};
+          const med = (cur.medidas || []).map(m => ({ label: T(m.label), valor: m.valor }));
+          return { w: sh.w || '', date: sh.date || '', kg: '', hasKg: false, shots, activeMed: med, activeSub: cur.sub || '', hasActive: med.length > 0 };
+        }
+        const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n] }));
+        const med = (sh.p.medidas || []).map(m => ({ label: T(m.label), valor: m.valor }));
+        return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, hasKg: !!sh.p.kg, shots, activeMed: med, activeSub: '', hasActive: med.length > 0 };
+      })() : {},
       ...(() => { const nSh = sh.k === 'photo' ? (sh.shots ? sh.shots.length : SHOTS.filter(n => sh.p && sh.p.fotos && sh.p.fotos[n]).length) : 0; const idx = Math.min(Math.max(0, st.photoIdx || 0), Math.max(0, nSh - 1)); const drag = st.photoDrag || 0; return { photoShift: nSh ? 'calc(' + (-idx * 100 / nSh) + '% + ' + drag + 'px)' : '0px', photoTrans: drag ? 'none' : 'transform .4s cubic-bezier(.32,.72,0,1)', photoDots: Array.from({ length: nSh }, (_, i) => ({ bg: i === idx ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.25)', scale: i === idx ? 'scale(1.25)' : 'scale(1)' })) }; })(),
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoDelta,
