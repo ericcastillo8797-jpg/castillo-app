@@ -150,9 +150,10 @@
       }, _ctx.token);
     },
     // registra una sustitución de alimento del día (equivalencias); lo verá el entrenador en el CRM
-    registrarSustitucion: function (comida, original, nuevo, gramos) {
+    registrarSustitucion: function (comida, original, nuevo, gramos, macros) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
-      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, comida: comida || '', original: original || '', nuevo: nuevo || '', gramos: (gramos != null ? gramos : null), registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      var mc = macros || {};
+      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, comida: comida || '', original: original || '', nuevo: nuevo || '', gramos: (gramos != null ? gramos : null), kcal_new: (mc.kcal != null ? mc.kcal : null), p_new: (mc.p != null ? mc.p : null), c_new: (mc.c != null ? mc.c : null), g_new: (mc.g != null ? mc.g : null), registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       return api('/rest/v1/sustituciones_dieta?on_conflict=cliente_email,fecha,comida,original', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);
