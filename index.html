@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=48"></script>
-<script src="./castillo-transform.js?v=48"></script>
-<script src="./castillo-equiv.js?v=48"></script>
-<script src="./castillo-data.js?v=48"></script>
+<script src="./castillo-i18n.js?v=49"></script>
+<script src="./castillo-transform.js?v=49"></script>
+<script src="./castillo-equiv.js?v=49"></script>
+<script src="./castillo-data.js?v=49"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -964,6 +964,17 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <sc-if value="{{ s.img }}" hint-placeholder-val="{{ false }}"><img src="{{ s.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" /></sc-if>
             <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:18px 10px 12px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);background:linear-gradient(to top,rgba(var(--bgc,0,0,0),.62),transparent)">{{ s.n }}</div>
           </div>
+          <sc-if value="{{ s.hasMedidas }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px">
+            <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-bottom:8px">{{ s.sub }}</div>
+            <sc-for list="{{ s.medidas }}" as="m" hint-placeholder-count="4">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06)">
+              <div style="font-size:12.5px;color:rgba(var(--fgc,255,255,255),.66)">{{ m.label }}</div>
+              <div style="font-size:13px;font-weight:600">{{ m.valor }}</div>
+            </div>
+            </sc-for>
+          </div>
+          </sc-if>
         </div>
         </sc-for>
       </div>
@@ -1577,8 +1588,8 @@ class Component extends DCLogic {
     const a = pf.primeras && pf.primeras.fotos && pf.primeras.fotos[view];
     const b = pf.ultimas && pf.ultimas.fotos && pf.ultimas.fotos[view];
     const shots = [];
-    if (a) shots.push({ n: (en ? 'Before' : 'Antes') + ' · ' + view, img: a });
-    if (b) shots.push({ n: (en ? 'Now' : 'Ahora') + ' · ' + view, img: b });
+    if (a) shots.push({ n: (en ? 'Before' : 'Antes') + ' · ' + view, img: a, sub: (pf.primeras.w || '') + ' · ' + (pf.primeras.date || ''), medidas: pf.primeras.medidas || [] });
+    if (b) shots.push({ n: (en ? 'Now' : 'Ahora') + ' · ' + view, img: b, sub: (pf.ultimas.w || '') + ' · ' + (pf.ultimas.date || ''), medidas: pf.ultimas.medidas || [] });
     if (!shots.length) return;
     this.openSheet({ k: 'photo', shots: shots, w: view, date: en ? 'Before / now' : 'Antes / ahora' });
   };
@@ -2388,7 +2399,7 @@ class Component extends DCLogic {
         shots: SHOTS.map(n => ({ n, img: (p.fotos && p.fotos[n]) || '', open: this.openPhoto(p, n) }))
       })),
       isPhotoSheet: sh.k === 'photo',
-      photoSheet: sh.k === 'photo' ? (sh.shots ? { w: sh.w || '', date: sh.date || '', kg: '', shots: sh.shots, medidas: [], hasMedidas: false, noMedidas: true } : (() => { const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n] })); const med = (sh.p.medidas || []).map(m => ({ label: T(m.label), valor: m.valor })); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, shots, medidas: med, hasMedidas: med.length > 0, noMedidas: med.length === 0 }; })()) : {},
+      photoSheet: sh.k === 'photo' ? (sh.shots ? { w: sh.w || '', date: sh.date || '', kg: '', shots: sh.shots.map(s => ({ n: s.n, img: s.img, sub: s.sub || '', medidas: (s.medidas || []).map(m => ({ label: T(m.label), valor: m.valor })), hasMedidas: (s.medidas || []).length > 0 })), medidas: [], hasMedidas: false, noMedidas: false } : (() => { const shots = SHOTS.filter(n => sh.p.fotos && sh.p.fotos[n]).map(n => ({ n, img: sh.p.fotos[n], sub: '', medidas: [], hasMedidas: false })); const med = (sh.p.medidas || []).map(m => ({ label: T(m.label), valor: m.valor })); return { w: sh.p.w, date: sh.p.date, kg: sh.p.kg, shots, medidas: med, hasMedidas: med.length > 0, noMedidas: med.length === 0 }; })()) : {},
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoDelta,
       chartArea: chart.area, chartLine: chart.line, chartLx: chart.lx, chartLy: chart.ly,
