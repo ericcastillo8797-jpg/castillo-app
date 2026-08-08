@@ -95,6 +95,13 @@
     }, _ctx.token);
   }
 
+  // cambia la contraseña del cliente (Supabase Auth). NO afecta al CRM: el CRM enlaza por EMAIL, no por contraseña.
+  function cambiarPassword(pass) {
+    if (!_ctx.token) return Promise.reject(new Error('sin sesión'));
+    return api('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ password: pass }) }, _ctx.token)
+      .then(function (r) { try { var cr = readCreds(); if (cr) saveCreds(cr.e, pass); } catch (e) {} return r; }); // actualiza el Face ID guardado
+  }
+
   // guarda el perfil del cliente (datos + foto) en Supabase (una fila por cliente)
   function guardarPerfil(p) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
@@ -159,6 +166,7 @@
     registrarComida: registrarComida,
     desregistrarComida: desregistrarComida,
     guardarPerfil: guardarPerfil,
+    cambiarPassword: cambiarPassword,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
