@@ -57,7 +57,10 @@
     // check-ins del cliente (peso/medidas que apunta él en la app)
     var pChk = api('/rest/v1/checkin_registros?select=*&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
       .catch(function () { return []; });
-    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk]).then(function (res) {
+    // perfil del cliente (foto + datos personales que rellena en Ajustes)
+    var pPerfil = api('/rest/v1/perfil_cliente?select=*&cliente_email=ilike.' + e + '&limit=1', {}, token)
+      .catch(function () { return []; });
+    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil]).then(function (res) {
       var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
       var comAll = res[4] || [], chkAll = res[5] || [];
       var comReg = comAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
@@ -68,6 +71,7 @@
       var chkHoy = chkAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
       data.checkinHoy = (chkHoy && chkHoy.valores) || {};   // valores ya registrados hoy (para prerellenar)
       data.checkinFotosHoy = (chkHoy && chkHoy.fotos) || {};   // fotos ya subidas hoy
+      data.perfil = (res[6] && res[6][0]) || null;   // perfil (foto + datos) guardado en Supabase
       _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
       window.__DATA = data;
       return data;
@@ -87,6 +91,16 @@
     }
     var row = { cliente_email: _ctx.email, fecha: f, comidas: comidas, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
     return api('/rest/v1/comida_registros?on_conflict=cliente_email,fecha', {
+      method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+    }, _ctx.token);
+  }
+
+  // guarda el perfil del cliente (datos + foto) en Supabase (una fila por cliente)
+  function guardarPerfil(p) {
+    if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+    p = p || {};
+    var row = { cliente_email: _ctx.email, nombre: p.nombre || null, apellidos: p.apellidos || null, nombre_publico: p.nombrePublico || null, fecha_nac: p.fechaNac || null, prefijo: p.prefijo || null, telefono: p.telefono || null, foto: p.foto || null, updated_at: new Date().toISOString() };
+    return api('/rest/v1/perfil_cliente?on_conflict=cliente_email', {
       method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
     }, _ctx.token);
   }
@@ -144,6 +158,7 @@
     logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); } catch (e) {} window.__DATA = null; },
     registrarComida: registrarComida,
     desregistrarComida: desregistrarComida,
+    guardarPerfil: guardarPerfil,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
