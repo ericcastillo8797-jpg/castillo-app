@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=65"></script>
-<script src="./castillo-transform.js?v=65"></script>
-<script src="./castillo-equiv.js?v=65"></script>
-<script src="./castillo-data.js?v=65"></script>
+<script src="./castillo-i18n.js?v=66"></script>
+<script src="./castillo-transform.js?v=66"></script>
+<script src="./castillo-equiv.js?v=66"></script>
+<script src="./castillo-data.js?v=66"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -534,6 +534,32 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </div>
       <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.34);margin:8px 2px 0;line-height:1.5">{{ L.emailPassNota }}</div>
 
+      <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.apariencia }}</div>
+      <div style="display:flex;gap:11px">
+        <sc-for list="{{ themes }}" as="t" hint-placeholder-count="2">
+        <div onClick="{{ t.pick }}" style="flex:1;border-radius:18px;padding:13px;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:var(--s1,#0C0C0E);border:1px solid {{ t.bd }}" style-active="transform:scale(.97)">
+          <div style="height:64px;border-radius:12px;border:.5px solid rgba(var(--fgc,255,255,255),.1);display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 11px;background:{{ t.pvBg }}">
+            <div style="height:4px;width:64%;border-radius:3px;background:{{ t.pvA }}"></div>
+            <div style="height:4px;width:42%;border-radius:3px;background:{{ t.pvB }}"></div>
+            <div style="height:4px;width:52%;border-radius:3px;background:{{ t.pvB }}"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
+            <div style="width:17px;height:17px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ t.dotBg }};color:{{ t.dotFg }};border:1.2px solid {{ t.dotBd }}">
+              <svg width="9" height="9" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
+            </div>
+            <div style="font-size:13px;font-weight:500">{{ t.n }}</div>
+          </div>
+        </div>
+        </sc-for>
+      </div>
+
+      <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.tamanoTexto }}</div>
+      <div style="display:flex;gap:11px;align-items:stretch">
+        <sc-for list="{{ fontSizes }}" as="s" hint-placeholder-count="3">
+        <div onClick="{{ s.pick }}" style="flex:1;text-align:center;padding:14px 4px;border-radius:16px;font-weight:600;line-height:1;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ s.bg }};color:{{ s.fg }};border:1px solid {{ s.bd }};font-size:{{ s.fs }}" style-active="transform:scale(.97)">{{ s.n }}</div>
+        </sc-for>
+      </div>
+
       <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.idioma }}</div>
       <div style="display:flex;gap:11px">
         <div onClick="{{ pickEs }}" style="flex:1;text-align:center;padding:14px 0;border-radius:16px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ langEsBg }};color:{{ langEsFg }};border:1px solid {{ langEsBd }}" style-active="transform:scale(.97)">{{ L.espanol }}</div>
@@ -567,36 +593,6 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </div>
     </sc-if>
 
-    <!-- VISIBILIDAD: apariencia + tamaño de texto + idioma -->
-    <sc-if value="{{ isConfVis }}" hint-placeholder-val="{{ false }}">
-    <div style="animation:cFade .34s both">
-      <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:20px 2px 10px">{{ L.apariencia }}</div>
-      <div style="display:flex;gap:11px">
-        <sc-for list="{{ themes }}" as="t" hint-placeholder-count="2">
-        <div onClick="{{ t.pick }}" style="flex:1;border-radius:18px;padding:13px;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:var(--s1,#0C0C0E);border:1px solid {{ t.bd }}" style-active="transform:scale(.97)">
-          <div style="height:64px;border-radius:12px;border:.5px solid rgba(var(--fgc,255,255,255),.1);display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 11px;background:{{ t.pvBg }}">
-            <div style="height:4px;width:64%;border-radius:3px;background:{{ t.pvA }}"></div>
-            <div style="height:4px;width:42%;border-radius:3px;background:{{ t.pvB }}"></div>
-            <div style="height:4px;width:52%;border-radius:3px;background:{{ t.pvB }}"></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
-            <div style="width:17px;height:17px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ t.dotBg }};color:{{ t.dotFg }};border:1.2px solid {{ t.dotBd }}">
-              <svg width="9" height="9" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
-            </div>
-            <div style="font-size:13px;font-weight:500">{{ t.n }}</div>
-          </div>
-        </div>
-        </sc-for>
-      </div>
-
-      <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:26px 2px 10px">{{ L.tamanoTexto }}</div>
-      <div style="display:flex;gap:11px;align-items:stretch">
-        <sc-for list="{{ fontSizes }}" as="s" hint-placeholder-count="3">
-        <div onClick="{{ s.pick }}" style="flex:1;text-align:center;padding:14px 4px;border-radius:16px;font-weight:600;line-height:1;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ s.bg }};color:{{ s.fg }};border:1px solid {{ s.bd }};font-size:{{ s.fs }}" style-active="transform:scale(.97)">{{ s.n }}</div>
-        </sc-for>
-      </div>
-    </div>
-    </sc-if>
   </div>
   </sc-if>
 
@@ -1221,11 +1217,34 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ L.queComiste }}</div>
       <!-- buscador -->
       <input value="{{ cheatQ }}" onInput="{{ setCheatQ }}" onChange="{{ setCheatQ }}" placeholder="{{ L.buscarAlimento }}" style="width:100%;box-sizing:border-box;margin-top:16px;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.12);border-radius:14px;padding:13px 14px;font-size:14px;color:var(--fg,#fff);outline:none" />
+
+      <!-- alimentos elegidos (ARRIBA, para verlos al añadir y poner los gramos) -->
+      <sc-if value="{{ cheatHasSel }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:14px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:16px;padding:6px 14px 12px">
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4);padding:10px 0 4px">{{ L.tuComida }}</div>
+        <sc-for list="{{ cheatSel }}" as="x" hint-placeholder-count="2">
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:.5px solid rgba(var(--fgc,255,255,255),.06)">
+          <div style="flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.nombre }}</div>
+          <input value="{{ x.gramos }}" onInput="{{ x.setG }}" onChange="{{ x.setG }}" type="tel" style="width:50px;flex:none;text-align:right;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.12);border-radius:8px;padding:6px 7px;font-size:12.5px;color:var(--fg,#fff);outline:none" />
+          <div style="flex:none;font-size:11px;color:rgba(var(--fgc,255,255,255),.42)">g</div>
+          <div style="flex:none;width:60px;text-align:right;font-size:12.5px;font-weight:600">{{ x.kcal }}</div>
+          <div onClick="{{ x.remove }}" style="flex:none;width:22px;height:22px;border-radius:6px;background:rgba(var(--fgc,255,255,255),.08);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)"><svg width="10" height="10" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l7 7M9 2l-7 7"></path></svg></div>
+        </div>
+        </sc-for>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:8px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.12)">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
+          <div style="font-size:15px;font-weight:700">{{ cheatTotal }}</div>
+        </div>
+      </div>
+      <div onClick="{{ saveCheat }}" style="margin-top:12px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ L.registrarComida }}</div>
+      </sc-if>
+
       <sc-if value="{{ cheatBusy }}" hint-placeholder-val="{{ false }}">
       <div style="text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.45);padding:16px 0">{{ L.buscando }}</div>
       </sc-if>
       <sc-if value="{{ cheatHasRes }}" hint-placeholder-val="{{ false }}">
-      <div style="display:flex;flex-direction:column;gap:7px;margin-top:12px">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 8px">{{ L.resultados }}</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
         <sc-for list="{{ cheatRes }}" as="r" hint-placeholder-count="4">
         <div onClick="{{ r.add }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.1);border-radius:12px;padding:12px 14px;cursor:pointer" style-active="transform:scale(.99)">
           <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.nombre }}</div><div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.45);margin-top:1px">{{ r.detail }}</div></div>
@@ -1236,26 +1255,6 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </sc-if>
       <sc-if value="{{ cheatNoRes }}" hint-placeholder-val="{{ false }}">
       <div style="text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.45);padding:16px 0">{{ L.sinResultados }}</div>
-      </sc-if>
-      <!-- alimentos elegidos -->
-      <sc-if value="{{ cheatHasSel }}" hint-placeholder-val="{{ false }}">
-      <div style="margin-top:20px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:16px;padding:6px 14px 12px">
-        <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4);padding:10px 0 4px">{{ L.tuComida }}</div>
-        <sc-for list="{{ cheatSel }}" as="x" hint-placeholder-count="2">
-        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:.5px solid rgba(var(--fgc,255,255,255),.06)">
-          <div style="flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.nombre }}</div>
-          <input value="{{ x.gramos }}" onChange="{{ x.setG }}" type="tel" style="width:46px;flex:none;text-align:right;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.12);border-radius:8px;padding:6px 7px;font-size:12.5px;color:var(--fg,#fff);outline:none" />
-          <div style="flex:none;font-size:11px;color:rgba(var(--fgc,255,255,255),.42)">g</div>
-          <div style="flex:none;width:62px;text-align:right;font-size:12.5px;font-weight:600">{{ x.kcal }}</div>
-          <div onClick="{{ x.remove }}" style="flex:none;width:22px;height:22px;border-radius:6px;background:rgba(var(--fgc,255,255,255),.08);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)"><svg width="10" height="10" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l7 7M9 2l-7 7"></path></svg></div>
-        </div>
-        </sc-for>
-        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:8px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.12)">
-          <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
-          <div style="font-size:15px;font-weight:700">{{ cheatTotal }}</div>
-        </div>
-      </div>
-      <div onClick="{{ saveCheat }}" style="margin-top:14px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ L.registrarComida }}</div>
       </sc-if>
     </div>
   </div>
@@ -1746,7 +1745,7 @@ class Component extends DCLogic {
   // buscador EN VIVO: busca solo mientras escribes (con pequeña espera para no saturar), sin escribir la palabra entera
   setCheatQ = e => { const v = (e && e.target) ? e.target.value : e; this.setState({ cheatQ: v }); clearTimeout(this._cheatT); const q = (v || '').trim(); if (q.length < 3) { this.setState({ cheatRes: null, cheatBusy: false }); return; } this._cheatT = setTimeout(() => this.runCheat(), 420); };
   runCheat = () => { const q = (this.state.cheatQ || '').trim(); if (q.length < 3) return; const cd = window.CastilloData; if (!cd || !cd.buscarAlimentos) return; const my = q; this.setState({ cheatBusy: true }); cd.buscarAlimentos(q).then(res => { if ((this.state.cheatQ || '').trim() === my) this.setState({ cheatRes: res || [], cheatBusy: false }); }, () => this.setState({ cheatRes: [], cheatBusy: false })); };
-  addCheatFood = r => () => { const it = { nombre: r.nombre, kcal100: r.kcal, gramos: 100, kcal: Math.round(r.kcal) }; this.setState(s => ({ cheatSel: (s.cheatSel || []).concat([it]) })); };
+  addCheatFood = r => () => { const it = { nombre: r.nombre, kcal100: r.kcal, gramos: 100, kcal: Math.round(r.kcal) }; this.setState(s => ({ cheatSel: (s.cheatSel || []).concat([it]) })); this.flash(this.state.lang === 'en' ? 'Added — set the grams' : 'Añadido — pon los gramos'); };
   setCheatGrams = idx => e => { const g = parseInt((e && e.target) ? e.target.value : e, 10) || 0; this.setState(s => { const arr = (s.cheatSel || []).slice(); if (arr[idx]) arr[idx] = Object.assign({}, arr[idx], { gramos: g, kcal: Math.round((arr[idx].kcal100 || 0) * g / 100) }); return { cheatSel: arr }; }); };
   removeCheatFood = idx => () => this.setState(s => ({ cheatSel: (s.cheatSel || []).filter((_, i) => i !== idx) }));
   saveCheat = () => {
@@ -2621,7 +2620,7 @@ class Component extends DCLogic {
         series: T('Series'), repeticiones: T('Repeticiones'), peso: T('Peso'),
         apariencia: T('Apariencia'), idioma: T('Idioma'), espanol: T('Español'), ingles: T('Inglés'),
         datosPersonales: T('Datos personales'), tocaCambiarFoto: T('Toca para cambiar la foto'), emailPassNota: T('Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.'), telefonoLbl: T('Teléfono'), emailLbl: T('Email'), passLbl: T('Contraseña'), cambiar: T('Cambiar'), cambiarPass: T('Cambiar contraseña'), nuevaPass: T('Nueva contraseña'), repitePass: T('Repite la contraseña'), guardar: T('Guardar'),
-        comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar comida libre'),
+        comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'),
         cuenta: T('Cuenta'), cerrarSesion: T('Cerrar sesión'), aplicacion: T('Aplicación'),
         tocarFoto: T('Toque la imagen para añadir su fotografía'), verAnimacion: T('Ver animación de apertura'),
         checkinSemanal: T('Check-in semanal'), enviarCheckin: T('Enviar check-in'), listo: T('Listo'),
@@ -2708,8 +2707,8 @@ class Component extends DCLogic {
         const tabBtn = (n, i) => ({ n, sel: ct === i, pick: this.setConfTab(i), bg: ct === i ? 'var(--fg,#fff)' : 'var(--s2,#17171B)', fg: ct === i ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.62)', bd: ct === i ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.12)' });
         const fld = (k, label, type, ph, ro) => ({ k, label: T(label), value: ro ? (k === 'password' ? '••••••••' : _email) : (_pf[k] || ''), type: type || 'text', ph: ph ? T(ph) : '', ro: !!ro, editable: !ro, set: ro ? (() => {}) : this.setProfileField(k) });
         return {
-          confTabs: [tabBtn(T('Mi perfil'), 0), tabBtn(T('Aplicaciones conectadas'), 1), tabBtn(T('Visibilidad'), 2)],
-          isConfProfile: ct === 0, isConfApps: ct === 1, isConfVis: ct === 2,
+          confTabs: [tabBtn(T('Mi perfil'), 0), tabBtn(T('Aplicaciones conectadas'), 1)],
+          isConfProfile: ct !== 1, isConfApps: ct === 1, isConfVis: false,
           profilePhotoUrl: st.profilePhoto || '', hasProfilePhoto: !!st.profilePhoto, noProfilePhoto: !st.profilePhoto, profileInitials: _initials,
           pickProfilePhoto: this.pickProfilePhoto,
           profileFields: [
