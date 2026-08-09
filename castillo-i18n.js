@@ -206,6 +206,7 @@
     'Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.': "Your email can't be changed here: it's your account identifier. If you need to, contact your trainer.",
     'Cambiar': 'Change', 'Cambiar contraseña': 'Change password', 'Nueva contraseña': 'New password', 'Repite la contraseña': 'Repeat password', 'Guardar': 'Save',
     'Comida a domicilio, hecha por tus calorías. Solo regístrala.': 'Home-delivered meal, made to your calories. Just log it.',
+    'Comida libre': 'Free meal', '¿Comiste fuera? Búscalo y regístralo.': 'Ate out? Search it and log it.', '¿Qué comiste?': 'What did you eat?', 'Buscar alimento…': 'Search food…', 'Buscar': 'Search', 'Buscando…': 'Searching…', 'Añadir': 'Add', 'Sin resultados. Prueba otro nombre.': 'No results. Try another name.', 'Tu comida': 'Your meal', 'Registrar comida libre': 'Log free meal',
     'Toque la imagen para añadir su fotografía': 'Tap the image to add your photo',
     'Ver animación de apertura': 'View opening animation', 'Check-in semanal': 'Weekly check-in',
     'Enviar check-in': 'Send check-in', 'Listo': 'Done', 'Total': 'Total',

@@ -95,6 +95,34 @@
     }, _ctx.token);
   }
 
+  // ---- Buscador de alimentos (USDA FoodData Central) para la comida libre / cheat meal ----
+  var USDA_KEY = 'DEMO_KEY';   // clave pública limitada; cambiar por una gratuita propia para clientes reales
+  var ES_EN_FOOD = { 'platano':'banana','plátano':'banana','pollo':'chicken breast','pechuga':'chicken breast','arroz':'white rice','huevo':'egg','huevos':'egg','clara':'egg white','avena':'oats','leche':'milk','pan':'bread','atun':'tuna','atún':'tuna','salmon':'salmon','salmón':'salmon','ternera':'beef','carne':'beef','cerdo':'pork','pavo':'turkey breast','patata':'potato','patatas':'potato','tomate':'tomato','manzana':'apple','naranja':'orange','fresa':'strawberry','fresas':'strawberry','queso':'cheese','yogur':'yogurt','yogurt':'yogurt','almendras':'almonds','nueces':'walnuts','cacahuete':'peanuts','aguacate':'avocado','brocoli':'broccoli','brócoli':'broccoli','espinaca':'spinach','espinacas':'spinach','lentejas':'lentils','garbanzos':'chickpeas','pasta':'pasta','espagueti':'spaghetti','aceite':'olive oil','mantequilla':'butter','miel':'honey','azucar':'sugar','azúcar':'sugar','zanahoria':'carrot','cebolla':'onion','lechuga':'lettuce','pepino':'cucumber','pimiento':'pepper','maiz':'corn','maíz':'corn','gambas':'shrimp','merluza':'hake','bacalao':'cod','hamburguesa':'hamburger','patatas fritas':'french fries','pizza':'pizza','crepe':'crepe','crepes':'crepe','nutella':'nutella','chocolate':'chocolate','helado':'ice cream','galletas':'cookies','cerveza':'beer','vino':'wine' };
+  function traduceFood(q) { var s = String(q || '').toLowerCase().trim(); if (ES_EN_FOOD[s]) return ES_EN_FOOD[s]; return s.split(/\s+/).map(function (w) { return ES_EN_FOOD[w] || w; }).join(' '); }
+  function usdaMap(f) {
+    var fn = f.foodNutrients || [];
+    function g(names) { var x = fn.find(function (n) { var nm = (n.nutrientName || '').toLowerCase(); return names.some(function (s) { return nm.indexOf(s) >= 0; }) && (nm.indexOf('energy') < 0 || n.unitName === 'KCAL' || n.unitName === 'kcal'); }); return x ? Math.round((x.value || 0) * 10) / 10 : 0; }
+    var kc = (function () { var x = fn.find(function (n) { return (n.nutrientName || '') === 'Energy' && (n.unitName === 'KCAL' || n.unitName === 'kcal'); }); return x ? Math.round((x.value || 0) * 10) / 10 : 0; })();
+    var nombre = (f.description || '').toLowerCase().replace(/\b\w/g, function (c) { return c.toUpperCase(); }).slice(0, 60);
+    return { nombre: nombre, kcal: kc, prot: g(['protein']), carbs: g(['carbohydrate, by diff', 'carbohydrate']), fat: g(['total lipid', 'total fat']) };
+  }
+  function buscarAlimentos(query) {
+    var qEn = traduceFood(query);
+    var url = 'https://api.nal.usda.gov/fdc/v1/foods/search?api_key=' + USDA_KEY + '&query=' + encodeURIComponent(qEn) + '&pageSize=30&dataType=SR%20Legacy,Foundation,Branded';
+    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      return (j.foods || []).map(usdaMap).filter(function (x) { return x.nombre && x.kcal > 0; }).slice(0, 25);
+    }).catch(function () { return []; });
+  }
+  // guarda una comida libre / cheat meal del día: alimentos elegidos + marca esa comida como registrada ('libre')
+  function guardarComidaLibre(comida, alimentos, fecha) {
+    if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+    var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+    var row = { cliente_email: _ctx.email, fecha: f, comida: comida || '', alimentos: alimentos || [], registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+    return api('/rest/v1/comida_libre', {
+      method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(row)
+    }, _ctx.token);
+  }
+
   // cambia la contraseña del cliente (Supabase Auth). NO afecta al CRM: el CRM enlaza por EMAIL, no por contraseña.
   function cambiarPassword(pass) {
     if (!_ctx.token) return Promise.reject(new Error('sin sesión'));
@@ -167,6 +195,8 @@
     desregistrarComida: desregistrarComida,
     guardarPerfil: guardarPerfil,
     cambiarPassword: cambiarPassword,
+    buscarAlimentos: buscarAlimentos,
+    guardarComidaLibre: guardarComidaLibre,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
