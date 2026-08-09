@@ -207,6 +207,7 @@
     'Cambiar': 'Change', 'Cambiar contraseña': 'Change password', 'Nueva contraseña': 'New password', 'Repite la contraseña': 'Repeat password', 'Guardar': 'Save',
     'Comida a domicilio, hecha por tus calorías. Solo regístrala.': 'Home-delivered meal, made to your calories. Just log it.',
     'Comida libre': 'Free meal', '¿Comiste fuera? Búscalo y regístralo.': 'Ate out? Search it and log it.', '¿Qué comiste?': 'What did you eat?', 'Buscar alimento…': 'Search food…', 'Buscar': 'Search', 'Buscando…': 'Searching…', 'Añadir': 'Add', 'Sin resultados. Prueba otro nombre.': 'No results. Try another name.', 'Tu comida': 'Your meal', 'Registrar comida libre': 'Log free meal', 'Registrar cheat meal': 'Log cheat meal', 'Resultados': 'Results', 'Recientes': 'Recent',
+    'Resumen del mes': 'Monthly summary', 'Sin datos este mes': 'No data this month', 'Recuento del mes': "Month's count", 'Día a día': 'Day by day', 'Objetivo': 'Goal', 'pasos': 'steps', 'días': 'days', 'Hecho': 'Done', 'No': 'No', 'medidas': 'measures', 'sesión': 'session', 'sesiones': 'sessions', 'Progresión de peso por ejercicio este mes': 'Weight progression per exercise this month', 'Qué comió cada día y recuento del mes': "What you ate each day and the month's count", 'Check-ins registrados este mes': 'Check-ins logged this month',
     'Toque la imagen para añadir su fotografía': 'Tap the image to add your photo',
     'Ver animación de apertura': 'View opening animation', 'Check-in semanal': 'Weekly check-in',
     'Enviar check-in': 'Send check-in', 'Listo': 'Done', 'Total': 'Total',
