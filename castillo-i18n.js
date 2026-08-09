@@ -196,6 +196,7 @@
     'Apariencia': 'Appearance', 'Cuenta': 'Account', 'Cerrar sesión': 'Log out', 'Aplicación': 'App',
     'Oscuro': 'Dark', 'Claro': 'Light', 'Correo': 'Email', 'Plan': 'Plan', 'Sistema completo': 'Full system',
     'Descargar dieta': 'Download diet', 'Imprimir dieta': 'Print diet', 'Compartir dieta': 'Share diet',
+    'Puedes descargar en PDF': 'Download as PDF',
     'Revisión semanal': 'Weekly review', 'Viernes 19:00': 'Friday 19:00', 'Evaluación mensual': 'Monthly evaluation', 'Primer lunes': 'First Monday',
     'Idioma': 'Language', 'Español': 'Spanish', 'Inglés': 'English',
     'Mi perfil': 'My profile', 'Aplicaciones conectadas': 'Connected apps', 'Visibilidad': 'Display',
