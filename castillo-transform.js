@@ -526,7 +526,7 @@
     // ---------- RESUMEN MENSUAL (desglose por mes: cumplimiento + detalle) ----------
     function _mkey(dt) { return dt.getFullYear() + '-' + d2(dt.getMonth() + 1); }
     var _pasosObj = 0;
-    events.forEach(function (e) { if (!_pasosObj && e.type === 'cardio' && e.config && e.config.pasos) _pasosObj = e.config.pasos; });
+    events.forEach(function (e) { if (!_pasosObj && e.type === 'cardio' && e.config && e.config.pasos) _pasosObj = parseInt(String(e.config.pasos).replace(/[^0-9]/g, ''), 10) || 0; });
     var _monSet = {};
     function _addMon(dt) { if (dt && !isNaN(dt)) _monSet[_mkey(dt)] = 1; }
     events.forEach(function (e) { if (!e.removed) _addMon(new Date(ms(e.date))); });
