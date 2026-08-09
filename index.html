@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=61"></script>
-<script src="./castillo-transform.js?v=61"></script>
-<script src="./castillo-equiv.js?v=61"></script>
-<script src="./castillo-data.js?v=61"></script>
+<script src="./castillo-i18n.js?v=62"></script>
+<script src="./castillo-transform.js?v=62"></script>
+<script src="./castillo-equiv.js?v=62"></script>
+<script src="./castillo-data.js?v=62"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -90,15 +90,17 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.tareasHoy }}</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
       <sc-for list="{{ planTasks }}" as="t" hint-placeholder-count="4">
-      <div onClick="{{ t.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
+      <div onClick="{{ t.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:{{ t.cursor }};transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
         <div style="width:26px;height:26px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ t.ckBg }};color:{{ t.ckFg }};border:1.3px solid {{ t.ckBd }}">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
         </div>
         <div style="flex:1;min-width:0">
           <div style="font-size:14.5px;font-weight:500">{{ t.label }}</div>
-          <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.sub }}</div>
+          <div style="font-size:11.5px;color:{{ t.subColor }};margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.sub }}</div>
         </div>
+        <sc-if value="{{ t.pending }}" hint-placeholder-val="{{ true }}">
         <svg width="12" height="12" viewBox="0 0 11 11" fill="none" stroke="currentColor" opacity=".3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
+        </sc-if>
       </div>
       </sc-for>
     </div>
@@ -1218,10 +1220,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.comidaLibre }} · {{ cheatComida }}</div>
       <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ L.queComiste }}</div>
       <!-- buscador -->
-      <div style="display:flex;gap:8px;margin-top:16px">
-        <input value="{{ cheatQ }}" onChange="{{ setCheatQ }}" placeholder="{{ L.buscarAlimento }}" style="flex:1;min-width:0;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.12);border-radius:14px;padding:13px 14px;font-size:14px;color:var(--fg,#fff);outline:none" />
-        <div onClick="{{ runCheat }}" style="flex:none;padding:0 18px;display:flex;align-items:center;border-radius:14px;background:var(--fg,#fff);color:var(--bg,#000);font-size:13px;font-weight:600;cursor:pointer" style-active="transform:scale(.96)">{{ L.buscar }}</div>
-      </div>
+      <input value="{{ cheatQ }}" onInput="{{ setCheatQ }}" onChange="{{ setCheatQ }}" placeholder="{{ L.buscarAlimento }}" style="width:100%;box-sizing:border-box;margin-top:16px;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.12);border-radius:14px;padding:13px 14px;font-size:14px;color:var(--fg,#fff);outline:none" />
       <sc-if value="{{ cheatBusy }}" hint-placeholder-val="{{ false }}">
       <div style="text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.45);padding:16px 0">{{ L.buscando }}</div>
       </sc-if>
@@ -1744,8 +1743,9 @@ class Component extends DCLogic {
   // ---- COMIDA LIBRE / CHEAT MEAL: buscador de alimentos (USDA) + registrar ----
   openCheat = (mealId, comida) => () => { this.setState({ cheat: { mealId: mealId, comida: comida }, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ cheatIn: true }))); };
   closeCheat = () => { this.setState({ cheatIn: false }); this.later(() => this.setState({ cheat: null }), 420); };
-  setCheatQ = e => this.setState({ cheatQ: (e && e.target) ? e.target.value : e });
-  runCheat = () => { const q = (this.state.cheatQ || '').trim(); if (q.length < 2) return; const cd = window.CastilloData; if (!cd || !cd.buscarAlimentos) return; this.setState({ cheatBusy: true }); cd.buscarAlimentos(q).then(res => this.setState({ cheatRes: res || [], cheatBusy: false }), () => this.setState({ cheatRes: [], cheatBusy: false })); };
+  // buscador EN VIVO: busca solo mientras escribes (con pequeña espera para no saturar), sin escribir la palabra entera
+  setCheatQ = e => { const v = (e && e.target) ? e.target.value : e; this.setState({ cheatQ: v }); clearTimeout(this._cheatT); const q = (v || '').trim(); if (q.length < 3) { this.setState({ cheatRes: null, cheatBusy: false }); return; } this._cheatT = setTimeout(() => this.runCheat(), 420); };
+  runCheat = () => { const q = (this.state.cheatQ || '').trim(); if (q.length < 3) return; const cd = window.CastilloData; if (!cd || !cd.buscarAlimentos) return; const my = q; this.setState({ cheatBusy: true }); cd.buscarAlimentos(q).then(res => { if ((this.state.cheatQ || '').trim() === my) this.setState({ cheatRes: res || [], cheatBusy: false }); }, () => this.setState({ cheatRes: [], cheatBusy: false })); };
   addCheatFood = r => () => { const it = { nombre: r.nombre, kcal100: r.kcal, gramos: 100, kcal: Math.round(r.kcal) }; this.setState(s => ({ cheatSel: (s.cheatSel || []).concat([it]) })); };
   setCheatGrams = idx => e => { const g = parseInt((e && e.target) ? e.target.value : e, 10) || 0; this.setState(s => { const arr = (s.cheatSel || []).slice(); if (arr[idx]) arr[idx] = Object.assign({}, arr[idx], { gramos: g, kcal: Math.round((arr[idx].kcal100 || 0) * g / 100) }); return { cheatSel: arr }; }); };
   removeCheatFood = idx => () => this.setState(s => ({ cheatSel: (s.cheatSel || []).filter((_, i) => i !== idx) }));
@@ -2169,14 +2169,13 @@ class Component extends DCLogic {
       const done = tk.done || !!marked;
       const _c = taskColor(tk.key);
       return {
-        label: tr(tk.label), sub: tr(tk.sub), done,
+        label: tr(tk.label), sub: done ? T('Completado') : tr(tk.sub), done, pending: !done,
+        subColor: done ? _c : 'rgba(var(--fgc,255,255,255),.42)',
+        cursor: done ? 'default' : 'pointer',
         ckBg: done ? _c : 'transparent', ckFg: done ? '#0C0C0E' : 'transparent',
         ckBd: done ? _c : 'rgba(var(--fgc,255,255,255),.24)',
-        open: done
-          ? (tk.key === 'cardio' ? (() => {})
-             : tk.key === 'entreno' ? (() => this.flash('Entrenamiento ya completado'))
-             : (_acts[tk.key] || (() => {})))
-          : (_acts[tk.key] || (() => {}))
+        // una vez completada, se queda confirmada y NO se puede sacar desde aquí (lo pidió Alex)
+        open: done ? (() => {}) : (_acts[tk.key] || (() => {}))
       };
     });
     const planPct = planTasks.length ? Math.round(planTasks.filter(t => t.done).length / planTasks.length * 100) : 0;
@@ -2292,7 +2291,7 @@ class Component extends DCLogic {
         })(), (() => {
           // OPCIÓN "Comida libre / Cheat meal": abre el buscador de alimentos (USDA) para registrar lo que comió fuera
           const cmSel = _selMeals[m.id] === 'libre';
-          return { rom: T('OPCIÓN') + ' 9 · ' + T('Comida libre'), isSpecial: true, normal: false, showTotal: false, foods: [], kcalTotal: '', sub: T('¿Comiste fuera? Búscalo y regístralo.'), delay: (0.03 + (m.o.length + 1) * 0.03) + 's',
+          return { rom: T('OPCIÓN') + ' 9 · Cheat meal', isSpecial: true, normal: false, showTotal: false, foods: [], kcalTotal: '', sub: T('¿Comiste fuera? Búscalo y regístralo.'), delay: (0.03 + (m.o.length + 1) * 0.03) + 's',
             bg: cmSel ? 'rgba(var(--fgc,255,255,255),.1)' : 'var(--s2,#17171B)',
             bd: cmSel ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.07)',
             numFg: cmSel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)',
@@ -2616,7 +2615,7 @@ class Component extends DCLogic {
         series: T('Series'), repeticiones: T('Repeticiones'), peso: T('Peso'),
         apariencia: T('Apariencia'), idioma: T('Idioma'), espanol: T('Español'), ingles: T('Inglés'),
         datosPersonales: T('Datos personales'), tocaCambiarFoto: T('Toca para cambiar la foto'), emailPassNota: T('Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.'), telefonoLbl: T('Teléfono'), emailLbl: T('Email'), passLbl: T('Contraseña'), cambiar: T('Cambiar'), cambiarPass: T('Cambiar contraseña'), nuevaPass: T('Nueva contraseña'), repitePass: T('Repite la contraseña'), guardar: T('Guardar'),
-        comidaLibre: T('Comida libre'), queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar comida libre'),
+        comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar comida libre'),
         cuenta: T('Cuenta'), cerrarSesion: T('Cerrar sesión'), aplicacion: T('Aplicación'),
         tocarFoto: T('Toque la imagen para añadir su fotografía'), verAnimacion: T('Ver animación de apertura'),
         checkinSemanal: T('Check-in semanal'), enviarCheckin: T('Enviar check-in'), listo: T('Listo'),
