@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=58"></script>
-<script src="./castillo-transform.js?v=58"></script>
-<script src="./castillo-equiv.js?v=58"></script>
-<script src="./castillo-data.js?v=58"></script>
+<script src="./castillo-i18n.js?v=59"></script>
+<script src="./castillo-transform.js?v=59"></script>
+<script src="./castillo-equiv.js?v=59"></script>
+<script src="./castillo-data.js?v=59"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -828,6 +828,10 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.1)"></div>
             <div onClick="{{ o.pick }}" style="flex:none;padding:6px 13px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;background:{{ o.selBg }};color:{{ o.selFg }};border:1px solid {{ o.selBd }};transition:all .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.94)">{{ o.pickLabel }}</div>
           </div>
+          <sc-if value="{{ o.isSpecial }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:12.5px;line-height:1.5;color:rgba(var(--fgc,255,255,255),.5)">{{ o.sub }}</div>
+          </sc-if>
+          <sc-if value="{{ o.normal }}" hint-placeholder-val="{{ true }}">
           <sc-for list="{{ o.foods }}" as="f" hint-placeholder-count="3">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0">
             <div style="flex:1;min-width:0;display:flex;align-items:center;gap:7px">
@@ -846,6 +850,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
             <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
           </div>
+          </sc-if>
         </div>
         </sc-for>
       </div>
@@ -2177,8 +2182,7 @@ class Component extends DCLogic {
               openSwap: canSwap ? this.openFoodSwap(m.id, m.n, i, fi, tFood(f.n), alts) : (() => {}) };
           });
           const kcalTotal = F(o).reduce((s, f) => s + (parseInt(f.kcal, 10) || 0), 0);
-          const dim = locked && !sel;
-          return { rom: T('OPCIÓN') + ' ' + (i + 1), sel, foods, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.03) + 's',
+          return { rom: T('OPCIÓN') + ' ' + (i + 1), sel, foods, normal: true, isSpecial: false, kcalTotal: kcalTotal + ' kcal', delay: (0.03 + i * 0.03) + 's',
             bg: sel ? 'rgba(var(--fgc,255,255,255),.1)' : 'var(--s2,#17171B)',
             bd: sel ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.07)',
             numFg: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)',
@@ -2187,7 +2191,19 @@ class Component extends DCLogic {
             selBg: sel ? 'var(--fg,#fff)' : 'transparent',
             selFg: sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.72)',
             selBd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.3)' };
-        }) };
+        }).concat([(() => {
+          // OPCIÓN "Meal prep": solo registrar (comida a domicilio, hecha por calorías, sin ingredientes)
+          const mpSel = _selMeals[m.id] === 'mp';
+          return { rom: T('Meal prep'), isSpecial: true, normal: false, foods: [], kcalTotal: '', sub: T('Comida a domicilio, hecha por tus calorías. Solo regístrala.'), delay: (0.03 + m.o.length * 0.03) + 's',
+            bg: mpSel ? 'rgba(var(--fgc,255,255,255),.1)' : 'var(--s2,#17171B)',
+            bd: mpSel ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.07)',
+            numFg: mpSel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)',
+            pick: this.pickMeal(m.id, 'mp'),
+            pickLabel: mpSel ? ('✓ ' + T('Registrada')) : T('Registrar'),
+            selBg: mpSel ? 'var(--fg,#fff)' : 'transparent',
+            selFg: mpSel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.72)',
+            selBd: mpSel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.3)' };
+        })()]) };
     });
     const dietDaySheet = {
       tabs: _dmeals.map(x => ({ n: x.n, sel: x.sel, pick: x.pick,

@@ -205,6 +205,7 @@
     'El email y la contraseña se gestionan con tu cuenta; para cambiarlos, contacta con tu entrenador.': 'Email and password are managed with your account; to change them, contact your trainer.',
     'Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.': "Your email can't be changed here: it's your account identifier. If you need to, contact your trainer.",
     'Cambiar': 'Change', 'Cambiar contraseña': 'Change password', 'Nueva contraseña': 'New password', 'Repite la contraseña': 'Repeat password', 'Guardar': 'Save',
+    'Comida a domicilio, hecha por tus calorías. Solo regístrala.': 'Home-delivered meal, made to your calories. Just log it.',
     'Toque la imagen para añadir su fotografía': 'Tap the image to add your photo',
     'Ver animación de apertura': 'View opening animation', 'Check-in semanal': 'Weekly check-in',
     'Enviar check-in': 'Send check-in', 'Listo': 'Done', 'Total': 'Total',
