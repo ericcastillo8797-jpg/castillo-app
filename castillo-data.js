@@ -60,13 +60,16 @@
     // perfil del cliente (foto + datos personales que rellena en Ajustes)
     var pPerfil = api('/rest/v1/perfil_cliente?select=*&cliente_email=ilike.' + e + '&limit=1', {}, token)
       .catch(function () { return []; });
-    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil]).then(function (res) {
+    // comidas libres / cheat meals (para las kcal del desglose mensual)
+    var pLibre = api('/rest/v1/comida_libre?select=fecha,comida,alimentos&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
+      .catch(function () { return []; });
+    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre]).then(function (res) {
       var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
       var comAll = res[4] || [], chkAll = res[5] || [];
       var comReg = comAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
       if (!rows.length) throw new Error('No encontramos tu ficha. Avisa a Alex.');
       if (!window.buildAppData) throw new Error('Falta el transformador de datos');
-      var data = window.buildAppData(rows[0], programs, ejercicios, registros, comAll, chkAll);
+      var data = window.buildAppData(rows[0], programs, ejercicios, registros, comAll, chkAll, (res[7] || []));
       data.mealsReg = (comReg && comReg.comidas) || {};   // { meal_id: opcion } registradas HOY (bloqueadas)
       var chkHoy = chkAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
       data.checkinHoy = (chkHoy && chkHoy.valores) || {};   // valores ya registrados hoy (para prerellenar)

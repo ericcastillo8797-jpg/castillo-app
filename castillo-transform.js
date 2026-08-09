@@ -30,7 +30,14 @@
     return ' g';
   }
 
-  function buildAppData(row, programs, ejercicios, registros, comidaRegs, checkinRegs) {
+  function buildAppData(row, programs, ejercicios, registros, comidaRegs, checkinRegs, comidaLibre) {
+    // kcal de cheat meals por día y comida: comLibreByDate['YYYY-MM-DD'][nombreComida] = kcal total
+    var comLibreByDate = {};
+    (Array.isArray(comidaLibre) ? comidaLibre : []).forEach(function (r) {
+      var f = (r.fecha || '').slice(0, 10); if (!f) return;
+      var kc = (r.alimentos || []).reduce(function (s, a) { return s + (parseInt(a.kcal, 10) || 0); }, 0);
+      (comLibreByDate[f] || (comLibreByDate[f] = {}))[r.comida || ''] = ((comLibreByDate[f] || {})[r.comida || ''] || 0) + kc;
+    });
     // 4º arg puede ser un solo registro (compat) o el histórico completo (array)
     var regList = Array.isArray(registros) ? registros : (registros ? [registros] : []);
     // 5º arg: histórico de comida_registros (para el cumplimiento SEMANAL de nutrición)
@@ -237,7 +244,8 @@
             return { name: f.name || '', qty: (vq.quantity != null ? +vq.quantity : 0), unit: foodUnit(f), kcal: (vq.energy != null ? +vq.energy : 0), p: +vq.protein || 0, c: +vq.carbs || 0, g: +vq.fat || 0 };
           });
         });
-        DIET.push({ id: id, h: '', n: MEAL_ES[meal.type] || meal.mealDescription || ('Comida ' + (idx + 1)), o: opts, ox: optsX });
+        var okcal = opts.map(function (str) { return String(str || '').split(';').reduce(function (s, p) { var n = parseInt(p.split('@@')[1], 10); return s + (isNaN(n) ? 0 : n); }, 0); });
+        DIET.push({ id: id, h: '', n: MEAL_ES[meal.type] || meal.mealDescription || ('Comida ' + (idx + 1)), o: opts, ox: optsX, okcal: okcal });
         mealsSel[id] = typeof meal.selectedOption === 'number' ? meal.selectedOption : 0;
       });
     }
@@ -545,28 +553,41 @@
         var kc = dk(dc), regc = regByDate[kc] || {};
         var plannedC = events.some(function (e) { if (e.type !== 'cardio' || e.removed) return false; var ed = new Date(ms(e.date)); return ed.getFullYear() === yr && ed.getMonth() === mo && ed.getDate() === dc; });
         var doneC = !!regc.cardio || events.some(function (e) { if (e.type !== 'cardio' || !e.completed) return false; var ed = new Date(ms(e.date)); return ed.getFullYear() === yr && ed.getMonth() === mo && ed.getDate() === dc; });
-        if (plannedC || doneC) cardioDias.push({ lbl: d2(dc) + ' ' + MO[mo].slice(0, 3), done: doneC });
+        if (plannedC || doneC) cardioDias.push({ lbl: d2(dc) + ' ' + MO[mo].slice(0, 3), done: doneC, pasos: doneC ? (_pasosObj || 0) : 0 });
       }
-      // nutrición: días con TODAS las comidas registradas + recuento por opción
-      var nutDoneDias = 0, nutTotalDias = 0, nutDias = [], _conteo = {};
+      var _cardioSum = cardioDias.reduce(function (s, d) { return s + (d.pasos || 0); }, 0);
+      var cardioMedia = cardioDias.length ? Math.round(_cardioSum / cardioDias.length) : 0;
+      // nutrición: días con TODAS las comidas registradas + recuento por opción (agrupado por comida) + kcal por día
+      var nutDoneDias = 0, nutTotalDias = 0, nutDias = [], _cont = {};
+      function kcalDe(m, op, kn2) {
+        if (op === 'libre') return ((comLibreByDate[kn2] || {})[m.n]) || 0;
+        if (op === 'mp') return (m.okcal && m.okcal[0]) || 0;
+        return (m.okcal && m.okcal[op]) || 0;
+      }
       if (DIET.length) {
+        DIET.forEach(function (m) { _cont[m.id] = {}; });
         for (var dn2 = 1; dn2 <= lastDay; dn2++) {
           var kn = dk(dn2), com = comByDate[kn] || {}, nreg = Object.keys(com).length;
           if (!nreg) continue;
           nutTotalDias++;
           if (DIET.every(function (m) { return com[m.id] != null; })) nutDoneDias++;
-          var items = [];
+          var items = [], dayKcal = 0;
           DIET.forEach(function (m) {
             var op = com[m.id]; if (op == null) return;
             var opLbl = op === 'mp' ? 'Meal prep' : op === 'libre' ? 'Cheat meal' : ('Opción ' + (op + 1));
-            items.push({ meal: m.n, opcion: opLbl });
-            var ck = m.n + ' · ' + opLbl; _conteo[ck] = (_conteo[ck] || 0) + 1;
+            var kc = kcalDe(m, op, kn); dayKcal += kc;
+            items.push({ meal: m.n, opcion: opLbl, kcal: kc });
+            _cont[m.id][opLbl] = (_cont[m.id][opLbl] || 0) + 1;
           });
-          nutDias.push({ lbl: d2(dn2) + ' ' + MO[mo].slice(0, 3), items: items });
+          nutDias.push({ lbl: d2(dn2) + ' ' + MO[mo].slice(0, 3), kcal: dayKcal, items: items });
         }
       }
       nutDias.reverse();
-      var conteo = Object.keys(_conteo).map(function (k) { return { lbl: k, veces: _conteo[k] }; }).sort(function (a, b) { return b.veces - a.veces; });
+      // recuento agrupado por comida en el orden del plan (Desayuno, Comida, Cena…)
+      var conteoGrupos = DIET.map(function (m) {
+        var ops = Object.keys(_cont[m.id] || {}).map(function (lbl) { return { lbl: lbl, veces: _cont[m.id][lbl] }; }).sort(function (a, b) { return b.veces - a.veces; });
+        return { meal: m.n, opciones: ops };
+      }).filter(function (g) { return g.opciones.length; });
       var nutPct = nutTotalDias ? Math.round(nutDoneDias / nutTotalDias * 100) : 0;
       // ejercicios: progresión de peso dentro del mes
       var ejercicios = Object.keys(progMap).map(function (nombre) {
@@ -591,8 +612,8 @@
       var gDone = mEnt.done + mCar.done + mMet.done + nutDoneDias, gTot = mEnt.total + mCar.total + mMet.total + nutTotalDias;
       return {
         key: mk, label: MO[mo].charAt(0).toUpperCase() + MO[mo].slice(1) + ' ' + yr,
-        entrenos: mEnt, cardio: { done: mCar.done, total: mCar.total, pct: mCar.pct, objetivo: _pasosObj, dias: cardioDias },
-        nutricion: { done: nutDoneDias, total: nutTotalDias, pct: nutPct, dias: nutDias, conteo: conteo },
+        entrenos: mEnt, cardio: { done: mCar.done, total: mCar.total, pct: mCar.pct, objetivo: _pasosObj, media: cardioMedia, dias: cardioDias },
+        nutricion: { done: nutDoneDias, total: nutTotalDias, pct: nutPct, dias: nutDias, conteoGrupos: conteoGrupos },
         metricas: { done: mMet.done, total: mMet.total, pct: mMet.pct, checkins: checkins },
         global: gTot ? Math.round(gDone / gTot * 100) : 0,
         peso: { ini: pIni || '—', fin: pFin || '—', delta: pDelta }, fotos: fotosN, ejercicios: ejercicios
