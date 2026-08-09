@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=66"></script>
-<script src="./castillo-transform.js?v=66"></script>
-<script src="./castillo-equiv.js?v=66"></script>
-<script src="./castillo-data.js?v=66"></script>
+<script src="./castillo-i18n.js?v=67"></script>
+<script src="./castillo-transform.js?v=67"></script>
+<script src="./castillo-equiv.js?v=67"></script>
+<script src="./castillo-data.js?v=67"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1223,12 +1223,20 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="margin-top:14px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:16px;padding:6px 14px 12px">
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4);padding:10px 0 4px">{{ L.tuComida }}</div>
         <sc-for list="{{ cheatSel }}" as="x" hint-placeholder-count="2">
-        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:.5px solid rgba(var(--fgc,255,255,255),.06)">
-          <div style="flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.nombre }}</div>
-          <input value="{{ x.gramos }}" onInput="{{ x.setG }}" onChange="{{ x.setG }}" type="tel" style="width:50px;flex:none;text-align:right;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.12);border-radius:8px;padding:6px 7px;font-size:12.5px;color:var(--fg,#fff);outline:none" />
-          <div style="flex:none;font-size:11px;color:rgba(var(--fgc,255,255,255),.42)">g</div>
-          <div style="flex:none;width:60px;text-align:right;font-size:12.5px;font-weight:600">{{ x.kcal }}</div>
-          <div onClick="{{ x.remove }}" style="flex:none;width:22px;height:22px;border-radius:6px;background:rgba(var(--fgc,255,255,255),.08);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)"><svg width="10" height="10" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l7 7M9 2l-7 7"></path></svg></div>
+        <div style="padding:9px 0;border-top:.5px solid rgba(var(--fgc,255,255,255),.06)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.nombre }}</div>
+            <div style="flex:none;width:60px;text-align:right;font-size:12.5px;font-weight:600">{{ x.kcal }}</div>
+            <div onClick="{{ x.remove }}" style="flex:none;width:22px;height:22px;border-radius:6px;background:rgba(var(--fgc,255,255,255),.08);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)"><svg width="10" height="10" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l7 7M9 2l-7 7"></path></svg></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+            <input value="{{ x.cantidad }}" onInput="{{ x.setCant }}" onChange="{{ x.setCant }}" type="tel" style="width:54px;flex:none;text-align:center;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.12);border-radius:8px;padding:6px 7px;font-size:13px;color:var(--fg,#fff);outline:none" />
+            <div style="display:flex;flex:none;border:1px solid rgba(var(--fgc,255,255,255),.14);border-radius:8px;overflow:hidden">
+              <div onClick="{{ x.toG }}" style="padding:6px 11px;font-size:11.5px;font-weight:600;cursor:pointer;background:{{ x.gBg }};color:{{ x.gFg }}">g</div>
+              <div onClick="{{ x.toU }}" style="padding:6px 11px;font-size:11.5px;font-weight:600;cursor:pointer;background:{{ x.uBg }};color:{{ x.uFg }}">ud</div>
+            </div>
+            <div style="flex:1;font-size:11px;color:rgba(var(--fgc,255,255,255),.4)">{{ x.eq }}</div>
+          </div>
         </div>
         </sc-for>
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:8px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.12)">
@@ -1239,6 +1247,17 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div onClick="{{ saveCheat }}" style="margin-top:12px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ L.registrarComida }}</div>
       </sc-if>
 
+      <sc-if value="{{ cheatHasRecientes }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 8px">{{ L.recientes }}</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <sc-for list="{{ cheatRecientes }}" as="r" hint-placeholder-count="4">
+        <div onClick="{{ r.add }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.1);border-radius:12px;padding:12px 14px;cursor:pointer" style-active="transform:scale(.99)">
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.nombre }}</div><div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.45);margin-top:1px">{{ r.detail }}</div></div>
+          <div style="flex:none;font-size:12px;font-weight:600;color:var(--fg,#fff)">+ {{ L.anadir }}</div>
+        </div>
+        </sc-for>
+      </div>
+      </sc-if>
       <sc-if value="{{ cheatBusy }}" hint-placeholder-val="{{ false }}">
       <div style="text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.45);padding:16px 0">{{ L.buscando }}</div>
       </sc-if>
@@ -1369,6 +1388,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:930},&quot;arranque&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Apertura&quot;,&quot;Acceso&quot;,&quot;App&quot;],&quot;default&quot;:&quot;Apertura&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototipo&quot;},&quot;tema&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Oscuro&quot;,&quot;Claro&quot;],&quot;default&quot;:&quot;Oscuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototipo&quot;},&quot;mostrarUltimaSemana&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Entrenamiento&quot;},&quot;descansoSegundos&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:90,&quot;min&quot;:30,&quot;max&quot;:210,&quot;step&quot;:15,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Entrenamiento&quot;}}">
 const F = s => s.split(';').map(p => { const parts = p.split('@@'); const base = parts[0]; const kcal = parts.length > 1 ? parts[1] : ''; const i = base.lastIndexOf(':'); return { n: base.slice(0, i), q: base.slice(i + 1), kcal }; });
 const ROM = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+// peso medio (g) de UNA unidad de alimentos comunes, para el cheat meal cuando eligen "unidad" en vez de gramos
+const UNIT_G = { banana:120, platano:120, 'plátano':120, plantain:150, egg:50, huevo:50, clara:33, apple:180, manzana:180, orange:140, naranja:140, pear:175, pera:175, kiwi:75, peach:150, 'melocotón':150, melocoton:150, mandarin:90, mandarina:90, strawberry:12, fresa:12, grape:6, uva:6, tomato:120, tomate:120, potato:170, patata:170, carrot:60, zanahoria:60, avocado:200, aguacate:200, bread:30, pan:30, slice:30, rebanada:30, toast:25, tostada:25, tortilla:50, wrap:60, 'muffin':60, magdalena:45, cookie:15, galleta:15, cracker:8, biscuit:12, donut:60, 'dónut':60, croissant:60, pancake:40, tortita:40, waffle:75, gofre:75, crepe:60, pizza:100, hamburger:110, hamburguesa:110, burger:110, 'hot dog':50, sausage:40, salchicha:40, bacon:8, ham:25, jamon:25, 'jamón':25, cheese:20, queso:20, loncha:20, yogurt:125, yogur:125, milk:245, chocolate:40, 'barrita':35, bar:40, nutella:20, oreo:11, nut:1.4, almond:1.2, almendra:1.2, walnut:5, nuez:5, date:8, datil:8, 'dátil':8, fig:50, higo:50, 'shrimp':15, gamba:15, meatball:30, albondiga:30, 'albóndiga':30, nugget:18, taco:90, burrito:220, sushi:30, empanada:120, croqueta:30, 'churro':40 };
+function gramosPorUnidad(nombre) { var n = String(nombre || '').toLowerCase(); var best = 0; for (var k in UNIT_G) { if (n.indexOf(k) >= 0 && k.length > 2) { return UNIT_G[k]; } } return best || 100; }
 
 let DIET = [
   { id:'m1', h:'07:30', n:'Desayuno', o:[
@@ -1574,7 +1596,7 @@ class Component extends DCLogic {
     email: '', pass: '', scan: 0,
     meals: { m1: 2, m2: 0, m3: 3 },
     sheet: null, sheetIn: false, swap: null, swapIn: false, pwOpen: false, pwIn: false, pwNew: '', pwNew2: '',
-    cheat: null, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false,
+    cheat: null, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false, cheatRecientes: [],
     wOpen: false, wIn: false, exClosed: {},
     logs: {}, pad: null, padIn: false,
     rest: 0, restMax: 90,
@@ -1740,20 +1762,26 @@ class Component extends DCLogic {
   };
   closeSwap = () => { this.setState({ swapIn: false }); this.later(() => this.setState({ swap: null }), 420); };
   // ---- COMIDA LIBRE / CHEAT MEAL: buscador de alimentos (USDA) + registrar ----
-  openCheat = (mealId, comida) => () => { this.setState({ cheat: { mealId: mealId, comida: comida }, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ cheatIn: true }))); };
+  openCheat = (mealId, comida) => () => {
+    this.setState({ cheat: { mealId: mealId, comida: comida }, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false });
+    requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ cheatIn: true })));
+    const cd = window.CastilloData; if (cd && cd.alimentosRecientes) cd.alimentosRecientes().then(list => this.setState({ cheatRecientes: list || [] }), () => {});
+  };
   closeCheat = () => { this.setState({ cheatIn: false }); this.later(() => this.setState({ cheat: null }), 420); };
   // buscador EN VIVO: busca solo mientras escribes (con pequeña espera para no saturar), sin escribir la palabra entera
   setCheatQ = e => { const v = (e && e.target) ? e.target.value : e; this.setState({ cheatQ: v }); clearTimeout(this._cheatT); const q = (v || '').trim(); if (q.length < 3) { this.setState({ cheatRes: null, cheatBusy: false }); return; } this._cheatT = setTimeout(() => this.runCheat(), 420); };
   runCheat = () => { const q = (this.state.cheatQ || '').trim(); if (q.length < 3) return; const cd = window.CastilloData; if (!cd || !cd.buscarAlimentos) return; const my = q; this.setState({ cheatBusy: true }); cd.buscarAlimentos(q).then(res => { if ((this.state.cheatQ || '').trim() === my) this.setState({ cheatRes: res || [], cheatBusy: false }); }, () => this.setState({ cheatRes: [], cheatBusy: false })); };
-  addCheatFood = r => () => { const it = { nombre: r.nombre, kcal100: r.kcal, gramos: 100, kcal: Math.round(r.kcal) }; this.setState(s => ({ cheatSel: (s.cheatSel || []).concat([it]) })); this.flash(this.state.lang === 'en' ? 'Added — set the grams' : 'Añadido — pon los gramos'); };
-  setCheatGrams = idx => e => { const g = parseInt((e && e.target) ? e.target.value : e, 10) || 0; this.setState(s => { const arr = (s.cheatSel || []).slice(); if (arr[idx]) arr[idx] = Object.assign({}, arr[idx], { gramos: g, kcal: Math.round((arr[idx].kcal100 || 0) * g / 100) }); return { cheatSel: arr }; }); };
+  _cheatKcal = it => { const g = it.modo === 'ud' ? (it.cantidad * (it.gpu || 100)) : it.cantidad; return Math.round((it.kcal100 || 0) * g / 100); };
+  addCheatFood = r => () => { const it = { nombre: r.nombre, kcal100: r.kcal, gpu: gramosPorUnidad(r.nombre), modo: 'g', cantidad: 100 }; it.kcal = this._cheatKcal(it); this.setState(s => ({ cheatSel: (s.cheatSel || []).concat([it]) })); this.flash(this.state.lang === 'en' ? 'Added — set amount' : 'Añadido — pon la cantidad'); };
+  setCheatMode = (idx, modo) => () => { this.setState(s => { const arr = (s.cheatSel || []).slice(); if (arr[idx]) { const it = Object.assign({}, arr[idx], { modo: modo, cantidad: modo === 'ud' ? 1 : 100 }); it.kcal = this._cheatKcal(it); arr[idx] = it; } return { cheatSel: arr }; }); };
+  setCheatCantidad = idx => e => { const v = parseFloat(String((e && e.target) ? e.target.value : e).replace(',', '.')) || 0; this.setState(s => { const arr = (s.cheatSel || []).slice(); if (arr[idx]) { const it = Object.assign({}, arr[idx], { cantidad: v }); it.kcal = this._cheatKcal(it); arr[idx] = it; } return { cheatSel: arr }; }); };
   removeCheatFood = idx => () => this.setState(s => ({ cheatSel: (s.cheatSel || []).filter((_, i) => i !== idx) }));
   saveCheat = () => {
     const en = this.state.lang === 'en', ch = this.state.cheat; if (!ch) return;
-    const sel = (this.state.cheatSel || []).filter(x => x.gramos > 0);
+    const sel = (this.state.cheatSel || []).filter(x => x.cantidad > 0);
     if (!sel.length) { this.flash(en ? 'Add at least one food' : 'Añade al menos un alimento'); return; }
     const dd = DAYS.find(d => d.d === this.state.day) || DAYS.find(d => d.today) || {}; const fecha = dd.fecha;
-    const alimentos = sel.map(x => ({ nombre: x.nombre, gramos: x.gramos, kcal: x.kcal }));
+    const alimentos = sel.map(x => ({ nombre: x.nombre, kcal100: x.kcal100, gpu: x.gpu, modo: x.modo, cantidad: x.cantidad, gramos: (x.modo === 'ud' ? Math.round(x.cantidad * (x.gpu || 100)) : x.cantidad), kcal: x.kcal }));
     const cd = window.CastilloData;
     if (cd && cd.guardarComidaLibre) cd.guardarComidaLibre(ch.comida, alimentos, fecha).catch(() => {});
     if (cd && cd.registrarComida) cd.registrarComida(ch.mealId, 'libre', fecha).then(() => this.refreshData(), () => {});   // marca la comida como registrada
@@ -2620,7 +2648,7 @@ class Component extends DCLogic {
         series: T('Series'), repeticiones: T('Repeticiones'), peso: T('Peso'),
         apariencia: T('Apariencia'), idioma: T('Idioma'), espanol: T('Español'), ingles: T('Inglés'),
         datosPersonales: T('Datos personales'), tocaCambiarFoto: T('Toca para cambiar la foto'), emailPassNota: T('Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.'), telefonoLbl: T('Teléfono'), emailLbl: T('Email'), passLbl: T('Contraseña'), cambiar: T('Cambiar'), cambiarPass: T('Cambiar contraseña'), nuevaPass: T('Nueva contraseña'), repitePass: T('Repite la contraseña'), guardar: T('Guardar'),
-        comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'),
+        comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'), recientes: T('Recientes'),
         cuenta: T('Cuenta'), cerrarSesion: T('Cerrar sesión'), aplicacion: T('Aplicación'),
         tocarFoto: T('Toque la imagen para añadir su fotografía'), verAnimacion: T('Ver animación de apertura'),
         checkinSemanal: T('Check-in semanal'), enviarCheckin: T('Enviar check-in'), listo: T('Listo'),
@@ -2757,7 +2785,16 @@ class Component extends DCLogic {
       cheatComida: st.cheat ? tMeal(st.cheat.comida) : '', cheatQ: st.cheatQ, setCheatQ: this.setCheatQ, runCheat: this.runCheat, saveCheat: this.saveCheat, cheatBusy: st.cheatBusy,
       cheatHasRes: Array.isArray(st.cheatRes) && st.cheatRes.length > 0, cheatNoRes: Array.isArray(st.cheatRes) && st.cheatRes.length === 0,
       cheatRes: (st.cheatRes || []).map(r => ({ nombre: r.nombre, detail: Math.round(r.kcal) + ' kcal / 100 g', add: this.addCheatFood(r) })),
-      cheatSel: (st.cheatSel || []).map((x, i) => ({ nombre: x.nombre, gramos: String(x.gramos), kcal: x.kcal + ' kcal', setG: this.setCheatGrams(i), remove: this.removeCheatFood(i) })),
+      cheatHasRecientes: (st.cheatRecientes || []).length > 0 && (st.cheatQ || '').trim().length < 3,
+      cheatRecientes: (st.cheatRecientes || []).map(r => ({ nombre: r.nombre, detail: Math.round(r.kcal) + ' kcal / 100 g', add: this.addCheatFood(r) })),
+      cheatSel: (st.cheatSel || []).map((x, i) => {
+        const isU = x.modo === 'ud';
+        return { nombre: x.nombre, cantidad: String(x.cantidad), kcal: x.kcal + ' kcal', isG: !isU, isU: isU,
+          eq: isU ? ('≈ ' + Math.round(x.cantidad * (x.gpu || 100)) + ' g') : '',
+          gBg: !isU ? 'var(--fg,#fff)' : 'transparent', gFg: !isU ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)',
+          uBg: isU ? 'var(--fg,#fff)' : 'transparent', uFg: isU ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)',
+          setCant: this.setCheatCantidad(i), toG: this.setCheatMode(i, 'g'), toU: this.setCheatMode(i, 'ud'), remove: this.removeCheatFood(i) };
+      }),
       cheatHasSel: (st.cheatSel || []).length > 0, cheatTotal: (st.cheatSel || []).reduce((s, x) => s + (x.kcal || 0), 0) + ' kcal',
       foodSwapSheet: st.swap ? { origName: st.swap.origName, opts: (st.swap.alts || []).map((a, i) => ({ name: a.name, detail: a.grams + ' g · ~' + a.kcal + ' kcal', delay: (0.05 + i * 0.05) + 's', choose: this.chooseFood(st.swap.swapKey, st.swap.mealName, st.swap.origName, a) })) } : {},
       isCkSheet: sh.k === 'ck', ckShots, ckGroups, submitCheckin: this.submitCheckin,

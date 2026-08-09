@@ -104,6 +104,23 @@
       return Array.isArray(list) ? list : [];
     }).catch(function () { return []; });
   }
+  // alimentos que el cliente ya usó en cheat meals antes (para mostrarlos primero, sin re-buscar)
+  function alimentosRecientes() {
+    if (!_ctx.token || !_ctx.email) return Promise.resolve([]);
+    var e = encodeURIComponent(_ctx.email);
+    return api('/rest/v1/comida_libre?select=alimentos,updated_at&cliente_email=ilike.' + e + '&order=updated_at.desc&limit=40', {}, _ctx.token).then(function (rows) {
+      var seen = {}, out = [];
+      (rows || []).forEach(function (r) {
+        (r.alimentos || []).forEach(function (a) {
+          var k = String(a.nombre || '').toLowerCase(); if (!k || seen[k]) return; seen[k] = 1;
+          var k100 = (a.kcal100 != null) ? a.kcal100 : (a.gramos > 0 ? Math.round((a.kcal || 0) / a.gramos * 100) : (a.kcal || 0));
+          out.push({ nombre: a.nombre, kcal: k100 });
+        });
+      });
+      return out.slice(0, 15);
+    }).catch(function () { return []; });
+  }
+
   // guarda una comida libre / cheat meal del día: alimentos elegidos + marca esa comida como registrada ('libre')
   function guardarComidaLibre(comida, alimentos, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
@@ -187,6 +204,7 @@
     guardarPerfil: guardarPerfil,
     cambiarPassword: cambiarPassword,
     buscarAlimentos: buscarAlimentos,
+    alimentosRecientes: alimentosRecientes,
     guardarComidaLibre: guardarComidaLibre,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
