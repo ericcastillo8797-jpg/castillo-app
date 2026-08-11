@@ -40,6 +40,29 @@
     return msg;
   }
 
+  // Saca el PATH de una URL del bucket 'progreso', sea pública (/object/public/progreso/) o firmada (/object/sign/progreso/?token). null si es externa.
+  function _progresoPath(u) {
+    if (typeof u !== 'string') return null;
+    var marks = ['/object/public/progreso/', '/object/sign/progreso/'];
+    for (var m = 0; m < marks.length; m++) { var i = u.indexOf(marks[m]); if (i >= 0) { var p = u.slice(i + marks[m].length); var q = p.indexOf('?'); if (q >= 0) p = p.slice(0, q); return decodeURIComponent(p); } }
+    return null;
+  }
+  // Firma URLs del bucket privado 'progreso' → enlaces firmados temporales (7 días). Las externas se dejan igual.
+  function _signMap(urls, token) {
+    var paths = [];
+    (urls || []).forEach(function (u) { var p = _progresoPath(u); if (p && paths.indexOf(p) < 0) paths.push(p); });
+    if (!paths.length) return Promise.resolve({});
+    return fetch(SUPA + '/storage/v1/object/sign/progreso', {
+      method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: 604800, paths: paths })
+    }).then(function (r) { return r.ok ? r.json() : []; }).then(function (arr) {
+      var byPath = {}; (arr || []).forEach(function (o) { if (o && o.path && o.signedURL) byPath[o.path] = SUPA + '/storage/v1' + o.signedURL; });
+      var map = {};
+      (urls || []).forEach(function (u) { var p = _progresoPath(u); if (p && byPath[p]) map[u] = byPath[p]; });
+      return map;
+    }).catch(function () { return {}; });
+  }
+
   // fetch ficha del cliente + programas -> data del diseño
   function loadData(token, email) {
     var e = encodeURIComponent(String(email).toLowerCase());
@@ -66,18 +89,31 @@
     return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre]).then(function (res) {
       var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
       var comAll = res[4] || [], chkAll = res[5] || [];
-      var comReg = comAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
+      var perfilRow = (res[6] && res[6][0]) || null;
       if (!rows.length) throw new Error('No encontramos tu ficha. Avisa a Alex.');
       if (!window.buildAppData) throw new Error('Falta el transformador de datos');
-      var data = window.buildAppData(rows[0], programs, ejercicios, registros, comAll, chkAll, (res[7] || []));
-      data.mealsReg = (comReg && comReg.comidas) || {};   // { meal_id: opcion } registradas HOY (bloqueadas)
-      var chkHoy = chkAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
-      data.checkinHoy = (chkHoy && chkHoy.valores) || {};   // valores ya registrados hoy (para prerellenar)
-      data.checkinFotosHoy = (chkHoy && chkHoy.fotos) || {};   // fotos ya subidas hoy
-      data.perfil = (res[6] && res[6][0]) || null;   // perfil (foto + datos) guardado en Supabase
-      _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
-      window.__DATA = data;
-      return data;
+      // Fotos privadas: firmar las URLs del bucket 'progreso' (checkins + históricas + perfil) ANTES de montar la vista.
+      var toSign = [];
+      chkAll.forEach(function (c) { if (c.fotos) Object.keys(c.fotos).forEach(function (k) { if (c.fotos[k]) toSign.push(c.fotos[k]); }); });
+      var hrow = rows[0];
+      if (hrow && hrow.evolution && hrow.evolution.photos) hrow.evolution.photos.forEach(function (p) { ['front_url', 'side_url', 'back_url'].forEach(function (f) { if (p[f]) toSign.push(p[f]); }); });
+      if (perfilRow && perfilRow.foto) toSign.push(perfilRow.foto);
+      return _signMap(toSign, token).then(function (map) {
+        var swap = function (u) { return (u && map[u]) ? map[u] : u; };
+        chkAll.forEach(function (c) { if (c.fotos) Object.keys(c.fotos).forEach(function (k) { c.fotos[k] = swap(c.fotos[k]); }); });
+        if (hrow && hrow.evolution && hrow.evolution.photos) hrow.evolution.photos.forEach(function (p) { p.front_url = swap(p.front_url); p.side_url = swap(p.side_url); p.back_url = swap(p.back_url); });
+        if (perfilRow && perfilRow.foto) perfilRow.foto = swap(perfilRow.foto);
+        var comReg = comAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
+        var data = window.buildAppData(rows[0], programs, ejercicios, registros, comAll, chkAll, (res[7] || []));
+        data.mealsReg = (comReg && comReg.comidas) || {};   // { meal_id: opcion } registradas HOY (bloqueadas)
+        var chkHoy = chkAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
+        data.checkinHoy = (chkHoy && chkHoy.valores) || {};   // valores ya registrados hoy (para prerellenar)
+        data.checkinFotosHoy = (chkHoy && chkHoy.fotos) || {};   // fotos ya subidas hoy (firmadas)
+        data.perfil = perfilRow;   // perfil (foto + datos) guardado en Supabase
+        _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
+        window.__DATA = data;
+        return data;
+      });
     });
   }
 
@@ -252,7 +288,16 @@
         method: 'POST',
         headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': (file && file.type) || 'application/octet-stream', 'x-upsert': 'true' },
         body: file
-      }).then(function (r) { if (!r.ok) throw new Error('No se pudo subir la foto'); return SUPA + '/storage/v1/object/public/progreso/' + encodeURI(path); });
+      }).then(function (r) {
+        if (!r.ok) throw new Error('No se pudo subir la foto');
+        // bucket privado: devolver enlace FIRMADO para que se vea al instante (re-firmable después)
+        return fetch(SUPA + '/storage/v1/object/sign/progreso/' + encodeURI(path), {
+          method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expiresIn: 604800 })
+        }).then(function (s) { return s.ok ? s.json() : null; }).then(function (j) {
+          return (j && j.signedURL) ? (SUPA + '/storage/v1' + j.signedURL) : (SUPA + '/storage/v1/object/public/progreso/' + encodeURI(path));
+        });
+      });
     },
     // marca/desmarca el cardio de un día (se guarda en la MISMA fila diaria de entreno_registros, columna cardio)
     registrarCardio: function (fecha, done) {
