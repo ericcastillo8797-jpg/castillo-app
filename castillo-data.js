@@ -103,7 +103,9 @@
   // Supabase, NO en este código público. El proxy busca en USDA, mapea y devuelve [{nombre,kcal,prot,carbs,fat}].
   function buscarAlimentos(query) {
     var url = SUPA + '/functions/v1/food-search?q=' + encodeURIComponent(query || '');
-    return fetch(url, { headers: { 'apikey': ANON } }).then(function (r) { return r.json(); }).then(function (list) {
+    var h = { 'apikey': ANON };
+    if (_ctx.token) h['Authorization'] = 'Bearer ' + _ctx.token;   // el proxy exige usuario logueado
+    return fetch(url, { headers: h }).then(function (r) { return r.json(); }).then(function (list) {
       return Array.isArray(list) ? list : [];
     }).catch(function () { return []; });
   }
