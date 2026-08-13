@@ -66,7 +66,7 @@
   // fetch ficha del cliente + programas -> data del diseño
   function loadData(token, email) {
     var e = encodeURIComponent(String(email).toLowerCase());
-    var pRow = api('/rest/v1/harbiz_clientes?select=*&limit=1&email=ilike.' + e, {}, token);
+    var pRow = api('/rest/v1/clientes_app?select=*&limit=1&email=ilike.' + e, {}, token);
     var pProg = api('/rest/v1/programs?select=nombre,contenido&activo=eq.true', {}, token)
       .catch(function () { return api('/rest/v1/programs?select=nombre,contenido', {}, token); });
     var pEx = api('/rest/v1/ejercicios?select=id,nombre,categoria_biblio,variantes,video_url&activo=eq.true', {}, token)
