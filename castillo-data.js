@@ -170,6 +170,25 @@
       });
     }).catch(function () {});
   }
+  // Conexión MANUAL de Apple Salud (botón "Conectar"): pide permiso, lee pasos de hoy y marca cardio. Devuelve {available, ok, pasos}.
+  function conectarSalud() {
+    var C = window.Capacitor, H = C && C.Plugins && C.Plugins.HealthPlugin;
+    if (!H || !_ctx.email || !_ctx.token) return Promise.resolve({ available: !!H });
+    return H.requestHealthPermissions({ permissions: ['READ_STEPS'] }).then(function () {
+      var now = new Date();
+      var start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      return H.queryAggregated({ startDate: start, endDate: now.toISOString(), dataType: 'steps', bucket: 'day' });
+    }).then(function (res) {
+      var pasos = 0;
+      if (res && res.aggregatedData && res.aggregatedData.length) pasos = Math.round(res.aggregatedData.reduce(function (s, x) { return s + (x.value || 0); }, 0));
+      var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
+      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      if (pasos >= objetivo) row.cardio = true;
+      return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
+        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+      }, _ctx.token).then(function () { return { available: true, ok: true, pasos: pasos }; });
+    }).catch(function () { return { available: true, ok: false }; });
+  }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
   function registrarComida(mealId, opcion, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
@@ -299,6 +318,7 @@
     buscarAlimentos: buscarAlimentos,
     alimentosRecientes: alimentosRecientes,
     guardarComidaLibre: guardarComidaLibre,
+    conectarSalud: conectarSalud,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));

@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=83"></script>
-<script src="./castillo-transform.js?v=83"></script>
-<script src="./castillo-equiv.js?v=83"></script>
-<script src="./castillo-data.js?v=83"></script>
+<script src="./castillo-i18n.js?v=84"></script>
+<script src="./castillo-transform.js?v=84"></script>
+<script src="./castillo-equiv.js?v=84"></script>
+<script src="./castillo-data.js?v=84"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2968,7 +2968,14 @@ class Component extends DCLogic {
       prevWeek, nextWeek, prevWeekOpacity, nextWeekOpacity,
       planPct, planBar: _reveal ? planPct : 0, planPctLabel: Math.round(planPct * _ha) + '%', planTasks, wsRows, wsRings, wsGlobal, wsGlobalLabel: Math.round(wsGlobal * _ha) + '%', wsKcal,
       wsKcalLabel: wsKcal + ' kcal ' + T('objetivo / día'),
-      macroCards, macroPlan: ((_dd.macros || {}).plan) || '', connectHealth: () => this.flash(T('Pronto podrás sincronizar tu actividad automáticamente')),
+      macroCards, macroPlan: ((_dd.macros || {}).plan) || '', connectHealth: () => {
+        if (!(window.CastilloData && window.CastilloData.conectarSalud)) { this.flash(T('Cargando…')); return; }
+        window.CastilloData.conectarSalud().then((r) => {
+          if (!r || !r.available) { this.flash('Actualiza la app para conectar Apple Salud'); return; }
+          if (r.ok) { this.flash(r.pasos ? ('Apple Salud conectado · ' + r.pasos + ' pasos hoy') : 'Apple Salud conectado'); this.refreshData(); }
+          else { this.flash('No se pudo conectar con Apple Salud'); }
+        }).catch(() => this.flash('No se pudo conectar con Apple Salud'));
+      },
       showAllApps: st.showAllApps, toggleApps: () => this.setState({ showAllApps: !st.showAllApps }), appsToggleLabel: st.showAllApps ? T('Ver menos') : T('Ver todas las apps'),
       moreApps: [{ name: 'Garmin' }, { name: 'Fitbit' }, { name: 'Google Fit' }, { name: 'Samsung Health' }, { name: 'Strava' }, { name: 'Polar' }, { name: 'Oura' }, { name: 'Coros' }],
       allApps: [{ name: 'Apple Salud', logo: 'logos-app/apple-salud.webp' }, { name: 'WHOOP', logo: 'logos-app/whoop.png' }, { name: 'Garmin', logo: 'logos-app/garmin.png' }, { name: 'Fitbit', logo: 'logos-app/fitbit.png' }, { name: 'Google Fit', logo: 'logos-app/google-fit.png' }, { name: 'Samsung Health', logo: 'logos-app/samsung-health.webp' }, { name: 'Strava', logo: 'logos-app/strava.svg' }, { name: 'Polar', logo: '', noLogo: true }, { name: 'Oura', logo: 'logos-app/oura.png' }, { name: 'Coros', logo: 'logos-app/coros.png' }],
