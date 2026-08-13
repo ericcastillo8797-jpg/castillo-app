@@ -379,6 +379,9 @@
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
       var row = { cliente_email: _ctx.email, fecha: f, cardio: !!done, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      // marca MANUAL del cardio → cuenta el objetivo de pasos (regla de Alex)
+      var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
+      if (done) row.pasos = objetivo;
       return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);
