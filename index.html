@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=81"></script>
-<script src="./castillo-transform.js?v=81"></script>
-<script src="./castillo-equiv.js?v=81"></script>
-<script src="./castillo-data.js?v=81"></script>
+<script src="./castillo-i18n.js?v=82"></script>
+<script src="./castillo-transform.js?v=82"></script>
+<script src="./castillo-equiv.js?v=82"></script>
+<script src="./castillo-data.js?v=82"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1900,13 +1900,18 @@ class Component extends DCLogic {
   };
   doFaceId = () => {
     if (!window.CastilloData || !window.CastilloData.hasSession()) { this.flash('Accede con tu correo la primera vez'); return; }
-    this.setState({ stage: 'scan', scan: 1 });
-    this._bioCheck().then((ok) => {
-      if (!ok) { this.setState({ stage: 'lock', scan: 0 }); return; }
-      window.CastilloData.restoreSession()
-        .then(this._enterWith)
-        .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'Vuelve a acceder con tu correo'); });
-    });
+    const C = window.Capacitor, hasBio = !!(C && C.Plugins && C.Plugins.BiometricAuthNative && C.Plugins.BiometricAuthNative.internalAuthenticate);
+    const enter = () => window.CastilloData.restoreSession()
+      .then(this._enterWith)
+      .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'Vuelve a acceder con tu correo'); });
+    if (hasBio) {
+      // Face ID REAL de Apple: SIN la animación falsa. Se queda en el bloqueo mientras sale el prompt de Apple.
+      this._bioCheck().then((ok) => { if (ok) enter(); else this.setState({ stage: 'lock', scan: 0 }); });
+    } else {
+      // web / sin plugin nativo: animación simulada (como antes, solo para previsualizar en navegador)
+      this.setState({ stage: 'scan', scan: 1 });
+      enter();
+    }
   };
 
   go = t => () => {
@@ -2914,7 +2919,7 @@ class Component extends DCLogic {
 
     return {
       scrollRef: el => { this._sc = el; },
-      appLayerStyle: (stage === 'app' || stage === 'splashOut')
+      appLayerStyle: (stage === 'app')
         ? (st.sheetIn ? 'transform:scale(.94) translateY(10px);border-radius:34px;opacity:1' : 'transform:none;border-radius:0;opacity:1')
         : 'transform:scale(1.06);opacity:0',
       showSplash: stage === 'splash' || stage === 'splashOut',
@@ -3100,7 +3105,7 @@ class Component extends DCLogic {
       closePad: this.closePad, padVal: this.padValue(st.pad) || '—',
       padKeys: ['1','2','3','4','5','6','7','8','9',',','0','⌫'].map(n => ({ n, tap: this.padPress(n) })),
 
-      showLock: stage === 'lock' || stage === 'scan',
+      showLock: stage === 'lock' || stage === 'scan' || stage === 'splashOut',
       lockOpacity: stage === 'app' ? 0 : 1, lockTransform: stage === 'app' ? 'scale(1.08)' : 'none',
       // Bloqueo: si ya hay sesión guardada en este móvil, enseña SOLO Face ID (no el formulario de correo/contraseña).
       // El formulario solo sale la primera vez (sin sesión) o si el usuario elige "usar contraseña".
