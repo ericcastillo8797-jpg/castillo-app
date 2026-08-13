@@ -191,6 +191,7 @@
     }).catch(function () { return { available: true, ok: false }; });
   }
   function saludConectado() { try { return localStorage.getItem('salud_conectado') === '1'; } catch (e) { return false; } }
+  function desconectarSalud() { try { localStorage.removeItem('salud_conectado'); } catch (e) {} }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
   function registrarComida(mealId, opcion, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
@@ -322,6 +323,7 @@
     guardarComidaLibre: guardarComidaLibre,
     conectarSalud: conectarSalud,
     saludConectado: saludConectado,
+    desconectarSalud: desconectarSalud,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
