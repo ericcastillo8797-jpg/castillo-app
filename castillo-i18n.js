@@ -185,7 +185,7 @@
     'Peso de la sesión anterior': 'Last session weight', 'Descanso': 'Rest',
     // ajustes / integraciones / nutrición
     'Normal': 'Normal', 'Grande': 'Large', 'Más grande': 'Larger', 'Tamaño de texto': 'Text size',
-    'Sincroniza tu actividad': 'Sync your activity', 'Conecta tu dispositivo para volcar tu actividad automáticamente': 'Connect your device to sync your activity automatically', 'Conectar': 'Connect',
+    'Sincroniza tu actividad': 'Sync your activity', 'Conecta tu dispositivo para volcar tu actividad automáticamente': 'Connect your device to sync your activity automatically', 'Conectar': 'Connect', 'Conectado': 'Connected',
     'Tus objetivos diarios': 'Your daily targets', 'Calorías': 'Calories', 'Proteínas': 'Protein', 'Carbohidratos': 'Carbs', 'Grasas': 'Fats',
     'completado': 'completed', 'No puedo hacer este ejercicio': "I can't do this exercise", 'Variantes de este ejercicio': 'Variations of this exercise',
     'Variante en uso · ver otras': 'Variant in use · see others', 'Vídeo de técnica': 'Technique video',

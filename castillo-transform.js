@@ -53,6 +53,12 @@
     function wkKeyOf(dt) { return dt.getFullYear() + '-W' + isoWeek(dt); }
     function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
     function cardioSub(item) { var p = item && item.config && item.config.pasos; return p ? (miles(p) + ' pasos') : 'Cardio'; }
+    // sub del cardio mostrando los pasos REALES de Apple Salud hacia el objetivo (ej. "5.547 / 12.000 pasos")
+    function cardioSubReal(item, hechos) {
+      var p = item && item.config && item.config.pasos;
+      if (hechos != null && hechos !== '') return miles(hechos) + (p ? ' / ' + miles(p) : '') + ' pasos';
+      return p ? (miles(p) + ' pasos') : 'Cardio';
+    }
     row = row || {};
     var now = new Date();
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
@@ -129,9 +135,10 @@
     var regByDate = {};
     regList.forEach(function (r) {
       var k = (r.fecha || '').slice(0, 10); if (!k) return;
-      var o = regByDate[k] || (regByDate[k] = { workout: false, cardio: false });
+      var o = regByDate[k] || (regByDate[k] = { workout: false, cardio: false, pasos: null });
       if (r.estado === 'completado' || (Array.isArray(r.ejercicios) && r.ejercicios.length)) o.workout = true;
       if (r.cardio) o.cardio = true;
+      if (r.pasos != null) o.pasos = r.pasos;   // pasos reales de Apple Salud
     });
 
     // ---------- DAYS / WEEKS (semana actual + navegación) ----------
@@ -165,7 +172,7 @@
         // lista de actividades del día (como Harbiz > Planificación): métricas (foto incluida) / cardio / entreno
         var acts = [];
         if (statsItem || photoItem) acts.push({ type: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: !!((statsItem && statsItem.done) || (photoItem && photoItem.done) || chkDates[key] || chkWeeks[wkKeyOf(dt)]) });
-        if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: cardioSub(cardio), pasos: (cardio.config && cardio.config.pasos) || '', done: !!cardio.done });
+        if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: cardioSubReal(cardio, regDay.pasos), pasos: (cardio.config && cardio.config.pasos) || '', pasosHechos: (regDay.pasos != null ? regDay.pasos : ''), done: !!cardio.done });
         if (wkItem) acts.push({ type: 'workout', label: wkItem.title, sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
         out.push({
           d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
@@ -474,7 +481,7 @@
     var todayTasks = [];
     var checkinDoneThisWeek = !!chkWeeks[wkKeyOf(now)];
     if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') || !!chkDates[todayKey] || checkinDoneThisWeek });
-    if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: _cItem.title || 'Caminar', sub: cardioSub(_cItem), pasos: (_cItem.config && _cItem.config.pasos) || '', done: doneT('cardio') || !!regToday.cardio }); }
+    if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: _cItem.title || 'Caminar', sub: cardioSubReal(_cItem, regToday.pasos), pasos: (_cItem.config && _cItem.config.pasos) || '', pasosHechos: (regToday.pasos != null ? regToday.pasos : ''), done: doneT('cardio') || !!regToday.cardio }); }
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
     todayTasks.push({ key: 'nutricion', label: 'Pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.length > 0 && DIET.every(function (m) { return comHoy[m.id] != null; }) });

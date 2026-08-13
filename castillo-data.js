@@ -184,11 +184,13 @@
       var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
       var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       if (pasos >= objetivo) row.cardio = true;
+      try { localStorage.setItem('salud_conectado', '1'); } catch (e) {}
       return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token).then(function () { return { available: true, ok: true, pasos: pasos }; });
     }).catch(function () { return { available: true, ok: false }; });
   }
+  function saludConectado() { try { return localStorage.getItem('salud_conectado') === '1'; } catch (e) { return false; } }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
   function registrarComida(mealId, opcion, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
@@ -319,6 +321,7 @@
     alimentosRecientes: alimentosRecientes,
     guardarComidaLibre: guardarComidaLibre,
     conectarSalud: conectarSalud,
+    saludConectado: saludConectado,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
