@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"/>
+<title>Castillo · Alta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0A0A0B; --s1:#101013; --line:rgba(255,255,255,.10); --fg:#fff; --dim:rgba(255,255,255,.55); --faint:rgba(255,255,255,.34); --accent:#fff; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; background:var(--bg); color:var(--fg); font-family:Inter,system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  body{ min-height:100vh; padding:calc(38px + env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom)); max-width:520px; margin:0 auto; }
+  .lang{ position:absolute; top:calc(20px + env(safe-area-inset-top)); right:22px; font-size:12px; color:var(--faint); cursor:pointer; letter-spacing:.05em; }
+  .wm{ font-family:'Instrument Serif',serif; font-size:26px; letter-spacing:.5em; text-indent:.5em; text-align:center; margin-bottom:6px; }
+  h1{ font-family:'Instrument Serif',serif; font-weight:400; font-size:30px; line-height:1.15; margin:26px 0 8px; letter-spacing:-.01em; }
+  .sub{ color:var(--dim); font-size:14px; line-height:1.55; margin-bottom:26px; }
+  .card{ background:var(--s1); border:.5px solid var(--line); border-radius:16px; padding:18px 16px; margin-bottom:14px; }
+  label{ display:block; font-size:13px; font-weight:600; margin-bottom:9px; }
+  .q{ font-size:14px; font-weight:500; margin-bottom:11px; line-height:1.4; }
+  input,textarea{ width:100%; background:#000; border:.5px solid var(--line); border-radius:11px; color:var(--fg); font-family:inherit; font-size:15px; padding:13px 14px; outline:none; }
+  input:focus,textarea:focus{ border-color:rgba(255,255,255,.34); }
+  textarea{ resize:none; min-height:52px; }
+  .yn{ display:flex; gap:9px; }
+  .yn button{ flex:1; background:#000; border:.5px solid var(--line); border-radius:11px; color:var(--dim); font-family:inherit; font-size:14px; font-weight:600; padding:12px; cursor:pointer; transition:.15s; }
+  .yn button.on{ background:var(--fg); color:#000; border-color:var(--fg); }
+  .cta{ width:100%; background:var(--fg); color:#000; border:none; border-radius:100px; padding:17px; font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; margin-top:10px; transition:transform .15s; }
+  .cta:active{ transform:scale(.98); }
+  .cta[disabled]{ opacity:.5; cursor:default; }
+  .err{ background:rgba(220,80,70,.12); border:.5px solid rgba(220,80,70,.4); color:#ff9a90; border-radius:11px; padding:12px 14px; font-size:13.5px; margin:6px 0 14px; line-height:1.45; display:none; }
+  .foot{ text-align:center; color:var(--faint); font-size:11.5px; margin-top:22px; line-height:1.5; }
+  .center{ text-align:center; }
+  .ok-icon{ width:64px; height:64px; border-radius:50%; border:1.5px solid rgba(120,220,150,.5); display:flex; align-items:center; justify-content:center; margin:8px auto 22px; }
+  .hide{ display:none; }
+  .grid2{ display:flex; gap:10px; } .grid2>*{ flex:1; }
+</style>
+</head>
+<body>
+<div class="lang" id="langBtn">EN</div>
+
+<!-- CARGANDO -->
+<div id="loading" class="center" style="padding-top:120px;color:var(--dim)">…</div>
+
+<!-- ERROR TOKEN -->
+<div id="badToken" class="hide center" style="padding-top:90px">
+  <div class="wm">CASTILLO</div>
+  <h1 id="bt_title">Enlace no válido</h1>
+  <p class="sub" id="bt_sub">Este enlace no es válido o ya se ha usado. Pídele uno nuevo a tu entrenador.</p>
+</div>
+
+<!-- FORMULARIO -->
+<div id="form" class="hide">
+  <div class="wm">CASTILLO</div>
+  <h1 id="f_title">Bienvenido/a</h1>
+  <p class="sub" id="f_sub">Rellena este cuestionario rápido de salud y crea tu cuenta. Solo te llevará un minuto.</p>
+
+  <div class="err" id="err"></div>
+
+  <div class="card">
+    <div class="q" id="q_lesiones">¿Tienes alguna lesión o molestia física actual?</div>
+    <textarea id="lesiones" data-ph-es="Descríbela, o escribe 'Ninguna'" data-ph-en="Describe it, or write 'None'"></textarea>
+  </div>
+  <div class="card">
+    <div class="q" id="q_operaciones">¿Te han operado de algo relevante?</div>
+    <textarea id="operaciones" data-ph-es="¿De qué y cuándo? O escribe 'No'" data-ph-en="What and when? Or write 'No'"></textarea>
+  </div>
+  <div class="card">
+    <div class="q" id="q_dolor">¿Sientes dolor en el pecho al hacer actividad física?</div>
+    <div class="yn" data-yn="dolor_pecho"><button type="button" data-v="1" id="dolor_si">Sí</button><button type="button" data-v="0" id="dolor_no">No</button></div>
+  </div>
+  <div class="card">
+    <div class="q" id="q_mareos">¿Te mareas, te falta el aire o pierdes el equilibrio al entrenar?</div>
+    <div class="yn" data-yn="mareos"><button type="button" data-v="1" id="mareos_si">Sí</button><button type="button" data-v="0" id="mareos_no">No</button></div>
+  </div>
+  <div class="card">
+    <div class="q" id="q_medico">¿Algún problema de corazón, tensión u otra condición médica que debamos saber?</div>
+    <textarea id="problema_medico" data-ph-es="Descríbelo, o escribe 'No'" data-ph-en="Describe it, or write 'No'"></textarea>
+  </div>
+  <div class="card">
+    <div class="q" id="q_medicacion">¿Tomas alguna medicación?</div>
+    <textarea id="medicacion" data-ph-es="¿Cuál? O escribe 'No'" data-ph-en="Which one? Or write 'No'"></textarea>
+  </div>
+  <div class="card">
+    <div class="q" id="q_otros">¿Algo más que tu entrenador deba saber?</div>
+    <textarea id="otros" data-ph-es="Opcional" data-ph-en="Optional"></textarea>
+  </div>
+
+  <h1 style="font-size:24px;margin-top:34px" id="f_acc">Crea tu cuenta</h1>
+  <p class="sub" id="f_acc_sub" style="margin-bottom:16px">Con este email y contraseña entrarás en la app.</p>
+  <div class="card">
+    <label id="l_email">Email</label>
+    <input id="email" type="email" autocomplete="email" data-ph-es="tucorreo@email.com" data-ph-en="youremail@email.com"/>
+    <label id="l_pass" style="margin-top:16px">Contraseña</label>
+    <input id="password" type="password" autocomplete="new-password" data-ph-es="Mínimo 6 caracteres" data-ph-en="At least 6 characters"/>
+  </div>
+
+  <button class="cta" id="submit">Crear mi cuenta</button>
+  <div class="foot" id="foot">Al continuar aceptas que tu entrenador use estos datos para tu seguimiento.</div>
+</div>
+
+<!-- EXITO -->
+<div id="done" class="hide center" style="padding-top:70px">
+  <div class="wm">CASTILLO</div>
+  <div class="ok-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgb(120,220,150)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+  <h1 id="d_title">¡Cuenta creada!</h1>
+  <p class="sub" id="d_sub">Ya puedes descargar la app y entrar con tu email y contraseña.</p>
+  <a id="dl" href="#" class="cta" style="display:block;text-decoration:none;box-sizing:border-box">Descargar la app</a>
+  <div class="foot" id="d_foot">Al abrir la app, entra con el mismo email y contraseña que acabas de poner.</div>
+</div>
+
+<script>
+(function(){
+  var SUPA='https://pdplhtmhwfqgpyiofujt.supabase.co';
+  var ANON='sb_publishable_0vGKDo8tHn-jf88-CZb1UA_dTKD4mkx';
+  // TODO: cuando la app esté PÚBLICA en la App Store, poner aquí su URL (apps.apple.com/app/idXXXXXXXX)
+  var DOWNLOAD_URL='https://apps.apple.com/';
+
+  var params=new URLSearchParams(location.search);
+  var token=params.get('c')||params.get('token')||'';
+  var yn={};
+
+  // idioma: detecta navegador (EN por defecto salvo español)
+  var lang=(navigator.language||'en').toLowerCase().indexOf('es')===0?'es':'en';
+
+  var T={
+    es:{ btn:'EN', bad_t:'Enlace no válido', bad_s:'Este enlace no es válido o ya se ha usado. Pídele uno nuevo a tu entrenador.',
+      f_t:'Bienvenido/a', f_s:'Rellena este cuestionario rápido de salud y crea tu cuenta. Solo te llevará un minuto.',
+      q_les:'¿Tienes alguna lesión o molestia física actual?', q_op:'¿Te han operado de algo relevante?',
+      q_dol:'¿Sientes dolor en el pecho al hacer actividad física?', q_mar:'¿Te mareas, te falta el aire o pierdes el equilibrio al entrenar?',
+      q_med:'¿Algún problema de corazón, tensión u otra condición médica que debamos saber?', q_medic:'¿Tomas alguna medicación?',
+      q_otr:'¿Algo más que tu entrenador deba saber?', f_acc:'Crea tu cuenta', f_acc_s:'Con este email y contraseña entrarás en la app.',
+      l_em:'Email', l_pw:'Contraseña', si:'Sí', no:'No', cta:'Crear mi cuenta', foot:'Al continuar aceptas que tu entrenador use estos datos para tu seguimiento.',
+      d_t:'¡Cuenta creada!', d_s:'Ya puedes descargar la app y entrar con tu email y contraseña.', dl:'Descargar la app',
+      d_foot:'Al abrir la app, entra con el mismo email y contraseña que acabas de poner.',
+      e_req:'Responde a todas las preguntas de salud.', e_yn:'Responde Sí o No a las preguntas marcadas.', saving:'Creando…' },
+    en:{ btn:'ES', bad_t:'Invalid link', bad_s:'This link is invalid or has already been used. Ask your coach for a new one.',
+      f_t:'Welcome', f_s:'Fill in this quick health questionnaire and create your account. It only takes a minute.',
+      q_les:'Do you have any current injury or physical discomfort?', q_op:'Have you had any relevant surgery?',
+      q_dol:'Do you feel chest pain during physical activity?', q_mar:'Do you get dizzy, short of breath or lose balance when training?',
+      q_med:'Any heart condition, blood pressure or other medical condition we should know about?', q_medic:'Do you take any medication?',
+      q_otr:'Anything else your coach should know?', f_acc:'Create your account', f_acc_s:'You will log into the app with this email and password.',
+      l_em:'Email', l_pw:'Password', si:'Yes', no:'No', cta:'Create my account', foot:'By continuing you agree that your coach uses this data for your follow-up.',
+      d_t:'Account created!', d_s:'You can now download the app and log in with your email and password.', dl:'Download the app',
+      d_foot:'When you open the app, log in with the same email and password you just set.',
+      e_req:'Please answer all health questions.', e_yn:'Please answer Yes or No to the marked questions.', saving:'Creating…' }
+  };
+
+  function $(id){ return document.getElementById(id); }
+  function applyLang(){
+    var t=T[lang];
+    $('langBtn').textContent=t.btn; document.documentElement.lang=lang;
+    $('bt_title').textContent=t.bad_t; $('bt_sub').textContent=t.bad_s;
+    $('f_title').textContent=t.f_t; $('f_sub').textContent=t.f_s;
+    $('q_lesiones').textContent=t.q_les; $('q_operaciones').textContent=t.q_op; $('q_dolor').textContent=t.q_dol;
+    $('q_mareos').textContent=t.q_mar; $('q_medico').textContent=t.q_med; $('q_medicacion').textContent=t.q_medic; $('q_otros').textContent=t.q_otr;
+    $('f_acc').textContent=t.f_acc; $('f_acc_sub').textContent=t.f_acc_s; $('l_email').textContent=t.l_em; $('l_pass').textContent=t.l_pw;
+    $('submit').textContent=t.cta; $('foot').textContent=t.foot;
+    $('d_title').textContent=t.d_t; $('d_sub').textContent=t.d_s; $('dl').textContent=t.dl; $('d_foot').textContent=t.d_foot;
+    $('dolor_si').textContent=t.si; $('dolor_no').textContent=t.no; $('mareos_si').textContent=t.si; $('mareos_no').textContent=t.no;
+    document.querySelectorAll('[data-ph-es]').forEach(function(el){ el.placeholder=el.getAttribute('data-ph-'+lang); });
+  }
+  $('langBtn').onclick=function(){ lang=(lang==='es'?'en':'es'); applyLang(); };
+
+  // Sí/No
+  document.querySelectorAll('[data-yn]').forEach(function(g){
+    var key=g.getAttribute('data-yn');
+    g.querySelectorAll('button').forEach(function(b){
+      b.onclick=function(){ yn[key]=b.getAttribute('data-v')==='1'; g.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); };
+    });
+  });
+
+  function showErr(m){ var e=$('err'); e.textContent=m; e.style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); }
+
+  $('submit').onclick=function(){
+    var t=T[lang];
+    $('err').style.display='none';
+    var email=$('email').value.trim().toLowerCase(), pass=$('password').value;
+    if(yn.dolor_pecho===undefined || yn.mareos===undefined){ showErr(t.e_yn); return; }
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showErr(lang==='es'?'Email no válido.':'Invalid email.'); return; }
+    if(pass.length<6){ showErr(lang==='es'?'La contraseña debe tener al menos 6 caracteres.':'Password must be at least 6 characters.'); return; }
+    var parq={ lesiones:$('lesiones').value.trim(), operaciones:$('operaciones').value.trim(),
+      dolor_pecho:!!yn.dolor_pecho, mareos:!!yn.mareos, problema_medico:$('problema_medico').value.trim(),
+      medicacion:$('medicacion').value.trim(), otros:$('otros').value.trim() };
+    $('submit').disabled=true; $('submit').textContent=t.saving;
+    fetch(SUPA+'/functions/v1/alta-cliente',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'},
+      body:JSON.stringify({ token:token, email:email, password:pass, parq:parq }) })
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+      .then(function(res){
+        if(!res.ok || !res.j.ok){ $('submit').disabled=false; $('submit').textContent=t.cta; showErr(res.j.error||'Error'); return; }
+        $('form').classList.add('hide'); $('done').classList.remove('hide'); window.scrollTo(0,0);
+      })
+      .catch(function(){ $('submit').disabled=false; $('submit').textContent=t.cta; showErr(lang==='es'?'Error de conexión. Inténtalo de nuevo.':'Connection error. Try again.'); });
+  };
+
+  $('dl').href=DOWNLOAD_URL;
+
+  // arranque: valida que hay token
+  applyLang();
+  $('loading').classList.add('hide');
+  if(!token){ $('badToken').classList.remove('hide'); }
+  else { $('form').classList.remove('hide'); }
+})();
+</script>
+</body>
+</html>
