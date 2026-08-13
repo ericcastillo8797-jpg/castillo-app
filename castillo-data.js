@@ -162,7 +162,8 @@
         if (res && res.aggregatedData && res.aggregatedData.length) pasos = Math.round(res.aggregatedData.reduce(function (s, x) { return s + (x.value || 0); }, 0));
         if (!pasos) return;
         var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
-        var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+        var _n = new Date(), hoyF = _n.getFullYear() + '-' + ('0' + (_n.getMonth() + 1)).slice(-2) + '-' + ('0' + _n.getDate()).slice(-2);
+        var row = { cliente_email: _ctx.email, fecha: hoyF, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
         if (pasos >= objetivo) row.cardio = true;   // objetivo alcanzado → cardio hecho
         return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
           method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
@@ -182,7 +183,8 @@
       var pasos = 0;
       if (res && res.aggregatedData && res.aggregatedData.length) pasos = Math.round(res.aggregatedData.reduce(function (s, x) { return s + (x.value || 0); }, 0));
       var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
-      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      var _n = new Date(), hoyF = _n.getFullYear() + '-' + ('0' + (_n.getMonth() + 1)).slice(-2) + '-' + ('0' + _n.getDate()).slice(-2);   // fecha FRESCA (no la del login)
+      var row = { cliente_email: _ctx.email, fecha: hoyF, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       if (pasos >= objetivo) row.cardio = true;
       try { localStorage.setItem('salud_conectado', '1'); } catch (e) {}
       return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
