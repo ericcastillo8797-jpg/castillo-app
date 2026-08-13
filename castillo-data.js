@@ -113,6 +113,7 @@
         _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
         window.__DATA = data;
         try { registerPush(); } catch (e) {}   // registra el móvil para notificaciones (solo app nativa)
+        try { syncSaludPasos(); } catch (e) {}   // lee pasos de Apple Salud → marca cardio (solo app nativa)
         return data;
       });
     });
@@ -143,6 +144,31 @@
       if (p && (p.receive === 'prompt' || p.receive === 'prompt-with-rationale')) return PN.requestPermissions();
       return p;
     }).then(function (p) { if (p && p.receive === 'granted') PN.register(); }).catch(function () {});
+  }
+
+  // ---- APPLE SALUD: pasos del día → marca el cardio (solo app nativa) ----
+  var PASOS_OBJETIVO = 10000;   // objetivo por defecto (futuro: por cliente en la ficha)
+  function syncSaludPasos() {
+    var C = window.Capacitor, H = C && C.Plugins && C.Plugins.HealthPlugin;
+    if (!H || !_ctx.email || !_ctx.token) return Promise.resolve();
+    return (H.isHealthAvailable ? H.isHealthAvailable() : Promise.resolve({ available: true })).then(function (a) {
+      if (a && a.available === false) return;
+      return H.requestHealthPermissions({ permissions: ['READ_STEPS'] }).catch(function () {}).then(function () {
+        var now = new Date();
+        var start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+        return H.queryAggregated({ startDate: start, endDate: now.toISOString(), dataType: 'steps', bucket: 'day' });
+      }).then(function (res) {
+        var pasos = 0;
+        if (res && res.aggregatedData && res.aggregatedData.length) pasos = Math.round(res.aggregatedData.reduce(function (s, x) { return s + (x.value || 0); }, 0));
+        if (!pasos) return;
+        var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
+        var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+        if (pasos >= objetivo) row.cardio = true;   // objetivo alcanzado → cardio hecho
+        return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
+          method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+        }, _ctx.token);
+      });
+    }).catch(function () {});
   }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
   function registrarComida(mealId, opcion, fecha) {
