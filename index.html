@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=80"></script>
-<script src="./castillo-transform.js?v=80"></script>
-<script src="./castillo-equiv.js?v=80"></script>
-<script src="./castillo-data.js?v=80"></script>
+<script src="./castillo-i18n.js?v=81"></script>
+<script src="./castillo-transform.js?v=81"></script>
+<script src="./castillo-equiv.js?v=81"></script>
+<script src="./castillo-data.js?v=81"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1885,12 +1885,28 @@ class Component extends DCLogic {
       .then(this._enterWith)
       .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'No se pudo entrar'); });
   };
+  // Face ID REAL de Apple (plugin nativo). En web / si el plugin no está → pasa directo (no bloquea).
+  _bioCheck = () => {
+    const C = window.Capacitor, P = C && C.Plugins && C.Plugins.BiometricAuthNative;
+    if (!P || !P.internalAuthenticate) return Promise.resolve(true);
+    return P.internalAuthenticate({ reason: 'Accede a Castillo', cancelTitle: 'Cancelar', iosFallbackTitle: 'Usar contraseña', allowDeviceCredential: true })
+      .then(() => true)
+      .catch((e) => {
+        const m = ((e && (e.message || e.code || e.errorMessage)) || '').toString().toLowerCase();
+        // el usuario canceló a propósito → no entrar; error técnico → no bloquear (fallback al comportamiento normal)
+        if (m.indexOf('cancel') >= 0 || m.indexOf('userfallback') >= 0 || m.indexOf('not enrolled') >= 0) return false;
+        return true;
+      });
+  };
   doFaceId = () => {
     if (!window.CastilloData || !window.CastilloData.hasSession()) { this.flash('Accede con tu correo la primera vez'); return; }
     this.setState({ stage: 'scan', scan: 1 });
-    window.CastilloData.restoreSession()
-      .then(this._enterWith)
-      .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'Vuelve a acceder con tu correo'); });
+    this._bioCheck().then((ok) => {
+      if (!ok) { this.setState({ stage: 'lock', scan: 0 }); return; }
+      window.CastilloData.restoreSession()
+        .then(this._enterWith)
+        .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'Vuelve a acceder con tu correo'); });
+    });
   };
 
   go = t => () => {

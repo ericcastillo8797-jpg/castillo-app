@@ -112,12 +112,38 @@
         data.perfil = perfilRow;   // perfil (foto + datos) guardado en Supabase
         _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
         window.__DATA = data;
+        try { registerPush(); } catch (e) {}   // registra el móvil para notificaciones (solo app nativa)
         return data;
       });
     });
   }
 
   var _ctx = { token: null, email: null, hoy: null };
+
+  // ---- NOTIFICACIONES PUSH (solo en la app nativa; en web no hace nada) ----
+  var _pushInit = false;
+  function saveDeviceToken(token) {
+    if (!token || !_ctx.email || !_ctx.token) return;
+    var row = { cliente_email: _ctx.email, token: token, platform: 'ios', updated_at: new Date().toISOString() };
+    api('/rest/v1/device_tokens?on_conflict=cliente_email,token', {
+      method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+    }, _ctx.token).catch(function () {});
+  }
+  function registerPush() {
+    var C = window.Capacitor, PN = C && C.Plugins && C.Plugins.PushNotifications;
+    if (!PN || !_ctx.email) return;   // en navegador no existe → no-op
+    if (!_pushInit) {
+      _pushInit = true;
+      try {
+        PN.addListener('registration', function (t) { saveDeviceToken(t && t.value); });
+        PN.addListener('registrationError', function () {});
+      } catch (e) {}
+    }
+    (PN.checkPermissions ? PN.checkPermissions() : Promise.resolve({ receive: 'prompt' })).then(function (p) {
+      if (p && (p.receive === 'prompt' || p.receive === 'prompt-with-rationale')) return PN.requestPermissions();
+      return p;
+    }).then(function (p) { if (p && p.receive === 'granted') PN.register(); }).catch(function () {});
+  }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
   function registrarComida(mealId, opcion, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
