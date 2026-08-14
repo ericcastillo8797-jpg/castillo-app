@@ -60,7 +60,10 @@
       return p ? (miles(p) + ' pasos') : 'Cardio';
     }
     row = row || {};
-    var now = new Date();
+    // "now" en la ZONA HORARIA DEL CLIENTE (row.tz; presencial = Miami). Así el día/semana/hoy van por su zona, no la del dispositivo.
+    var now;
+    try { now = new Date(new Date().toLocaleString('en-US', { timeZone: (row.tz || 'America/New_York') })); if (isNaN(now)) now = new Date(); }
+    catch (e) { now = new Date(); }
     // programs: array de programas (o uno solo) -> fusionar todo el contenido
     var progList = Array.isArray(programs) ? programs : (programs ? [programs] : []);
     // ejercicios: catálogo del CRM (categoria_biblio + variantes que ordena Martín)

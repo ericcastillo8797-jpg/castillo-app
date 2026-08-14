@@ -63,6 +63,11 @@
     }).catch(function () { return {}; });
   }
 
+  // fecha de HOY (YYYY-MM-DD) en la ZONA HORARIA DEL CLIENTE (no la del dispositivo)
+  function tzToday(tz) {
+    try { return new Intl.DateTimeFormat('en-CA', { timeZone: tz || 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+    catch (e) { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  }
   // fetch ficha del cliente + programas -> data del diseño
   function loadData(token, email) {
     var e = encodeURIComponent(String(email).toLowerCase());
@@ -96,6 +101,8 @@
       var toSign = [];
       chkAll.forEach(function (c) { if (c.fotos) Object.keys(c.fotos).forEach(function (k) { if (c.fotos[k]) toSign.push(c.fotos[k]); }); });
       var hrow = rows[0];
+      var _tz = (hrow && hrow.tz) || 'America/New_York';   // zona horaria del cliente (presencial = Miami)
+      hoyStr = tzToday(_tz);   // "hoy" según la zona del CLIENTE, no el dispositivo
       if (hrow && hrow.evolution && hrow.evolution.photos) hrow.evolution.photos.forEach(function (p) { ['front_url', 'side_url', 'back_url'].forEach(function (f) { if (p[f]) toSign.push(p[f]); }); });
       if (perfilRow && perfilRow.foto) toSign.push(perfilRow.foto);
       return _signMap(toSign, token).then(function (map) {
@@ -110,7 +117,7 @@
         data.checkinHoy = (chkHoy && chkHoy.valores) || {};   // valores ya registrados hoy (para prerellenar)
         data.checkinFotosHoy = (chkHoy && chkHoy.fotos) || {};   // fotos ya subidas hoy (firmadas)
         data.perfil = perfilRow;   // perfil (foto + datos) guardado en Supabase
-        _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr;
+        _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr; _ctx.tz = _tz;
         window.__DATA = data;
         try { registerPush(); } catch (e) {}   // registra el móvil para notificaciones (solo app nativa)
         try { syncSaludPasos(); } catch (e) {}   // lee pasos de Apple Salud → marca cardio (solo app nativa)
@@ -162,7 +169,7 @@
         if (res && res.aggregatedData && res.aggregatedData.length) pasos = Math.round(res.aggregatedData.reduce(function (s, x) { return s + (x.value || 0); }, 0));
         if (!pasos) return;
         var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
-        var _n = new Date(), hoyF = _n.getFullYear() + '-' + ('0' + (_n.getMonth() + 1)).slice(-2) + '-' + ('0' + _n.getDate()).slice(-2);
+        var hoyF = tzToday(_ctx.tz);   // fecha fresca en la zona del cliente
         var row = { cliente_email: _ctx.email, fecha: hoyF, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
         if (pasos >= objetivo) row.cardio = true;   // objetivo alcanzado → cardio hecho
         return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
@@ -183,7 +190,7 @@
       var pasos = 0;
       if (res && res.aggregatedData && res.aggregatedData.length) pasos = Math.round(res.aggregatedData.reduce(function (s, x) { return s + (x.value || 0); }, 0));
       var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
-      var _n = new Date(), hoyF = _n.getFullYear() + '-' + ('0' + (_n.getMonth() + 1)).slice(-2) + '-' + ('0' + _n.getDate()).slice(-2);   // fecha FRESCA (no la del login)
+      var hoyF = tzToday(_ctx.tz);   // fecha fresca en la zona del cliente
       var row = { cliente_email: _ctx.email, fecha: hoyF, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       if (pasos >= objetivo) row.cardio = true;
       try { localStorage.setItem('salud_conectado', '1'); } catch (e) {}
