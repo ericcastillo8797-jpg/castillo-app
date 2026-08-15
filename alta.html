@@ -243,7 +243,7 @@
     var parq={}; PARQ.forEach(function(p){ parq[p.k]={ q:p.es, si:!!yn[p.k] }; });
     var payload={ token:codigo, code:codigo, email:email, password:pass, nombre:nombre, apellido:apellido,
       telefono:$('telefono').value.trim(), genero:choice.genero||null, birthdate:$('birthdate').value||null,
-      objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true };
+      objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true, lang:lang };
 
     $('submit').disabled=true; $('submit').textContent=t.saving;
     fetch(SUPA+'/functions/v1/alta-cliente',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'}, body:JSON.stringify(payload) })
