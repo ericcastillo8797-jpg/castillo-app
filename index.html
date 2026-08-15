@@ -1512,6 +1512,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </svg>
         <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.5)">Acceder con Face ID</div>
       </div>
+      <div onClick="{{ goAlta }}" style="margin-top:30px;text-align:center;cursor:pointer" style-active="opacity:.6">
+        <span style="font-size:13px;color:rgba(var(--fgc,255,255,255),.5)">¿Primera vez? </span><span style="font-size:13px;font-weight:600;color:var(--fg,#fff);text-decoration:underline;text-underline-offset:3px">Date de alta</span>
+      </div>
     </div>
     </sc-if>
 
@@ -1853,6 +1856,8 @@ class Component extends DCLogic {
     this.setState(patch);
     this.later(() => { this.setState({ stage: 'app', tab: 'home' }); this.playHome(); }, 900);
   };
+  // Alta de cliente nuevo: abre el formulario dentro de la app (misma webview). Al terminar vuelve ya logueado.
+  goAlta = () => { try { window.location.href = 'alta.html'; } catch (e) {} };
   doLogin = () => {
     var email = (this.state.email || '').trim(), pass = this.state.pass || '';
     if (!email || !pass) { this.flash('Introduce tu correo y contraseña'); return; }
@@ -2932,7 +2937,7 @@ class Component extends DCLogic {
         serieLbl: T('Series'), repsLbl: T('Repeticiones'), descansoLbl: T('Descanso'), pesoLbl: T('Peso'), pesoAnterior: T('Peso de la sesión anterior'),
         volverOriginal: T('Volver al ejercicio original'), siNoMaterial: T('Si no dispone del material')
       },
-      pickEs: this.setLang('es'), pickEn: this.setLang('en'), printDiet: this.printDiet, shareDiet: this.shareDiet, downloadDiet: this.downloadDiet,
+      pickEs: this.setLang('es'), pickEn: this.setLang('en'), printDiet: this.printDiet, shareDiet: this.shareDiet, downloadDiet: this.downloadDiet, goAlta: this.goAlta,
       langEsBg: !isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEsFg: !isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEsBd: !isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
       langEnBg: isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEnFg: isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEnBd: isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
       isHome: st.tab === 'home', isDiet: st.tab === 'diet', isTrain: st.tab === 'train', isEvo: st.tab === 'evo',

@@ -7,198 +7,260 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#0A0A0B; --s1:#101013; --line:rgba(255,255,255,.10); --fg:#fff; --dim:rgba(255,255,255,.55); --faint:rgba(255,255,255,.34); --accent:#fff; }
+  :root{ --bg:#0A0A0B; --s1:#101013; --line:rgba(255,255,255,.10); --fg:#fff; --dim:rgba(255,255,255,.55); --faint:rgba(255,255,255,.34); }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; background:var(--bg); color:var(--fg); font-family:Inter,system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
   body{ min-height:100vh; padding:calc(38px + env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom)); max-width:520px; margin:0 auto; }
   .lang{ position:absolute; top:calc(20px + env(safe-area-inset-top)); right:22px; font-size:12px; color:var(--faint); cursor:pointer; letter-spacing:.05em; }
   .wm{ font-family:'Instrument Serif',serif; font-size:26px; letter-spacing:.5em; text-indent:.5em; text-align:center; margin-bottom:6px; }
   h1{ font-family:'Instrument Serif',serif; font-weight:400; font-size:30px; line-height:1.15; margin:26px 0 8px; letter-spacing:-.01em; }
-  .sub{ color:var(--dim); font-size:14px; line-height:1.55; margin-bottom:26px; }
-  .card{ background:var(--s1); border:.5px solid var(--line); border-radius:16px; padding:18px 16px; margin-bottom:14px; }
-  label{ display:block; font-size:13px; font-weight:600; margin-bottom:9px; }
+  .sub{ color:var(--dim); font-size:14px; line-height:1.55; margin-bottom:22px; }
+  .sec{ font-size:11px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--faint); margin:30px 2px 12px; }
+  .card{ background:var(--s1); border:.5px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; }
+  label{ display:block; font-size:12.5px; font-weight:600; margin-bottom:8px; color:var(--dim); }
   .q{ font-size:14px; font-weight:500; margin-bottom:11px; line-height:1.4; }
-  input,textarea{ width:100%; background:#000; border:.5px solid var(--line); border-radius:11px; color:var(--fg); font-family:inherit; font-size:15px; padding:13px 14px; outline:none; }
-  input:focus,textarea:focus{ border-color:rgba(255,255,255,.34); }
-  textarea{ resize:none; min-height:52px; }
+  input,textarea,select{ width:100%; background:#000; border:.5px solid var(--line); border-radius:11px; color:var(--fg); font-family:inherit; font-size:15px; padding:13px 14px; outline:none; -webkit-appearance:none; }
+  input:focus,textarea:focus,select:focus{ border-color:rgba(255,255,255,.4); }
+  input[type=date]{ min-height:48px; color-scheme:dark; }
+  .mt{ margin-top:14px; }
   .yn{ display:flex; gap:9px; }
   .yn button{ flex:1; background:#000; border:.5px solid var(--line); border-radius:11px; color:var(--dim); font-family:inherit; font-size:14px; font-weight:600; padding:12px; cursor:pointer; transition:.15s; }
   .yn button.on{ background:var(--fg); color:#000; border-color:var(--fg); }
-  .cta{ width:100%; background:var(--fg); color:#000; border:none; border-radius:100px; padding:17px; font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; margin-top:10px; transition:transform .15s; }
-  .cta:active{ transform:scale(.98); }
-  .cta[disabled]{ opacity:.5; cursor:default; }
+  .opts{ display:flex; flex-direction:column; gap:9px; }
+  .opt{ background:#000; border:.5px solid var(--line); border-radius:12px; color:var(--dim); font-size:14px; font-weight:500; padding:14px; cursor:pointer; text-align:left; transition:.15s; }
+  .opt.on{ background:var(--fg); color:#000; border-color:var(--fg); font-weight:600; }
+  .grid2{ display:flex; gap:10px; } .grid2>*{ flex:1; }
+  .cta{ width:100%; background:var(--fg); color:#000; border:none; border-radius:100px; padding:17px; font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; margin-top:14px; transition:transform .15s; }
+  .cta:active{ transform:scale(.98); } .cta[disabled]{ opacity:.5; cursor:default; }
   .err{ background:rgba(220,80,70,.12); border:.5px solid rgba(220,80,70,.4); color:#ff9a90; border-radius:11px; padding:12px 14px; font-size:13.5px; margin:6px 0 14px; line-height:1.45; display:none; }
+  .consent{ display:flex; gap:12px; align-items:flex-start; }
+  .box{ width:22px; height:22px; flex:none; border-radius:6px; border:1.5px solid var(--faint); margin-top:1px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s; }
+  .box.on{ background:var(--fg); border-color:var(--fg); }
   .foot{ text-align:center; color:var(--faint); font-size:11.5px; margin-top:22px; line-height:1.5; }
   .center{ text-align:center; }
   .ok-icon{ width:64px; height:64px; border-radius:50%; border:1.5px solid rgba(120,220,150,.5); display:flex; align-items:center; justify-content:center; margin:8px auto 22px; }
   .hide{ display:none; }
-  .grid2{ display:flex; gap:10px; } .grid2>*{ flex:1; }
 </style>
 </head>
 <body>
 <div class="lang" id="langBtn">EN</div>
 
-<!-- CARGANDO -->
-<div id="loading" class="center" style="padding-top:120px;color:var(--dim)">…</div>
-
-<!-- ERROR TOKEN -->
-<div id="badToken" class="hide center" style="padding-top:90px">
-  <div class="wm">CASTILLO</div>
-  <h1 id="bt_title">Enlace no válido</h1>
-  <p class="sub" id="bt_sub">Este enlace no es válido o ya se ha usado. Pídele uno nuevo a tu entrenador.</p>
-</div>
-
 <!-- FORMULARIO -->
-<div id="form" class="hide">
+<div id="form">
   <div class="wm">CASTILLO</div>
   <h1 id="f_title">Bienvenido/a</h1>
-  <p class="sub" id="f_sub">Rellena este cuestionario rápido de salud y crea tu cuenta. Solo te llevará un minuto.</p>
+  <p class="sub" id="f_sub">Rellena este formulario para crear tu cuenta. Al terminar entrarás directo a tu app.</p>
 
   <div class="err" id="err"></div>
 
+  <!-- 1. DATOS PERSONALES -->
+  <div class="sec" id="s_datos">Datos personales</div>
   <div class="card">
-    <div class="q" id="q_lesiones">¿Tienes alguna lesión o molestia física actual?</div>
-    <textarea id="lesiones" data-ph-es="Descríbela, o escribe 'Ninguna'" data-ph-en="Describe it, or write 'None'"></textarea>
-  </div>
-  <div class="card">
-    <div class="q" id="q_operaciones">¿Te han operado de algo relevante?</div>
-    <textarea id="operaciones" data-ph-es="¿De qué y cuándo? O escribe 'No'" data-ph-en="What and when? Or write 'No'"></textarea>
-  </div>
-  <div class="card">
-    <div class="q" id="q_dolor">¿Sientes dolor en el pecho al hacer actividad física?</div>
-    <div class="yn" data-yn="dolor_pecho"><button type="button" data-v="1" id="dolor_si">Sí</button><button type="button" data-v="0" id="dolor_no">No</button></div>
-  </div>
-  <div class="card">
-    <div class="q" id="q_mareos">¿Te mareas, te falta el aire o pierdes el equilibrio al entrenar?</div>
-    <div class="yn" data-yn="mareos"><button type="button" data-v="1" id="mareos_si">Sí</button><button type="button" data-v="0" id="mareos_no">No</button></div>
-  </div>
-  <div class="card">
-    <div class="q" id="q_medico">¿Algún problema de corazón, tensión u otra condición médica que debamos saber?</div>
-    <textarea id="problema_medico" data-ph-es="Descríbelo, o escribe 'No'" data-ph-en="Describe it, or write 'No'"></textarea>
-  </div>
-  <div class="card">
-    <div class="q" id="q_medicacion">¿Tomas alguna medicación?</div>
-    <textarea id="medicacion" data-ph-es="¿Cuál? O escribe 'No'" data-ph-en="Which one? Or write 'No'"></textarea>
-  </div>
-  <div class="card">
-    <div class="q" id="q_otros">¿Algo más que tu entrenador deba saber?</div>
-    <textarea id="otros" data-ph-es="Opcional" data-ph-en="Optional"></textarea>
+    <div class="grid2">
+      <div><label id="l_nombre">Nombre</label><input id="nombre" autocomplete="given-name"/></div>
+      <div><label id="l_apellido">Apellidos</label><input id="apellido" autocomplete="family-name"/></div>
+    </div>
+    <div class="mt"><label id="l_email">Email</label><input id="email" type="email" autocomplete="email" data-ph-es="tucorreo@email.com" data-ph-en="youremail@email.com"/></div>
+    <div class="mt"><label id="l_tel">Teléfono</label><input id="telefono" type="tel" autocomplete="tel" data-ph-es="Con prefijo, ej: +1 305…" data-ph-en="With country code, e.g. +1 305…"/></div>
+    <div class="mt"><label id="l_bd">Fecha de nacimiento</label><input id="birthdate" type="date"/></div>
+    <div class="mt"><label id="l_gen">Género</label>
+      <div class="yn" data-choice="genero">
+        <button type="button" data-v="hombre" id="gen_h">Hombre</button>
+        <button type="button" data-v="mujer" id="gen_m">Mujer</button>
+        <button type="button" data-v="no_especificado" id="gen_x">Otro</button>
+      </div>
+    </div>
   </div>
 
-  <h1 style="font-size:24px;margin-top:34px" id="f_acc">Crea tu cuenta</h1>
-  <p class="sub" id="f_acc_sub" style="margin-bottom:16px">Con este email y contraseña entrarás en la app.</p>
+  <!-- 2. OBJETIVO -->
+  <div class="sec" id="s_obj">Tu objetivo</div>
   <div class="card">
-    <label id="l_email">Email</label>
-    <input id="email" type="email" autocomplete="email" data-ph-es="tucorreo@email.com" data-ph-en="youremail@email.com"/>
-    <label id="l_pass" style="margin-top:16px">Contraseña</label>
+    <div class="q" id="q_obj">¿Cuál es tu objetivo?</div>
+    <div class="opts" data-choice="objetivo">
+      <button type="button" class="opt" data-v="perder_peso" id="obj1">Perder peso</button>
+      <button type="button" class="opt" data-v="quemar_grasa" id="obj2">Quemar grasa y definir músculo</button>
+      <button type="button" class="opt" data-v="ponerme_en_forma" id="obj3">Ponerme en forma</button>
+      <button type="button" class="opt" data-v="ganar_musculo" id="obj4">Ganar músculo (volumen y fuerza)</button>
+    </div>
+  </div>
+
+  <!-- 3. MEDIDAS -->
+  <div class="sec" id="s_med">Medidas</div>
+  <div class="card">
+    <div class="grid2">
+      <div><label id="l_peso">Peso (kg)</label><input id="peso" type="number" inputmode="decimal" data-ph-es="Ej: 78" data-ph-en="e.g. 78"/></div>
+      <div><label id="l_alt">Altura (cm)</label><input id="altura" type="number" inputmode="numeric" data-ph-es="Ej: 178" data-ph-en="e.g. 178"/></div>
+    </div>
+  </div>
+
+  <!-- 4. PAR-Q -->
+  <div class="sec" id="s_salud">Estado de salud</div>
+  <p class="sub" id="s_salud_sub" style="margin:-4px 2px 14px">Cuestionario rápido de aptitud física (PAR-Q). Responde con sinceridad.</p>
+  <div id="parqWrap"></div>
+
+  <!-- 5. CUENTA -->
+  <div class="sec" id="s_cuenta">Crea tu cuenta</div>
+  <div class="card">
+    <label id="l_pass">Contraseña</label>
     <input id="password" type="password" autocomplete="new-password" data-ph-es="Mínimo 6 caracteres" data-ph-en="At least 6 characters"/>
+    <label id="l_code" class="mt">Código de tu entrenador</label>
+    <input id="codigo" autocomplete="off" autocapitalize="characters" data-ph-es="El código que te dio Alex" data-ph-en="The code your coach gave you" style="letter-spacing:.12em;text-transform:uppercase"/>
   </div>
 
-  <button class="cta" id="submit">Crear mi cuenta</button>
-  <div class="foot" id="foot">Al continuar aceptas que tu entrenador use estos datos para tu seguimiento.</div>
+  <!-- 6. CONSENTIMIENTO -->
+  <div class="card" style="margin-top:12px">
+    <div class="consent">
+      <div class="box" id="consentBox"></div>
+      <div id="consentTxt" style="font-size:13px;color:var(--dim);line-height:1.5;cursor:pointer">Acepto que Castillo Private trate mis datos (incluidos los de salud) para mi seguimiento, según los términos y la política de privacidad.</div>
+    </div>
+  </div>
+
+  <button class="cta" id="submit">Finalizar y entrar</button>
+  <div class="foot" id="foot">Al finalizar, tu cuenta se crea sola y entras directo a la app.</div>
 </div>
 
-<!-- EXITO -->
+<!-- EXITO (fallback si el auto-login falla) -->
 <div id="done" class="hide center" style="padding-top:70px">
   <div class="wm">CASTILLO</div>
   <div class="ok-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgb(120,220,150)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
   <h1 id="d_title">¡Cuenta creada!</h1>
-  <p class="sub" id="d_sub">Ya puedes descargar la app y entrar con tu email y contraseña.</p>
-  <a id="dl" href="#" class="cta" style="display:block;text-decoration:none;box-sizing:border-box">Descargar la app</a>
-  <div class="foot" id="d_foot">Al abrir la app, entra con el mismo email y contraseña que acabas de poner.</div>
+  <p class="sub" id="d_sub">Ya puedes entrar con tu email y la contraseña que acabas de poner.</p>
+  <a id="dl" href="index.html" class="cta" style="display:block;text-decoration:none;box-sizing:border-box">Entrar a la app</a>
 </div>
 
 <script>
 (function(){
   var SUPA='https://pdplhtmhwfqgpyiofujt.supabase.co';
   var ANON='sb_publishable_0vGKDo8tHn-jf88-CZb1UA_dTKD4mkx';
-  // TODO: cuando la app esté PÚBLICA en la App Store, poner aquí su URL (apps.apple.com/app/idXXXXXXXX)
-  var DOWNLOAD_URL='https://apps.apple.com/';
+  var LS='castillo_session', CR='castillo_creds';
 
   var params=new URLSearchParams(location.search);
-  var token=params.get('c')||params.get('token')||'';
-  var yn={};
-
-  // idioma: detecta navegador (EN por defecto salvo español)
+  var choice={}, yn={}, consent=false;
   var lang=(navigator.language||'en').toLowerCase().indexOf('es')===0?'es':'en';
 
+  // PAR-Q (mismas 8 preguntas del PDF aprobado por Alex)
+  var PARQ=[
+    { k:'q1', es:'¿Te ha diagnosticado un médico una enfermedad cardíaca y te recomienda hacer solo actividad física supervisada?', en:'Has a doctor ever diagnosed a heart condition and recommended only medically supervised activity?' },
+    { k:'q2', es:'¿Sufres dolor en el pecho cuando realizas actividad física?', en:'Do you feel chest pain during physical activity?' },
+    { k:'q3', es:'¿Has tenido dolor en el pecho durante el último mes estando en reposo?', en:'Have you had chest pain at rest in the last month?' },
+    { k:'q4', es:'¿Has perdido alguna vez el conocimiento o el equilibrio?', en:'Have you ever lost consciousness or balance?' },
+    { k:'q5', es:'¿Sueles tener sensación de mareo?', en:'Do you often feel dizzy?' },
+    { k:'q6', es:'¿Tienes algún problema óseo o articular que pueda agravarse con la actividad física?', en:'Any bone or joint problem that could worsen with physical activity?' },
+    { k:'q7', es:'¿Te han recetado algún fármaco para la tensión o para un problema cardíaco o circulatorio?', en:'Are you on medication for blood pressure or a heart/circulatory condition?' },
+    { k:'q8', es:'¿Conoces cualquier otra razón que te impida hacer ejercicio sin supervisión médica?', en:'Do you know any other reason you should not exercise without medical supervision?' }
+  ];
+
   var T={
-    es:{ btn:'EN', bad_t:'Enlace no válido', bad_s:'Este enlace no es válido o ya se ha usado. Pídele uno nuevo a tu entrenador.',
-      f_t:'Bienvenido/a', f_s:'Rellena este cuestionario rápido de salud y crea tu cuenta. Solo te llevará un minuto.',
-      q_les:'¿Tienes alguna lesión o molestia física actual?', q_op:'¿Te han operado de algo relevante?',
-      q_dol:'¿Sientes dolor en el pecho al hacer actividad física?', q_mar:'¿Te mareas, te falta el aire o pierdes el equilibrio al entrenar?',
-      q_med:'¿Algún problema de corazón, tensión u otra condición médica que debamos saber?', q_medic:'¿Tomas alguna medicación?',
-      q_otr:'¿Algo más que tu entrenador deba saber?', f_acc:'Crea tu cuenta', f_acc_s:'Con este email y contraseña entrarás en la app.',
-      l_em:'Email', l_pw:'Contraseña', si:'Sí', no:'No', cta:'Crear mi cuenta', foot:'Al continuar aceptas que tu entrenador use estos datos para tu seguimiento.',
-      d_t:'¡Cuenta creada!', d_s:'Ya puedes descargar la app y entrar con tu email y contraseña.', dl:'Descargar la app',
-      d_foot:'Al abrir la app, entra con el mismo email y contraseña que acabas de poner.',
-      e_req:'Responde a todas las preguntas de salud.', e_yn:'Responde Sí o No a las preguntas marcadas.', saving:'Creando…' },
-    en:{ btn:'ES', bad_t:'Invalid link', bad_s:'This link is invalid or has already been used. Ask your coach for a new one.',
-      f_t:'Welcome', f_s:'Fill in this quick health questionnaire and create your account. It only takes a minute.',
-      q_les:'Do you have any current injury or physical discomfort?', q_op:'Have you had any relevant surgery?',
-      q_dol:'Do you feel chest pain during physical activity?', q_mar:'Do you get dizzy, short of breath or lose balance when training?',
-      q_med:'Any heart condition, blood pressure or other medical condition we should know about?', q_medic:'Do you take any medication?',
-      q_otr:'Anything else your coach should know?', f_acc:'Create your account', f_acc_s:'You will log into the app with this email and password.',
-      l_em:'Email', l_pw:'Password', si:'Yes', no:'No', cta:'Create my account', foot:'By continuing you agree that your coach uses this data for your follow-up.',
-      d_t:'Account created!', d_s:'You can now download the app and log in with your email and password.', dl:'Download the app',
-      d_foot:'When you open the app, log in with the same email and password you just set.',
-      e_req:'Please answer all health questions.', e_yn:'Please answer Yes or No to the marked questions.', saving:'Creating…' }
+    es:{ btn:'EN', f_t:'Bienvenido/a', f_s:'Rellena este formulario para crear tu cuenta. Al terminar entrarás directo a tu app.',
+      s_datos:'Datos personales', l_nombre:'Nombre', l_apellido:'Apellidos', l_email:'Email', l_tel:'Teléfono', l_bd:'Fecha de nacimiento', l_gen:'Género',
+      gen_h:'Hombre', gen_m:'Mujer', gen_x:'Otro', s_obj:'Tu objetivo', q_obj:'¿Cuál es tu objetivo?',
+      obj1:'Perder peso', obj2:'Quemar grasa y definir músculo', obj3:'Ponerme en forma', obj4:'Ganar músculo (volumen y fuerza)',
+      s_med:'Medidas', l_peso:'Peso (kg)', l_alt:'Altura (cm)', s_salud:'Estado de salud', s_salud_sub:'Cuestionario rápido de aptitud física (PAR-Q). Responde con sinceridad.',
+      si:'Sí', no:'No', s_cuenta:'Crea tu cuenta', l_pass:'Contraseña', l_code:'Código de tu entrenador',
+      consent:'Acepto que Castillo Private trate mis datos (incluidos los de salud) para mi seguimiento, según los términos y la política de privacidad.',
+      cta:'Finalizar y entrar', foot:'Al finalizar, tu cuenta se crea sola y entras directo a la app.',
+      d_t:'¡Cuenta creada!', d_s:'Ya puedes entrar con tu email y la contraseña que acabas de poner.', dl:'Entrar a la app',
+      saving:'Creando tu cuenta…', e_datos:'Completa nombre, apellidos y email.', e_email:'Email no válido.', e_pass:'La contraseña debe tener al menos 6 caracteres.',
+      e_code:'Escribe el código que te dio tu entrenador.', e_yn:'Responde todas las preguntas de salud.', e_consent:'Debes aceptar el consentimiento para continuar.', e_conn:'Error de conexión. Inténtalo de nuevo.' },
+    en:{ btn:'ES', f_t:'Welcome', f_s:'Fill in this form to create your account. When you finish you go straight into your app.',
+      s_datos:'Personal details', l_nombre:'First name', l_apellido:'Last name', l_email:'Email', l_tel:'Phone', l_bd:'Date of birth', l_gen:'Gender',
+      gen_h:'Male', gen_m:'Female', gen_x:'Other', s_obj:'Your goal', q_obj:'What is your goal?',
+      obj1:'Lose weight', obj2:'Burn fat and get defined', obj3:'Get in shape', obj4:'Build muscle (size and strength)',
+      s_med:'Measurements', l_peso:'Weight (kg)', l_alt:'Height (cm)', s_salud:'Health', s_salud_sub:'Quick physical readiness questionnaire (PAR-Q). Please answer honestly.',
+      si:'Yes', no:'No', s_cuenta:'Create your account', l_pass:'Password', l_code:'Your coach code',
+      consent:'I agree that Castillo Private processes my data (including health data) for my coaching, per the terms and privacy policy.',
+      cta:'Finish and enter', foot:'When you finish, your account is created and you go straight into the app.',
+      d_t:'Account created!', d_s:'You can now log in with your email and the password you just set.', dl:'Enter the app',
+      saving:'Creating your account…', e_datos:'Please complete first name, last name and email.', e_email:'Invalid email.', e_pass:'Password must be at least 6 characters.',
+      e_code:'Enter the code your coach gave you.', e_yn:'Please answer all health questions.', e_consent:'You must accept the consent to continue.', e_conn:'Connection error. Try again.' }
   };
 
   function $(id){ return document.getElementById(id); }
+
+  // pinta las 8 PAR-Q
+  function renderParq(){
+    var w=$('parqWrap'); w.innerHTML='';
+    PARQ.forEach(function(p){
+      var c=document.createElement('div'); c.className='card';
+      c.innerHTML='<div class="q" id="pq_'+p.k+'">'+p[lang]+'</div><div class="yn" data-yn="'+p.k+'"><button type="button" data-v="1">'+T[lang].si+'</button><button type="button" data-v="0">'+T[lang].no+'</button></div>';
+      w.appendChild(c);
+    });
+    w.querySelectorAll('[data-yn]').forEach(function(g){
+      var key=g.getAttribute('data-yn');
+      g.querySelectorAll('button').forEach(function(b){
+        if(yn[key]===(b.getAttribute('data-v')==='1')) b.classList.add('on');
+        b.onclick=function(){ yn[key]=b.getAttribute('data-v')==='1'; g.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); };
+      });
+    });
+  }
+
   function applyLang(){
-    var t=T[lang];
-    $('langBtn').textContent=t.btn; document.documentElement.lang=lang;
-    $('bt_title').textContent=t.bad_t; $('bt_sub').textContent=t.bad_s;
-    $('f_title').textContent=t.f_t; $('f_sub').textContent=t.f_s;
-    $('q_lesiones').textContent=t.q_les; $('q_operaciones').textContent=t.q_op; $('q_dolor').textContent=t.q_dol;
-    $('q_mareos').textContent=t.q_mar; $('q_medico').textContent=t.q_med; $('q_medicacion').textContent=t.q_medic; $('q_otros').textContent=t.q_otr;
-    $('f_acc').textContent=t.f_acc; $('f_acc_sub').textContent=t.f_acc_s; $('l_email').textContent=t.l_em; $('l_pass').textContent=t.l_pw;
-    $('submit').textContent=t.cta; $('foot').textContent=t.foot;
-    $('d_title').textContent=t.d_t; $('d_sub').textContent=t.d_s; $('dl').textContent=t.dl; $('d_foot').textContent=t.d_foot;
-    $('dolor_si').textContent=t.si; $('dolor_no').textContent=t.no; $('mareos_si').textContent=t.si; $('mareos_no').textContent=t.no;
+    var t=T[lang]; $('langBtn').textContent=t.btn; document.documentElement.lang=lang;
+    ['f_title:f_t','f_sub:f_s','s_datos:s_datos','l_nombre:l_nombre','l_apellido:l_apellido','l_email:l_email','l_tel:l_tel','l_bd:l_bd','l_gen:l_gen',
+     'gen_h:gen_h','gen_m:gen_m','gen_x:gen_x','s_obj:s_obj','q_obj:q_obj','obj1:obj1','obj2:obj2','obj3:obj3','obj4:obj4','s_med:s_med','l_peso:l_peso','l_alt:l_alt',
+     's_salud:s_salud','s_salud_sub:s_salud_sub','s_cuenta:s_cuenta','l_pass:l_pass','l_code:l_code','consentTxt:consent','submit:cta','foot:foot',
+     'd_title:d_t','d_sub:d_s','dl:dl'].forEach(function(pair){ var a=pair.split(':'); var el=$(a[0]); if(el) el.textContent=t[a[1]]; });
     document.querySelectorAll('[data-ph-es]').forEach(function(el){ el.placeholder=el.getAttribute('data-ph-'+lang); });
+    renderParq();
   }
   $('langBtn').onclick=function(){ lang=(lang==='es'?'en':'es'); applyLang(); };
 
-  // Sí/No
-  document.querySelectorAll('[data-yn]').forEach(function(g){
-    var key=g.getAttribute('data-yn');
+  // choices (genero, objetivo)
+  document.querySelectorAll('[data-choice]').forEach(function(g){
+    var key=g.getAttribute('data-choice');
     g.querySelectorAll('button').forEach(function(b){
-      b.onclick=function(){ yn[key]=b.getAttribute('data-v')==='1'; g.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); };
+      b.onclick=function(){ choice[key]=b.getAttribute('data-v'); g.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); };
     });
   });
+  function toggleConsent(){ consent=!consent; $('consentBox').classList.toggle('on',consent); }
+  $('consentBox').onclick=toggleConsent; $('consentTxt').onclick=toggleConsent;
 
   function showErr(m){ var e=$('err'); e.textContent=m; e.style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); }
 
+  function saveSessionAndEnter(email, pass){
+    // password grant -> guarda sesión y credenciales igual que la app -> entra logueado
+    return fetch(SUPA+'/auth/v1/token?grant_type=password',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'}, body:JSON.stringify({ email:email, password:pass }) })
+      .then(function(r){ return r.json(); })
+      .then(function(s){
+        if(!s || !s.access_token) throw new Error('nologin');
+        try{ localStorage.setItem(LS, JSON.stringify({ access_token:s.access_token, refresh_token:s.refresh_token, email:(s.user&&s.user.email)||email, ts:Date.now() })); }catch(e){}
+        try{ localStorage.setItem(CR, btoa(unescape(encodeURIComponent(JSON.stringify({ e:email, p:pass }))))); }catch(e){}
+        location.replace('index.html');
+      });
+  }
+
   $('submit').onclick=function(){
-    var t=T[lang];
-    $('err').style.display='none';
-    var email=$('email').value.trim().toLowerCase(), pass=$('password').value;
-    if(yn.dolor_pecho===undefined || yn.mareos===undefined){ showErr(t.e_yn); return; }
-    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showErr(lang==='es'?'Email no válido.':'Invalid email.'); return; }
-    if(pass.length<6){ showErr(lang==='es'?'La contraseña debe tener al menos 6 caracteres.':'Password must be at least 6 characters.'); return; }
-    var parq={ lesiones:$('lesiones').value.trim(), operaciones:$('operaciones').value.trim(),
-      dolor_pecho:!!yn.dolor_pecho, mareos:!!yn.mareos, problema_medico:$('problema_medico').value.trim(),
-      medicacion:$('medicacion').value.trim(), otros:$('otros').value.trim() };
+    var t=T[lang]; $('err').style.display='none';
+    var nombre=$('nombre').value.trim(), apellido=$('apellido').value.trim();
+    var email=$('email').value.trim().toLowerCase(), pass=$('password').value, codigo=$('codigo').value.trim();
+    if(!nombre || !apellido || !email){ showErr(t.e_datos); return; }
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showErr(t.e_email); return; }
+    if(pass.length<6){ showErr(t.e_pass); return; }
+    if(!codigo){ showErr(t.e_code); return; }
+    for(var i=0;i<PARQ.length;i++){ if(yn[PARQ[i].k]===undefined){ showErr(t.e_yn); return; } }
+    if(!consent){ showErr(t.e_consent); return; }
+
+    var parq={}; PARQ.forEach(function(p){ parq[p.k]={ q:p.es, si:!!yn[p.k] }; });
+    var payload={ token:codigo, code:codigo, email:email, password:pass, nombre:nombre, apellido:apellido,
+      telefono:$('telefono').value.trim(), genero:choice.genero||null, birthdate:$('birthdate').value||null,
+      objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true };
+
     $('submit').disabled=true; $('submit').textContent=t.saving;
-    fetch(SUPA+'/functions/v1/alta-cliente',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'},
-      body:JSON.stringify({ token:token, email:email, password:pass, parq:parq }) })
+    fetch(SUPA+'/functions/v1/alta-cliente',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'}, body:JSON.stringify(payload) })
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
       .then(function(res){
         if(!res.ok || !res.j.ok){ $('submit').disabled=false; $('submit').textContent=t.cta; showErr(res.j.error||'Error'); return; }
-        $('form').classList.add('hide'); $('done').classList.remove('hide'); window.scrollTo(0,0);
+        // cuenta creada -> auto-login y entrar a la app
+        saveSessionAndEnter(email, pass).catch(function(){
+          $('form').classList.add('hide'); $('done').classList.remove('hide'); window.scrollTo(0,0);
+        });
       })
-      .catch(function(){ $('submit').disabled=false; $('submit').textContent=t.cta; showErr(lang==='es'?'Error de conexión. Inténtalo de nuevo.':'Connection error. Try again.'); });
+      .catch(function(){ $('submit').disabled=false; $('submit').textContent=t.cta; showErr(t.e_conn); });
   };
 
-  $('dl').href=DOWNLOAD_URL;
-
-  // arranque: valida que hay token
+  // arranque: si viene ?c=CODE en el enlace, prerellena el código
+  var pre=params.get('c')||params.get('token')||''; if(pre) $('codigo').value=pre;
   applyLang();
-  $('loading').classList.add('hide');
-  if(!token){ $('badToken').classList.remove('hide'); }
-  else { $('form').classList.remove('hide'); }
 })();
 </script>
 </body>
