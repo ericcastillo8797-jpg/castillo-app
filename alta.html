@@ -95,7 +95,12 @@
           <div><label id="l_apellido">Apellidos</label><input id="apellido" autocomplete="family-name"/></div>
         </div>
         <div class="mt"><label id="l_email">Email</label><input id="email" type="email" autocomplete="email" data-ph-es="tucorreo@email.com" data-ph-en="youremail@email.com"/></div>
-        <div class="mt"><label id="l_tel">Teléfono</label><input id="telefono" type="tel" autocomplete="tel" data-ph-es="Con prefijo, ej: +1 305…" data-ph-en="With country code, e.g. +1 305…"/></div>
+        <div class="mt"><label id="l_tel">Teléfono</label>
+          <div style="display:flex;gap:9px">
+            <input id="prefijo" type="tel" autocomplete="tel-country-code" inputmode="tel" data-ph-es="+1" data-ph-en="+1" style="flex:0 0 78px;text-align:center;letter-spacing:.02em"/>
+            <input id="telefono" type="tel" autocomplete="tel-national" inputmode="tel" data-ph-es="Número de teléfono" data-ph-en="Phone number" style="flex:1"/>
+          </div>
+        </div>
         <div class="mt"><label id="l_bd">Fecha de nacimiento</label><input id="birthdate" type="date"/></div>
         <div class="mt"><label id="l_gen">Género</label>
           <div class="yn" data-choice="genero">
@@ -347,7 +352,7 @@
     var email=$('email').value.trim().toLowerCase(), pass=$('password').value, codigo=$('codigo').value.trim();
     var parq={}; PARQ.forEach(function(p){ parq[p.k]={ q:p.es, si:!!yn[p.k] }; });
     var payload={ token:codigo, code:codigo, email:email, password:pass, nombre:$('nombre').value.trim(), apellido:$('apellido').value.trim(),
-      telefono:$('telefono').value.trim(), genero:choice.genero||null, birthdate:$('birthdate').value||null,
+      telefono:$('telefono').value.trim(), prefix:$('prefijo').value.trim(), genero:choice.genero||null, birthdate:$('birthdate').value||null,
       objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true, lang:lang, foto:fotoData||null };
     submitting=true; $('nextBtn').disabled=true; $('backBtn').disabled=true; $('nextBtn').textContent=t.creando;
     fetch(SUPA+'/functions/v1/alta-cliente',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'}, body:JSON.stringify(payload) })
