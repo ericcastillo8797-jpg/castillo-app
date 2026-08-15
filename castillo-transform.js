@@ -165,6 +165,7 @@
         var cardio = sItems.filter(function (x) { return x.type === 'cardio'; })[0];
         var statsItem = sItems.filter(function (x) { return x.type === 'bodyStats'; })[0];
         var photoItem = sItems.filter(function (x) { return x.type === 'bodyPhoto'; })[0];
+        var nutriItem = sItems.filter(function (x) { return x.type === 'nutritionPlan' || x.type === 'nutrition'; })[0];
         // lo que el cliente ya registró ese día cuenta como hecho (aunque el entrenador no lo haya marcado)
         var regDay = regByDate[key] || {};
         if (wkItem && regDay.workout) wkItem.done = true;
@@ -181,6 +182,8 @@
         if (photoItem) acts.push({ type: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: !!((photoItem && photoItem.done) || chkFotoDates[key]) });
         if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: cardioSubReal(cardio, regDay.pasos), pasos: (cardio.config && cardio.config.pasos) || '', pasosHechos: (regDay.pasos != null ? regDay.pasos : ''), done: !!cardio.done });
         if (wkItem) acts.push({ type: 'workout', label: wkItem.title, sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
+        // Nutrición del programa (con el título TAL CUAL lo puso el entrenador en el CRM, ej. "P.S Alimentación aumento músculo M.1")
+        if (nutriItem) acts.push({ type: 'nutricion', label: nutriItem.title || 'Nutrición', sub: 'Marca lo que has comido', done: !!nutriItem.done });
         out.push({
           d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
           rom: ROM[i], t: title, s: status, wk: wkKey, n: nCount, acts: acts,
@@ -498,7 +501,9 @@
     if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: _cItem.title || 'Caminar', sub: cardioSubReal(_cItem, regToday.pasos), pasos: (_cItem.config && _cItem.config.pasos) || '', pasosHechos: (regToday.pasos != null ? regToday.pasos : ''), done: doneT('cardio') || !!regToday.cardio }); }
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
+    var _nutToday = todayItems.filter(function (x) { return x.type === 'nutritionPlan' || x.type === 'nutrition'; })[0];
     if (DIET.length) todayTasks.push({ key: 'nutricion', label: 'Pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.every(function (m) { return comHoy[m.id] != null; }) });
+    else if (_nutToday) todayTasks.push({ key: 'nutricion', label: _nutToday.title || 'Nutrición', sub: 'Marca lo que has comido', done: !!_nutToday.done });
     var trainDoneN = todayTasks.filter(function (t) { return t.done; }).length;
     var planHoyPct = todayTasks.length ? Math.round(trainDoneN / todayTasks.length * 100) : 0;
     // cumplimiento semanal (planificado vs completado en la semana actual)
