@@ -131,6 +131,10 @@
           data.perfil = merged;
         })();
         _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr; _ctx.tz = _tz;
+        // Sincroniza el estado "WHOOP conectado" con la tabla real (por si conectó/desconectó en otro sitio)
+        api('/rest/v1/whoop_tokens?select=cliente_email&limit=1&cliente_email=ilike.' + encodeURIComponent(_ctx.email), {}, token)
+          .then(function (rows) { try { var k = 'app_con_' + _ctx.email + '_WHOOP'; if (rows && rows.length) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) {} })
+          .catch(function () {});
         window.__DATA = data;
         try { registerPush(); } catch (e) {}   // registra el móvil para notificaciones (solo app nativa)
         try { syncSaludPasos(); } catch (e) {}   // lee pasos de Apple Salud → marca cardio (solo app nativa)
@@ -217,6 +221,13 @@
   // Estado de conexión de cada app por usuario (Apple Salud es el flag real; el resto se marca en este móvil).
   function _appKey(name) { return 'app_con_' + (_ctx.email || '') + '_' + String(name).replace(/\s+/g, '_'); }
   function appConectado(name) { if (name === 'Apple Salud') return saludConectado(); try { return localStorage.getItem(_appKey(name)) === '1'; } catch (e) { return false; } }
+  // WHOOP: pide al servidor la URL de login OAuth (con el token del cliente) para abrirla.
+  function conectarWhoop() {
+    if (!_ctx.token) return Promise.resolve({ ok: false });
+    return fetch(SUPA + '/functions/v1/whoop-connect', {
+      method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': 'application/json' }
+    }).then(function (r) { return r.json(); }).catch(function () { return { ok: false }; });
+  }
   function conectarApp(name) { try { localStorage.setItem(_appKey(name), '1'); } catch (e) {} }
   function desconectarApp(name) { try { localStorage.removeItem(_appKey(name)); } catch (e) {} }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
@@ -354,6 +365,7 @@
     appConectado: appConectado,
     conectarApp: conectarApp,
     desconectarApp: desconectarApp,
+    conectarWhoop: conectarWhoop,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
