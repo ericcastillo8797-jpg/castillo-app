@@ -383,7 +383,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           <div style="font-family:'Instrument Serif',serif;font-size:24px;line-height:1;margin-top:6px;color:#fff">{{ resumenMes.global }}</div>
         </div>
         <div style="flex:1;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.06);border-radius:14px;padding:12px 13px">
-          <div style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.pesoCorporal }} · {{ resumenMes.fotos }} 📷</div>
+          <div style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.pesoCorporal }} · {{ resumenMes.fotos }}</div>
           <div style="font-size:15px;font-weight:600;margin-top:6px">{{ resumenMes.pesoIni }} → {{ resumenMes.pesoFin }}</div>
           <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.45);margin-top:1px">{{ resumenMes.pesoDelta }}</div>
         </div>
@@ -2522,7 +2522,7 @@ class Component extends DCLogic {
       ],
       pesoIni: _rm.peso.ini, pesoFin: _rm.peso.fin,
       pesoDelta: (_rm.peso.delta > 0 ? '+' : '') + String(_rm.peso.delta).replace('.', ',') + ' kg', pesoUp: _rm.peso.delta > 0,
-      fotos: String(_rm.fotos)
+      fotos: String(_rm.fotos) + ' ' + (this.state.lang === 'en' ? 'photos' : 'fotos')
     } : { hay: false };
     // detalle del cuadro pulsado
     const _det = st.mesDetail;
