@@ -543,7 +543,8 @@
     regList.forEach(function (r) { var f = (r.fecha || '').slice(0, 7); if (f) _monSet[f] = 1; });
     Object.keys(comByDate).forEach(function (k) { _monSet[k.slice(0, 7)] = 1; });
     chkList.forEach(function (c) { var f = (c.fecha || '').slice(0, 7); if (f) _monSet[f] = 1; });
-    _addMon(now);
+    // Nota: NO se añade el mes actual "por defecto"; el Resumen del mes solo existe si hay actividad real ese mes
+    // (así un cliente nuevo no ve un resumen vacío en cero — ni puede compartirlo).
     var _monKeys = Object.keys(_monSet).filter(function (k) { return /^\d{4}-\d{2}$/.test(k); }).sort().reverse().slice(0, 12);
     var resumenMeses = _monKeys.map(function (mk) {
       var yr = +mk.slice(0, 4), mo = +mk.slice(5, 7) - 1;
