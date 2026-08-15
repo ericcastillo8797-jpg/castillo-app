@@ -1988,18 +1988,43 @@ class Component extends DCLogic {
       + '</body></html>';
     return { doc: doc, nombre: 'Resumen-' + m.label.replace(/\s+/g, '-') + '.pdf' };
   };
+  // Espera a que carguen jsPDF + html2canvas (CDN) — evita el fallo "no se puede generar" si aún no están.
+  _ensurePdfLibs = async () => {
+    for (var i = 0; i < 40; i++) {
+      if (window.jspdf && window.jspdf.jsPDF && window.html2canvas) return true;
+      await new Promise(function (r) { setTimeout(r, 80); });
+    }
+    return false;
+  };
+  _isIOS = () => {
+    try { if (window.Capacitor && window.Capacitor.getPlatform) return window.Capacitor.getPlatform() === 'ios'; } catch (e) {}
+    return /iP(hone|ad|od)/.test(navigator.userAgent || '');
+  };
+  // Pasa el PDF al menú del sistema (en iOS es la vía fiable para Imprimir / Guardar en Archivos / Compartir).
+  _sharePdf = async (blob, nombre, title) => {
+    var fname = String(nombre || 'documento').replace(/\s+/g, '_') + '.pdf';
+    var file = new File([blob], fname, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: title || 'PDF' }); return true; }
+    return false;
+  };
+  _savePdf = async (blob, nombre) => {
+    var fname = String(nombre || 'documento').replace(/\s+/g, '_') + '.pdf';
+    if (this._isIOS()) { try { if (await this._sharePdf(blob, nombre, fname)) return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  };
+
   _resumenPdfBlob = async () => {
     const rm = (window.__DATA && window.__DATA.resumenMeses) || [];
     const mi = Math.min(Math.max(0, this.state.mesIdx || 0), Math.max(0, rm.length - 1));
     const m = rm[mi]; if (!m) return null;
-    if (!(window.jspdf && window.jspdf.jsPDF) || !window.html2canvas) return null;
+    if (!(await this._ensurePdfLibs())) return null;
     const built = this._resumenDocHtml(m);
     var old = document.getElementById('resumenGenFrame'); if (old) old.remove();
     var f = document.createElement('iframe'); f.id = 'resumenGenFrame';
     f.setAttribute('style', 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;background:#fff');
     document.body.appendChild(f);
     var fd = f.contentWindow.document; fd.open(); fd.write(built.doc); fd.close();
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 220));
     var canvas = await window.html2canvas(fd.body, { scale: 2, backgroundColor: '#ffffff', windowWidth: 794, width: 794 });
     f.remove();
     var img = canvas.toDataURL('image/jpeg', 0.92);
@@ -2009,18 +2034,19 @@ class Component extends DCLogic {
     return { blob: pdf.output('blob'), nombre: built.nombre };
   };
   resumenShare = async () => {
-    try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando…'); return; }
-      try { var file = new File([b.blob], b.nombre, { type: 'application/pdf' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: b.nombre }); return; } } catch (e) {}
-      var url = URL.createObjectURL(b.blob); var a = document.createElement('a'); a.href = url; a.download = b.nombre; document.body.appendChild(a); a.click(); a.remove();
-    } catch (e) { this.flash('No se pudo generar el PDF'); }
+    try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando… inténtalo de nuevo'); return; }
+      if (await this._sharePdf(b.blob, b.nombre, b.nombre)) return;
+      await this._savePdf(b.blob, b.nombre);
+    } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar el PDF'); }
   };
   resumenDownload = async () => {
-    try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando…'); return; }
-      var url = URL.createObjectURL(b.blob); var a = document.createElement('a'); a.href = url; a.download = b.nombre; document.body.appendChild(a); a.click(); a.remove();
-    } catch (e) { this.flash('No se pudo generar el PDF'); }
+    try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando… inténtalo de nuevo'); return; }
+      await this._savePdf(b.blob, b.nombre);
+    } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar el PDF'); }
   };
   resumenPrint = async () => {
-    try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando…'); return; }
+    try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando… inténtalo de nuevo'); return; }
+      if (this._isIOS()) { try { if (await this._sharePdf(b.blob, b.nombre, b.nombre)) return; } catch (e) { if (e && e.name === 'AbortError') return; } }
       var url = URL.createObjectURL(b.blob); var old = document.getElementById('resumenPrintFrame'); if (old) old.remove();
       var f = document.createElement('iframe'); f.id = 'resumenPrintFrame'; f.setAttribute('style', 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0');
       f.onload = () => { this.later(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} }, 300); };
@@ -2214,7 +2240,7 @@ class Component extends DCLogic {
 
   // genera el PDF de 1 hoja (mismo diseño 3 columnas) renderizando el HTML a imagen -> A4. Lo usan Imprimir y Compartir.
   _dietPdfBlob = async () => {
-    if (!(window.jspdf && window.jspdf.jsPDF) || !window.html2canvas) return null;
+    if (!(await this._ensurePdfLibs())) return null;
     const built = this._dietDocHtml();
     var old = document.getElementById('dietaGenFrame'); if (old) old.remove();
     var f = document.createElement('iframe');
@@ -2222,7 +2248,7 @@ class Component extends DCLogic {
     f.setAttribute('style', 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;background:#fff');
     document.body.appendChild(f);
     var fd = f.contentWindow.document; fd.open(); fd.write(built.doc); fd.close();
-    await new Promise(r => setTimeout(r, 550));
+    await new Promise(r => setTimeout(r, 220));
     var canvas = await window.html2canvas(fd.body, { scale: 2, backgroundColor: '#ffffff', windowWidth: 794, width: 794 });
     f.remove();
     var img = canvas.toDataURL('image/jpeg', 0.92);
@@ -2238,6 +2264,8 @@ class Component extends DCLogic {
     try {
       var built = await this._dietPdfBlob();
       if (!built) { this.flash('Cargando… inténtalo de nuevo'); return; }
+      // iOS: el print del webview no es fiable -> menú del sistema (incluye Imprimir y Guardar en Archivos)
+      if (this._isIOS()) { try { if (await this._sharePdf(built.blob, built.nombre, 'Dieta')) return; } catch (e) { if (e && e.name === 'AbortError') return; } }
       var url = URL.createObjectURL(built.blob);
       var old = document.getElementById('dietaPrintFrame'); if (old) old.remove();
       var f = document.createElement('iframe');
@@ -2254,24 +2282,18 @@ class Component extends DCLogic {
     try {
       var built = await this._dietPdfBlob();
       if (!built) { this.flash('Cargando… inténtalo de nuevo'); return; }
-      var fname = String(built.nombre || 'dieta').replace(/\s+/g, '_') + '.pdf';
-      var file = new File([built.blob], fname, { type: 'application/pdf' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Dieta', text: (this.state.lang === 'en' ? 'Meal plan' : 'Plan de alimentación') });
-      } else {
-        var url = URL.createObjectURL(built.blob); var a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
-      }
+      if (await this._sharePdf(built.blob, built.nombre, this.state.lang === 'en' ? 'Meal plan' : 'Plan de alimentación')) return;
+      await this._savePdf(built.blob, built.nombre);
     } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo compartir la dieta'); }
   };
 
-  // Descargar: el mismo PDF de la dieta guardado directamente
+  // Descargar / Guardar: en iOS pasa por el menú del sistema (Guardar en Archivos); en el resto descarga directa
   downloadDiet = async () => {
     try {
       var built = await this._dietPdfBlob();
       if (!built) { this.flash('Cargando… inténtalo de nuevo'); return; }
-      var fname = String(built.nombre || 'dieta').replace(/\s+/g, '_') + '.pdf';
-      var url = URL.createObjectURL(built.blob); var a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
-    } catch (e) { this.flash('No se pudo generar la dieta'); }
+      await this._savePdf(built.blob, built.nombre);
+    } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar la dieta'); }
   };
 
   startWorkout = (wk, title) => {
