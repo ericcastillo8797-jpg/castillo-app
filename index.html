@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=94"></script>
-<script src="./castillo-transform.js?v=94"></script>
-<script src="./castillo-equiv.js?v=94"></script>
-<script src="./castillo-data.js?v=94"></script>
+<script src="./castillo-i18n.js?v=95"></script>
+<script src="./castillo-transform.js?v=95"></script>
+<script src="./castillo-equiv.js?v=95"></script>
+<script src="./castillo-data.js?v=95"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -88,6 +88,13 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </div>
 
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.tareasHoy }}</div>
+    <sc-if value="{{ noPlanTasks }}">
+    <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:22px 18px;text-align:center">
+      <div style="font-size:14px;font-weight:600">{{ L.sinPlanTitulo }}</div>
+      <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.42);margin-top:5px">{{ L.sinPlanSub }}</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ hasPlanTasks }}">
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
       <sc-for list="{{ planTasks }}" as="t" hint-placeholder-count="4">
       <div onClick="{{ t.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:{{ t.cursor }};transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
@@ -104,6 +111,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </div>
       </sc-for>
     </div>
+    </sc-if>
 
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.resumenSemanal }}</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 16px 6px">
@@ -180,7 +188,8 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
     <!-- (Las apps conectadas se movieron a Ajustes > Aplicaciones conectadas) -->
 
-    <!-- Nutrición: macros objetivo + botón a la dieta completa -->
+    <!-- Nutrición: macros objetivo + botón a la dieta completa (solo si el entrenador ya le asignó dieta) -->
+    <sc-if value="{{ hasDiet }}">
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.nutricion }}</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:16px">
       <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34);margin-bottom:12px">{{ L.objetivosDiarios }}</div>
@@ -210,11 +219,20 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
       </div>
     </div>
+    </sc-if>
+    <sc-if value="{{ noDiet }}">
+    <div style="margin:28px 0 0;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:22px 18px;text-align:center">
+      <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin-bottom:10px">{{ L.nutricion }}</div>
+      <div style="font-size:14px;font-weight:600">{{ L.sinDietaTitulo }}</div>
+      <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.42);margin-top:5px">{{ L.sinDietaSub }}</div>
+    </div>
+    </sc-if>
   </div>
   </sc-if>
 
   <sc-if value="{{ isDiet }}" hint-placeholder-val="{{ false }}">
   <div data-screen-label="Dieta" style="animation:cTabIn .46s cubic-bezier(.2,.8,.2,1) both;padding:calc(64px + env(safe-area-inset-top)) 0 132px">
+    <sc-if value="{{ hasDiet }}">
     <div style="padding:0 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
       <div style="min-width:0">
         <div style="font-family:'Instrument Serif',serif;font-size:36px;line-height:1">{{ L.dieta }}</div>
@@ -272,6 +290,13 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </div>
       <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:14px">{{ dietNote }}</div>
     </div>
+    </sc-if>
+    <sc-if value="{{ noDiet }}">
+    <div style="padding:60px 24px;text-align:center">
+      <div style="font-size:15px;font-weight:600">{{ L.sinDietaTitulo }}</div>
+      <div style="font-size:12.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:6px">{{ L.sinDietaSub }}</div>
+    </div>
+    </sc-if>
   </div>
   </sc-if>
 
@@ -393,6 +418,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </div>
     </sc-if>
 
+    <sc-if value="{{ hasWeights }}">
     <div style="margin-top:16px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 18px 12px">
       <div style="display:flex;align-items:flex-end;justify-content:space-between">
         <div>
@@ -428,6 +454,14 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <span>{{ chartL0 }}</span><span>{{ chartL1 }}</span><span>{{ chartL2 }}</span>
       </div>
     </div>
+    </sc-if>
+    <sc-if value="{{ noWeights }}">
+    <div style="margin-top:16px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:26px 18px;text-align:center">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">{{ L.pesoCorporal }}</div>
+      <div style="font-size:14px;font-weight:600;margin-top:10px">{{ L.sinPesoTitulo }}</div>
+      <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.42);margin-top:5px">{{ L.sinPesoSub }}</div>
+    </div>
+    </sc-if>
 
     <div style="display:flex;gap:4px;margin-top:16px;padding:3px;background:var(--s1,#101012);border:.5px solid rgba(var(--fgc,255,255,255),.08);border-radius:12px">
       <sc-for list="{{ evoTabs }}" as="t" hint-placeholder-count="2">
@@ -447,6 +481,12 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
       </div>
       <sc-if value="{{ evoCompOpen }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ noMet }}">
+      <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:22px 18px;text-align:center;margin-top:14px">
+        <div style="font-size:14px;font-weight:600">{{ L.sinMedidasTitulo }}</div>
+        <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.42);margin-top:5px">{{ L.sinMedidasSub }}</div>
+      </div>
+      </sc-if>
       <sc-for list="{{ metGroups }}" as="g" hint-placeholder-count="4">
       <div>
         <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 10px">{{ g.g }}</div>
@@ -1724,22 +1764,24 @@ let PHOTOSETS = [
 function applyRealData(d) {
   if (!d) return;
   var nz = function (v) { return v && (v.length || Object.keys(v).length); };
-  if (nz(d.DIET)) DIET = d.DIET;
+  // DATOS PERSONALES del cliente: SIEMPRE se toman de sus datos reales (vacío si es nuevo) — nunca la demo de diseño.
+  DIET = d.DIET || [];
+  WEEKS = d.WEEKS || [];
+  APPTS = d.APPTS || [];
+  MET = d.MET || [];
+  WEIGHTS = d.WEIGHTS || [];
+  chartLabels = d.chartLabels || [];
+  PHOTOSETS = d.PHOTOSETS || [];
+  SESS = d.SESS || [];
+  DATES = d.DATES || [];
+  if (nz(d.DAYS)) DAYS = d.DAYS;   // la agenda semanal siempre viene calculada (semana actual)
+  // Biblioteca GLOBAL de técnica/ejercicios (no es personal): si viene de la BBDD se usa; si no, se deja la de referencia.
   if (nz(d.EX)) EX = d.EX;
   if (nz(d.WK)) WK = d.WK;
-  VAR = d.VAR || {};
-  if (nz(d.DAYS)) DAYS = d.DAYS;
-  if (nz(d.WEEKS)) WEEKS = d.WEEKS;
-  EXPROG = d.EXPROG || [];
-  if (nz(d.APPTS)) APPTS = d.APPTS;
-  if (nz(d.MET)) MET = d.MET;
   if (nz(d.VID)) VID = d.VID;
-  if (nz(d.WEIGHTS)) WEIGHTS = d.WEIGHTS;
-  if (nz(d.chartLabels)) chartLabels = d.chartLabels;
-  if (nz(d.PHOTOSETS)) PHOTOSETS = d.PHOTOSETS;
-  if (nz(d.SESS)) SESS = d.SESS;
-  if (nz(d.DATES)) DATES = d.DATES;
   if (nz(d.SHOTS)) SHOTS = d.SHOTS;
+  VAR = d.VAR || {};
+  EXPROG = d.EXPROG || [];
 }
 
 class Component extends DCLogic {
@@ -1806,7 +1848,17 @@ class Component extends DCLogic {
         try { window.history.replaceState({}, '', window.location.pathname); } catch (e) {}
       }
     } catch (e) {}
-    if (this.stage === 'splash') this.runSplash();
+    // Recién dado de alta (alta.html redirige con ?entrar=1 y la sesión ya guardada): entra directo, sin pedir login otra vez.
+    var _autoEnter = false;
+    try {
+      var _e = new URLSearchParams(window.location.search).get('entrar');
+      if (_e && window.CastilloData && window.CastilloData.hasSession()) { _autoEnter = true; try { window.history.replaceState({}, '', window.location.pathname); } catch (e) {} }
+    } catch (e) {}
+    if (_autoEnter) {
+      this.setState({ stage: 'scan', scan: 1 });
+      window.CastilloData.restoreSession().then(this._enterWith)
+        .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'Vuelve a acceder con tu correo'); });
+    } else if (this.stage === 'splash') { this.runSplash(); }
     if (this.state.tab === 'evo') this.playEvo();
     if (this.state.tab === 'home') this.playHome();
     // deslizar el tirador del sheet hacia abajo para cerrarlo
@@ -2822,18 +2874,20 @@ class Component extends DCLogic {
       };
     });
 
-    const mn = Math.min.apply(null, WEIGHTS), mx = Math.max.apply(null, WEIGHTS);
+    const _hasW = WEIGHTS.length > 0;   // cliente nuevo sin registros de peso → gráfico vacío (no demo)
+    const mn = _hasW ? Math.min.apply(null, WEIGHTS) : 0, mx = _hasW ? Math.max.apply(null, WEIGHTS) : 0;
     const cw = 320, chh = 82, padL = 34, rngW = (mx - mn) || 1;   // padL = hueco para las etiquetas de peso (eje Y)
     const yOfW = v => chh - ((v - mn) / rngW) * (chh - 12) - 6;
+    const _wDen = (WEIGHTS.length - 1) || 1;
     const pts = WEIGHTS.map((v, i) => {
-      const x = padL + (i * (cw - padL)) / (WEIGHTS.length - 1);
+      const x = padL + (i * (cw - padL)) / _wDen;
       return [Math.round(x * 10) / 10, Math.round(yOfW(v) * 10) / 10];
     });
-    const chart = {
+    const chart = _hasW ? {
       line: pts.map(p => p[0] + ',' + p[1]).join(' '),
       area: pts.map(p => p[0] + ',' + p[1]).join(' ') + ' ' + cw + ',92 ' + padL + ',92',
       lx: pts[pts.length - 1][0], ly: pts[pts.length - 1][1]
-    };
+    } : { line: '', area: '', lx: 0, ly: 0 };
     // rayas horizontales + etiqueta de peso en el eje izquierdo (para leer qué pesaba en cada momento)
     const _wround = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
     const chartRows = [0, 1, 2, 3].map(r => { const val = mx - rngW * (r / 3); const y = Math.round(yOfW(val) * 10) / 10; return { y, x2: cw, x1: padL, lx: padL - 5, label: _wround(val) }; });
@@ -2984,6 +3038,10 @@ class Component extends DCLogic {
         bibliotecaTecnica: T('Biblioteca de técnica'),
         sincroniza: T('Sincroniza tu actividad'), sincronizaSub: T('Conecta tu dispositivo para volcar tu actividad automáticamente'), conectar: T('Conectar'),
         nutricion: T('Nutrición'), objetivosDiarios: T('Tus objetivos diarios'), verMiDieta: T('Ver toda mi dieta'), verDietaSub: T('Desayuno, comida, cena y todas tus opciones'), tuDieta: T('Tu dieta completa'), composicionMedidas: T('Composición y medidas'), tamanoTexto: T('Tamaño de texto'), registrarEvo: T('Registrar evolución'),
+        sinDietaTitulo: isEN ? 'You don’t have a diet yet' : 'Aún no tienes dieta asignada', sinDietaSub: isEN ? 'Your coach will set it up and it’ll appear here.' : 'Tu entrenador la preparará y aparecerá aquí.',
+        sinPlanTitulo: isEN ? 'Nothing planned for today yet' : 'Aún no tienes plan para hoy', sinPlanSub: isEN ? 'Your coach will assign your tasks and they’ll appear here.' : 'Tu entrenador te asignará tus tareas y aparecerán aquí.',
+        sinPesoTitulo: isEN ? 'No weight logged yet' : 'Aún no hay registros de peso', sinPesoSub: isEN ? 'When you log your progress, your chart will show here.' : 'Cuando registres tu evolución, verás aquí tu gráfica.',
+        sinMedidasTitulo: isEN ? 'No measurements yet' : 'Aún no hay medidas', sinMedidasSub: isEN ? 'When you log your progress, your measurements will show here.' : 'Cuando registres tu evolución, verás aquí tus medidas.',
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'), descargarPdf: T('Puedes descargar en PDF'),
         pesoCorporal: T('Peso corporal'), variacion: T('variación'), empezoEn: T('Empezó en'), ahora: T('ahora'),
         progresoTitulo: T('Tu progreso'), fotoPrimeras: T('Primeras'), fotoUltimas: T('Últimas'), deslizaFotos: T('Desliza para ver frontal, lateral y espalda'),
@@ -3008,6 +3066,10 @@ class Component extends DCLogic {
       langEsBg: !isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEsFg: !isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEsBd: !isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
       langEnBg: isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEnFg: isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEnBd: isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
       isHome: st.tab === 'home', isDiet: st.tab === 'diet', isTrain: st.tab === 'train', isEvo: st.tab === 'evo',
+      hasDiet: DIET.length > 0, noDiet: DIET.length === 0,
+      hasPlanTasks: planTasks.length > 0, noPlanTasks: planTasks.length === 0,
+      hasWeights: _hasW, noWeights: !_hasW,
+      hasMet: metGroups.length > 0, noMet: metGroups.length === 0,
       goHome: this.go('home'), goDiet: this.go('diet'), goTrain: this.go('train'), goEvo: this.go('evo'),
       cHome: tabColor('home'), cDiet: tabColor('diet'), cTrain: tabColor('train'), cEvo: tabColor('evo'),
 

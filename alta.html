@@ -130,7 +130,7 @@
       <div id="parqWrap"></div>
     </div></div>
 
-    <!-- PASO 5 · CUENTA -->
+    <!-- PASO 5 · CUENTA + ACEPTAR POLÍTICA (último paso) -->
     <div class="step" data-step="4"><div class="maxw">
       <h1 id="t4">Crea tu cuenta</h1>
       <p class="sub" id="s4">Con esto entrarás en tu app. El código te lo dio tu entrenador.</p>
@@ -141,13 +141,6 @@
         <label id="l_code" class="mt">Código de tu entrenador</label>
         <input id="codigo" autocomplete="off" autocapitalize="characters" data-ph-es="El código que te dio Alex" data-ph-en="The code your coach gave you" style="letter-spacing:.12em;text-transform:uppercase"/>
       </div>
-    </div></div>
-
-    <!-- PASO 6 · CONSENTIMIENTO -->
-    <div class="step" data-step="5"><div class="maxw">
-      <h1 id="t5">Un último paso</h1>
-      <p class="sub" id="s5">Revisa y acepta para terminar.</p>
-      <div class="err" id="err5"></div>
       <div class="card">
         <div class="consent">
           <div class="box" id="consentBox"></div>
@@ -178,7 +171,7 @@
   var LS='castillo_session', CR='castillo_creds';
   var params=new URLSearchParams(location.search);
   var lang=(navigator.language||'en').toLowerCase().indexOf('es')===0?'es':'en';
-  var choice={}, yn={}, consent=false, cur=0, TOTAL=6, submitting=false;
+  var choice={}, yn={}, consent=false, cur=0, TOTAL=5, submitting=false;
 
   var PARQ=[
     { k:'q1', es:'¿Te ha diagnosticado un médico una enfermedad cardíaca y te recomienda hacer solo actividad física supervisada?', en:'Has a doctor ever diagnosed a heart condition and recommended only medically supervised activity?' },
@@ -240,7 +233,7 @@
   function applyLang(){
     var t=T[lang]; $('langBtn').textContent=t.btn; document.documentElement.lang=lang;
     ['t0','s0','l_nombre','l_apellido','l_email','l_tel','l_bd','l_gen','gen_h','gen_m','gen_x','t1','s1','obj1','obj2','obj3','obj4',
-     't2','s2','l_peso','l_alt','t3','s3','t4','s4','l_pass','l_code','t5','s5','consentTxt:consent','d_title:d_t','d_sub:d_s','dl:dl'].forEach(function(p){
+     't2','s2','l_peso','l_alt','t3','s3','t4','s4','l_pass','l_code','consentTxt:consent','d_title:d_t','d_sub:d_s','dl:dl'].forEach(function(p){
       var a=p.split(':'), id=a[0], key=a[1]||a[0]; var el=$(id); if(el) el.textContent=t[key];
     });
     document.querySelectorAll('[data-ph-es]').forEach(function(el){ el.placeholder=el.getAttribute('data-ph-'+lang); });
@@ -291,8 +284,7 @@
     } else if(n===4){
       if(($('password').value||'').length<6){ err(4,t.e_pass); return false; }
       if(!$('codigo').value.trim()){ err(4,t.e_code); return false; }
-    } else if(n===5){
-      if(!consent){ err(5,t.e_consent); return false; }
+      if(!consent){ err(4,t.e_consent); return false; }
     }
     err(n,''); return true;
   }
@@ -312,7 +304,7 @@
         if(!s || !s.access_token) throw new Error('nologin');
         try{ localStorage.setItem(LS, JSON.stringify({ access_token:s.access_token, refresh_token:s.refresh_token, email:(s.user&&s.user.email)||email, ts:Date.now() })); }catch(e){}
         try{ localStorage.setItem(CR, btoa(unescape(encodeURIComponent(JSON.stringify({ e:email, p:pass }))))); }catch(e){}
-        location.replace('index.html');
+        location.replace('index.html?entrar=1');
       });
   }
 
@@ -327,13 +319,13 @@
     fetch(SUPA+'/functions/v1/alta-cliente',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'}, body:JSON.stringify(payload) })
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
       .then(function(res){
-        if(!res.ok || !res.j.ok){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(5,res.j.error||'Error'); return; }
+        if(!res.ok || !res.j.ok){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(4,res.j.error||'Error'); return; }
         saveSessionAndEnter(email, pass).catch(function(){
           document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('active'); });
           $('nav').style.display='none'; $('done').style.display='flex';
         });
       })
-      .catch(function(){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(5,t.e_conn); });
+      .catch(function(){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(4,t.e_conn); });
   }
 
   // arranque: prellena código de ?c= si viene en el enlace

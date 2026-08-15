@@ -178,6 +178,8 @@
     return (H.isHealthAvailable ? H.isHealthAvailable() : Promise.resolve({ available: true })).then(function (a) {
       if (a && a.available === false) return;
       return H.requestHealthPermissions({ permissions: ['READ_STEPS'] }).catch(function () {}).then(function () {
+        // permiso pedido en la entrada → marca Apple Salud como conectado (para que Ajustes lo muestre en verde sin volver a tocar)
+        try { localStorage.setItem('salud_conectado_' + (_ctx.email || ''), '1'); } catch (e) {}
         var now = new Date();
         var start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
         return H.queryAggregated({ startDate: start, endDate: now.toISOString(), dataType: 'steps', bucket: 'day' });
