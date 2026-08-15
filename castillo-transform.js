@@ -205,6 +205,12 @@
       if (wt === mon.getTime()) curWeekIdx = WEEKS.length;
       WEEKS.push(wobj);
     }
+    // Si la semana actual está vacía (aún no empieza el plan), abre la agenda en la primera semana CON tareas
+    // (así el cliente ve el programa que le acaban de asignar aunque empiece en unos días).
+    var _wkHasContent = function (w) { return w && w.days && w.days.some(function (d) { return (d.acts || []).length > 0; }); };
+    if (WEEKS[curWeekIdx] && !_wkHasContent(WEEKS[curWeekIdx])) {
+      for (var _wi = curWeekIdx + 1; _wi < WEEKS.length; _wi++) { if (_wkHasContent(WEEKS[_wi])) { curWeekIdx = _wi; break; } }
+    }
 
     // ---------- APPTS (proximas sesiones) ----------
     var APPTS = [];
