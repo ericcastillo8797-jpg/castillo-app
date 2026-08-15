@@ -186,7 +186,7 @@
   var ANON='sb_publishable_0vGKDo8tHn-jf88-CZb1UA_dTKD4mkx';
   var LS='castillo_session', CR='castillo_creds';
   var params=new URLSearchParams(location.search);
-  var lang=(navigator.language||'en').toLowerCase().indexOf('es')===0?'es':'en';
+  var lang='en';   // el formulario arranca SIEMPRE en inglés (la mayoría de clientes son en inglés); el cliente puede pasarlo a español arriba a la derecha
   var choice={}, yn={}, consent=false, cur=0, TOTAL=5, submitting=false, fotoData='';
 
   var PARQ=[
