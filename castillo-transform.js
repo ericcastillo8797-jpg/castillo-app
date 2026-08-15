@@ -50,6 +50,9 @@
     chkList.forEach(function (c) { var v = c.valores || {}; Object.keys(v).forEach(function (k) { if (v[k] != null && v[k] !== '') { (chkByKey[k] || (chkByKey[k] = [])).push({ fecha: (c.fecha || '').slice(0, 10), val: v[k] }); } }); });
     // días en los que el cliente pasó un check-in (métricas o fotos) -> cuentan como "métricas hechas"
     var chkDates = {}, chkWeeks = {}; chkList.forEach(function (c) { if ((c.valores && Object.keys(c.valores).length) || (c.fotos && Object.keys(c.fotos).length)) { var _f = (c.fecha || '').slice(0, 10); chkDates[_f] = true; var _dd = new Date(_f + 'T00:00:00'); if (!isNaN(_dd)) chkWeeks[_dd.getFullYear() + '-W' + isoWeek(_dd)] = true; } });
+    // por-día: qué se registró (medidas vs fotos) para marcar cada tarea por separado
+    var chkMedDates = {}, chkFotoDates = {};
+    chkList.forEach(function (c) { var _f = (c.fecha || '').slice(0, 10); if (c.valores && Object.keys(c.valores).length) chkMedDates[_f] = true; if (c.fotos && Object.keys(c.fotos).length) chkFotoDates[_f] = true; });
     function wkKeyOf(dt) { return dt.getFullYear() + '-W' + isoWeek(dt); }
     function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
     function cardioSub(item) { var p = item && item.config && item.config.pasos; return p ? (miles(p) + ' pasos') : 'Cardio'; }
@@ -174,7 +177,8 @@
         var hh = wkItem ? d2(wkItem.dt.getHours()) + ':' + d2(wkItem.dt.getMinutes()) : '';
         // lista de actividades del día (como Harbiz > Planificación): métricas (foto incluida) / cardio / entreno
         var acts = [];
-        if (statsItem || photoItem) acts.push({ type: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: !!((statsItem && statsItem.done) || (photoItem && photoItem.done) || chkDates[key] || chkWeeks[wkKeyOf(dt)]) });
+        if (statsItem) acts.push({ type: 'medidas', label: 'Métricas personales · medidas', sub: 'Peso y medidas', done: !!((statsItem && statsItem.done) || chkMedDates[key]) });
+        if (photoItem) acts.push({ type: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: !!((photoItem && photoItem.done) || chkFotoDates[key]) });
         if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: cardioSubReal(cardio, regDay.pasos), pasos: (cardio.config && cardio.config.pasos) || '', pasosHechos: (regDay.pasos != null ? regDay.pasos : ''), done: !!cardio.done });
         if (wkItem) acts.push({ type: 'workout', label: wkItem.title, sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
         out.push({
@@ -489,7 +493,8 @@
     var entrenoHecho = regToday.workout || doneT('workout');
     var todayTasks = [];
     var checkinDoneThisWeek = !!chkWeeks[wkKeyOf(now)];
-    if (hasT('bodyStats') || hasT('bodyPhoto')) todayTasks.push({ key: 'metricas', label: 'Métricas personales', sub: 'Peso, medidas y foto', done: doneT('bodyStats') || doneT('bodyPhoto') || !!chkDates[todayKey] || checkinDoneThisWeek });
+    if (hasT('bodyStats')) todayTasks.push({ key: 'medidas', label: 'Métricas personales · medidas', sub: 'Peso y medidas', done: doneT('bodyStats') || !!chkMedDates[todayKey] });
+    if (hasT('bodyPhoto')) todayTasks.push({ key: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: doneT('bodyPhoto') || !!chkFotoDates[todayKey] });
     if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: _cItem.title || 'Caminar', sub: cardioSubReal(_cItem, regToday.pasos), pasos: (_cItem.config && _cItem.config.pasos) || '', pasosHechos: (regToday.pasos != null ? regToday.pasos : ''), done: doneT('cardio') || !!regToday.cardio }); }
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)

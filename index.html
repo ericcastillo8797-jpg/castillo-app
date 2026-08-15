@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=102"></script>
-<script src="./castillo-transform.js?v=102"></script>
-<script src="./castillo-equiv.js?v=102"></script>
-<script src="./castillo-data.js?v=102"></script>
+<script src="./castillo-i18n.js?v=103"></script>
+<script src="./castillo-transform.js?v=103"></script>
+<script src="./castillo-equiv.js?v=103"></script>
+<script src="./castillo-data.js?v=103"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1222,10 +1222,11 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <sc-if value="{{ isCkSheet }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Check-in semanal" style="display:flex;flex-direction:column;min-height:0">
       <div style="padding:14px 20px 12px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
-        <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">Semana 30 · 31 de julio</div>
-        <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1;margin-top:4px">Check-in semanal</div>
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ ckSheetSub }}</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1;margin-top:4px">{{ ckSheetTitle }}</div>
       </div>
       <div style="overflow-y:auto;padding:16px 20px 30px">
+        <sc-if value="{{ ckShowFotos }}">
         <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:0 2px 10px">Fotografías</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
           <sc-for list="{{ ckShots }}" as="s" hint-placeholder-count="3">
@@ -1251,7 +1252,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </div>
           </sc-for>
         </div>
+        </sc-if>
 
+        <sc-if value="{{ ckShowMedidas }}">
         <sc-for list="{{ ckGroups }}" as="g" hint-placeholder-count="4">
         <div>
           <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:22px 2px 10px">{{ g.g }}</div>
@@ -1269,8 +1272,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </div>
         </div>
         </sc-for>
+        </sc-if>
 
-        <div onClick="{{ submitCheckin }}" style="margin-top:22px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">Enviar check-in</div>
+        <div onClick="{{ submitCheckin }}" style="margin-top:22px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ ckSubmitLabel }}</div>
         <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:10px">Revisado por su equipo antes de la sesión del viernes.</div>
       </div>
     </div>
@@ -2458,11 +2462,9 @@ class Component extends DCLogic {
     else this.setState(s => ({ ck: Object.assign({}, s.ck, { [p.k]: v }) }));
   };
 
-  openCheckin = () => {
-    const dd = (typeof window !== 'undefined' && window.__DATA) || {};
-    const tf = (DAYS.find(d => d.today) || {}).fecha;
-    if (dd.checkinDoneThisWeek || (tf && this.state.marks[tf + '|metricas'])) { this.flash('Ya registraste tu check-in de esta semana'); return; }
-    this.openSheet({ k: 'ck' });
+  openCheckin = (mode) => {
+    // mode: 'medidas' (solo peso/medidas) | 'fotos' (solo fotos) | undefined (ambos). Se pueden registrar por separado.
+    this.openSheet({ k: 'ck', mode: (mode === 'medidas' || mode === 'fotos') ? mode : 'both' });
   };
   tapPhoto = id => () => {
     // ya subida: permite quitarla
@@ -2482,17 +2484,21 @@ class Component extends DCLogic {
     inp.click();
   };
   submitCheckin = () => {
+    const sh = this.state.sheet || {}; const mode = sh.mode || 'both';
     const src = this.state.ck || {}, vals = {};
     Object.keys(src).forEach(k => { if (src[k] != null && String(src[k]).trim() !== '') vals[k] = src[k]; });
     const fotos = {}; const cp = this.state.ckPhotos || {};
     Object.keys(cp).forEach(k => { if (cp[k]) fotos[k] = cp[k]; });   // solo las que son URL (subidas)
-    if (!Object.keys(vals).length && !Object.keys(fotos).length) { this.flash('Escribe algún dato o añade una foto'); return; }
+    if (mode === 'medidas' && !Object.keys(vals).length) { this.flash('Escribe alguna medida'); return; }
+    else if (mode === 'fotos' && !Object.keys(fotos).length) { this.flash('Añade al menos una foto'); return; }
+    else if (mode === 'both' && !Object.keys(vals).length && !Object.keys(fotos).length) { this.flash('Escribe algún dato o añade una foto'); return; }
     this.closeSheet();
-    const _tf = (DAYS.find(d => d.today) || {}).fecha;   // marca "métricas" hecho al instante (sin esperar al refresh)
-    if (_tf) this.setState(s => ({ marks: Object.assign({}, s.marks, { [_tf + '|metricas']: true }) }));
+    const _tf = (DAYS.find(d => d.today) || {}).fecha;   // marca la tarea correspondiente hecha al instante
+    if (_tf) { const mk = mode === 'fotos' ? 'fotos' : (mode === 'medidas' ? 'medidas' : 'metricas'); this.setState(s => ({ marks: Object.assign({}, s.marks, { [_tf + '|' + mk]: true }) })); }
+    // Se envían medidas Y fotos del estado (ya trae lo existente de hoy), así guardar una no borra la otra.
     if (window.CastilloData && window.CastilloData.registrarCheckin) {
-      window.CastilloData.registrarCheckin(vals, fotos).then(() => { this.flash('Check-in guardado'); this.refreshData(); }, () => this.flash('No se pudo guardar'));
-    } else { this.flash('Check-in guardado'); }
+      window.CastilloData.registrarCheckin(vals, fotos).then(() => { this.flash('Guardado'); this.refreshData(); }, () => this.flash('No se pudo guardar'));
+    } else { this.flash('Guardado'); }
   };
 
   renderVals() {
@@ -2564,9 +2570,9 @@ class Component extends DCLogic {
     // --- Plan de hoy (tareas + progreso) + Resumen semanal ---
     const _dd = (typeof window !== 'undefined' && window.__DATA) || {};
     const _todayFecha = (DAYS.find(d => d.today) || {}).fecha || 'hoy';
-    const _acts = { entreno: () => this.startWorkout(_realToday.wk, _realToday.t), nutricion: this.openDietSheet(_todayFecha), metricas: this.openCheckin, cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
+    const _acts = { entreno: () => this.startWorkout(_realToday.wk, _realToday.t), nutricion: this.openDietSheet(_todayFecha), metricas: this.openCheckin, medidas: () => this.openCheckin('medidas'), fotos: () => this.openCheckin('fotos'), cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
     // Colores por tipo de tarea (estilo Harbiz: un color por cosa) — se usan en el tick de hoy, los anillos del resumen y los puntos de la agenda
-    const TASK_COL = { entreno: '#5B8CFF', workout: '#5B8CFF', cardio: '#FF6B5C', nutricion: '#3DD68C', nutrition: '#3DD68C', metricas: '#C084FC', metrics: '#C084FC' };
+    const TASK_COL = { entreno: '#5B8CFF', workout: '#5B8CFF', cardio: '#FF6B5C', nutricion: '#3DD68C', nutrition: '#3DD68C', metricas: '#C084FC', metrics: '#C084FC', medidas: '#C084FC', bodyStats: '#C084FC', fotos: '#E879C7', bodyPhoto: '#E879C7' };
     const taskColor = k => TASK_COL[k] || 'rgba(var(--fgc,255,255,255),.55)';
     const planTasks = (_dd.todayTasks || []).map(tk => {
       const marked = st.marks[_todayFecha + '|' + tk.key];
@@ -2802,6 +2808,8 @@ class Component extends DCLogic {
       const done = a.done || !!st.marks[dS.fecha + '|' + a.type] || (a.type === 'workout' && !!st.marks[dS.fecha + '|entreno']);
       let open, thumb = '';
       if (a.type === 'metricas') open = this.openCheckin;
+      else if (a.type === 'medidas') open = () => this.openCheckin('medidas');
+      else if (a.type === 'fotos') open = () => this.openCheckin('fotos');
       // cardio: una vez marcado ya NO se puede desmarcar (ni hoy ni en días pasados)
       else if (a.type === 'cardio') open = done ? (() => {}) : this.toggleMark(dS.fecha, 'cardio', 'Cardio marcado');
       else { open = done ? (() => this.flash('Entrenamiento ya completado')) : (() => this.startWorkout(a.wk, a.label)); const first = (WK[a.wk] || [])[0]; const exr = first ? EX.find(e => e.n === first.split('|')[0]) : null; thumb = (exr && exr.y) ? THUMB(exr.y) : ''; }
@@ -3251,6 +3259,10 @@ class Component extends DCLogic {
       isDetEnt: st.mesDetail === 'entrenos', isDetCar: st.mesDetail === 'cardio', isDetNut: st.mesDetail === 'nutricion', isDetMet: st.mesDetail === 'metricas',
       foodSwapSheet: st.swap ? { origName: st.swap.origName, opts: (st.swap.alts || []).map((a, i) => ({ name: a.name, detail: a.grams + ' g · ~' + a.kcal + ' kcal', delay: (0.05 + i * 0.05) + 's', choose: this.chooseFood(st.swap.swapKey, st.swap.mealName, st.swap.origName, a) })) } : {},
       isCkSheet: sh.k === 'ck', ckShots, ckGroups, submitCheckin: this.submitCheckin,
+      ckShowFotos: sh.mode !== 'medidas', ckShowMedidas: sh.mode !== 'fotos',
+      ckSheetTitle: sh.mode === 'fotos' ? T('Fotos de progreso') : (sh.mode === 'medidas' ? T('Medidas personales') : T('Check-in semanal')),
+      ckSheetSub: sh.mode === 'fotos' ? T('Sube tus fotos de esta semana') : (sh.mode === 'medidas' ? T('Registra tu peso y medidas') : T('Registra tus medidas y fotos')),
+      ckSubmitLabel: sh.mode === 'fotos' ? T('Guardar fotos') : (sh.mode === 'medidas' ? T('Guardar medidas') : T('Enviar check-in')),
 
       pad: st.pad, padDim: st.padIn ? 1 : 0, padY: st.padIn ? 'none' : 'translateY(100%)',
       closePad: this.closePad, padVal: this.padValue(st.pad) || '—',
