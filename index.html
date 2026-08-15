@@ -2000,12 +2000,36 @@ class Component extends DCLogic {
     try { if (window.Capacitor && window.Capacitor.getPlatform) return window.Capacitor.getPlatform() === 'ios'; } catch (e) {}
     return /iP(hone|ad|od)/.test(navigator.userAgent || '');
   };
-  // Pasa el PDF al menú del sistema (en iOS es la vía fiable para Imprimir / Guardar en Archivos / Compartir).
+  // Pasa el PDF al menú del sistema (Compartir).
   _sharePdf = async (blob, nombre, title) => {
     var fname = String(nombre || 'documento').replace(/\s+/g, '_') + '.pdf';
     var file = new File([blob], fname, { type: 'application/pdf' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: title || 'PDF' }); return true; }
     return false;
+  };
+  _blobToB64 = (blob) => new Promise(function (res, rej) { var r = new FileReader(); r.onloadend = function () { res(String(r.result || '').split(',')[1] || ''); }; r.onerror = rej; r.readAsDataURL(blob); });
+  // GUARDAR de verdad: escribe el PDF en Archivos del iPhone (plugin nativo Filesystem). Devuelve false si no está el plugin.
+  _saveNative = async (blob, nombre) => {
+    try {
+      var FS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem;
+      if (!FS || !FS.writeFile) return false;
+      var fname = String(nombre || 'documento').replace(/\s+/g, '_') + '.pdf';
+      var b64 = await this._blobToB64(blob);
+      await FS.writeFile({ path: fname, data: b64, directory: 'DOCUMENTS', recursive: true });
+      this.flash(this.state.lang === 'en' ? 'Saved to Files (Castillo)' : 'Guardado en Archivos (Castillo)');
+      return true;
+    } catch (e) { return false; }
+  };
+  // IMPRIMIR de verdad: escribe el HTML en un iframe y abre el diálogo de impresión del sistema.
+  _printDoc = (docHtml, id) => {
+    var old = document.getElementById(id); if (old) old.remove();
+    var f = document.createElement('iframe');
+    f.id = id; f.setAttribute('style', 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0');
+    document.body.appendChild(f);
+    var fd = f.contentWindow.document; fd.open(); fd.write(docHtml); fd.close();
+    var done = false, doPrint = () => { if (done) return; done = true; try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} };
+    f.onload = () => this.later(doPrint, 250);
+    this.later(doPrint, 700);
   };
   _savePdf = async (blob, nombre) => {
     var fname = String(nombre || 'documento').replace(/\s+/g, '_') + '.pdf';
@@ -2041,17 +2065,18 @@ class Component extends DCLogic {
   };
   resumenDownload = async () => {
     try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando… inténtalo de nuevo'); return; }
+      if (await this._saveNative(b.blob, b.nombre)) return;
       await this._savePdf(b.blob, b.nombre);
     } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar el PDF'); }
   };
   resumenPrint = async () => {
-    try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando… inténtalo de nuevo'); return; }
-      if (this._isIOS()) { try { if (await this._sharePdf(b.blob, b.nombre, b.nombre)) return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-      var url = URL.createObjectURL(b.blob); var old = document.getElementById('resumenPrintFrame'); if (old) old.remove();
-      var f = document.createElement('iframe'); f.id = 'resumenPrintFrame'; f.setAttribute('style', 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0');
-      f.onload = () => { this.later(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} }, 300); };
-      f.src = url; document.body.appendChild(f);
-    } catch (e) { this.flash('No se pudo generar el PDF'); }
+    try {
+      const rm = (window.__DATA && window.__DATA.resumenMeses) || [];
+      const mi = Math.min(Math.max(0, this.state.mesIdx || 0), Math.max(0, rm.length - 1));
+      const m = rm[mi]; if (!m) { this.flash('Sin datos este mes'); return; }
+      const built = this._resumenDocHtml(m);
+      this._printDoc(built.doc, 'resumenPrintFrame');
+    } catch (e) { this.flash('No se pudo imprimir el PDF'); }
   };
   // buscador EN VIVO: busca solo mientras escribes (con pequeña espera para no saturar), sin escribir la palabra entera
   setCheatQ = e => { const v = (e && e.target) ? e.target.value : e; this.setState({ cheatQ: v }); clearTimeout(this._cheatT); const q = (v || '').trim(); if (q.length < 3) { this.setState({ cheatRes: null, cheatBusy: false }); return; } this._cheatT = setTimeout(() => this.runCheat(), 420); };
@@ -2262,19 +2287,9 @@ class Component extends DCLogic {
   // Imprimir: imprime el PDF de 1 hoja (no el HTML) -> iOS no lo puede partir en 3
   printDiet = async () => {
     try {
-      var built = await this._dietPdfBlob();
-      if (!built) { this.flash('Cargando… inténtalo de nuevo'); return; }
-      // iOS: el print del webview no es fiable -> menú del sistema (incluye Imprimir y Guardar en Archivos)
-      if (this._isIOS()) { try { if (await this._sharePdf(built.blob, built.nombre, 'Dieta')) return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-      var url = URL.createObjectURL(built.blob);
-      var old = document.getElementById('dietaPrintFrame'); if (old) old.remove();
-      var f = document.createElement('iframe');
-      f.id = 'dietaPrintFrame';
-      f.setAttribute('style', 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0');
-      f.onload = () => { this.later(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} }, 300); };
-      f.src = url;
-      document.body.appendChild(f);
-    } catch (e) { this.flash('No se pudo generar la dieta'); }
+      const built = this._dietDocHtml();
+      this._printDoc(built.doc, 'dietaPrintFrame');
+    } catch (e) { this.flash('No se pudo imprimir la dieta'); }
   };
 
   // Compartir: el mismo PDF de 1 hoja -> menú compartir de iOS (WhatsApp, email…)
@@ -2287,11 +2302,12 @@ class Component extends DCLogic {
     } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo compartir la dieta'); }
   };
 
-  // Descargar / Guardar: en iOS pasa por el menú del sistema (Guardar en Archivos); en el resto descarga directa
+  // Guardar: escribe el PDF en Archivos del iPhone (nativo); si no hay plugin, cae al menú del sistema.
   downloadDiet = async () => {
     try {
       var built = await this._dietPdfBlob();
       if (!built) { this.flash('Cargando… inténtalo de nuevo'); return; }
+      if (await this._saveNative(built.blob, built.nombre)) return;
       await this._savePdf(built.blob, built.nombre);
     } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar la dieta'); }
   };
