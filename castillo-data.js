@@ -206,14 +206,14 @@
       var hoyF = tzToday(_ctx.tz);   // fecha fresca en la zona del cliente
       var row = { cliente_email: _ctx.email, fecha: hoyF, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       if (pasos >= objetivo) row.cardio = true;
-      try { localStorage.setItem('salud_conectado', '1'); } catch (e) {}
+      try { localStorage.setItem('salud_conectado_' + (_ctx.email || ''), '1'); } catch (e) {}
       return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token).then(function () { return { available: true, ok: true, pasos: pasos }; });
     }).catch(function () { return { available: true, ok: false }; });
   }
-  function saludConectado() { try { return localStorage.getItem('salud_conectado') === '1'; } catch (e) { return false; } }
-  function desconectarSalud() { try { localStorage.removeItem('salud_conectado'); } catch (e) {} }
+  function saludConectado() { try { return localStorage.getItem('salud_conectado_' + (_ctx.email || '')) === '1'; } catch (e) { return false; } }
+  function desconectarSalud() { try { localStorage.removeItem('salud_conectado_' + (_ctx.email || '')); } catch (e) {} }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
   function registrarComida(mealId, opcion, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
@@ -335,7 +335,7 @@
       }
       return (creds ? passwordLogin(creds.e, creds.p).catch(noSesion) : noSesion());
     },
-    logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); } catch (e) {} window.__DATA = null; },
+    logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
     registrarComida: registrarComida,
     desregistrarComida: desregistrarComida,
     guardarPerfil: guardarPerfil,
