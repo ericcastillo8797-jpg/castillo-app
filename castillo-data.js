@@ -116,7 +116,20 @@
         var chkHoy = chkAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
         data.checkinHoy = (chkHoy && chkHoy.valores) || {};   // valores ya registrados hoy (para prerellenar)
         data.checkinFotosHoy = (chkHoy && chkHoy.fotos) || {};   // fotos ya subidas hoy (firmadas)
-        data.perfil = perfilRow;   // perfil (foto + datos) guardado en Supabase
+        // Perfil de Ajustes: usa lo que el cliente haya editado (perfil_cliente); y lo que falte, lo SIEMBRA de su ficha
+        // (clientes_app) — así un cliente nuevo del alta ve sus datos ya rellenos (nombre, apellidos, teléfono, nacimiento).
+        (function () {
+          var pr = perfilRow || {};
+          var seed = {
+            nombre: hrow.nombre || '', apellidos: hrow.apellido || '',
+            fecha_nac: hrow.birthdate ? String(hrow.birthdate).slice(0, 10) : '',
+            prefijo: hrow.prefix || '', telefono: hrow.telefono || ''
+          };
+          var merged = {};
+          Object.keys(seed).forEach(function (k) { merged[k] = (pr[k] != null && pr[k] !== '') ? pr[k] : seed[k]; });
+          merged.foto = pr.foto || null; merged.nombre_publico = pr.nombre_publico || '';
+          data.perfil = merged;
+        })();
         _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr; _ctx.tz = _tz;
         window.__DATA = data;
         try { registerPush(); } catch (e) {}   // registra el móvil para notificaciones (solo app nativa)
