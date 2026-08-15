@@ -3066,7 +3066,7 @@ class Component extends DCLogic {
           telefonoVal: _pf.telefono || '', setTelefono: this.setProfileField('telefono'),
           emailVal: _email,
           avatarUrl: st.profilePhoto || '', avatarInitials: _initials, hasAvatar: !!st.profilePhoto, noAvatar: !st.profilePhoto,
-          showAvatar: stage === 'app' && !st.wOpen, openAvatar: this.openAvatar
+          showAvatar: stage === 'app' && !st.wOpen && st.tab !== 'conf', openAvatar: this.openAvatar
         };
       })(),
       themes: [['dark','Oscuro','#050505'],['light','Claro','#FFFFFF']].map(([k, n, pv]) => {
