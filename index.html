@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=101"></script>
-<script src="./castillo-transform.js?v=101"></script>
-<script src="./castillo-equiv.js?v=101"></script>
-<script src="./castillo-data.js?v=101"></script>
+<script src="./castillo-i18n.js?v=102"></script>
+<script src="./castillo-transform.js?v=102"></script>
+<script src="./castillo-equiv.js?v=102"></script>
+<script src="./castillo-data.js?v=102"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1855,6 +1855,9 @@ class Component extends DCLogic {
       if (_e && window.CastilloData && window.CastilloData.hasSession()) { _autoEnter = true; try { window.history.replaceState({}, '', window.location.pathname); } catch (e) {} }
     } catch (e) {}
     if (_autoEnter) {
+      // Cliente RECIÉN dado de alta: arranca con TODAS las integraciones desconectadas (limpia flags de conexión que hayan quedado
+      // en este móvil de una prueba/cuenta anterior — Apple Salud, apps…). Así no sale "conectado" sin que él lo haya hecho.
+      try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {}
       this.setState({ stage: 'scan', scan: 1 });
       window.CastilloData.restoreSession().then(this._enterWith)
         .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'Vuelve a acceder con tu correo'); });
