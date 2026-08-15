@@ -214,6 +214,11 @@
   }
   function saludConectado() { try { return localStorage.getItem('salud_conectado_' + (_ctx.email || '')) === '1'; } catch (e) { return false; } }
   function desconectarSalud() { try { localStorage.removeItem('salud_conectado_' + (_ctx.email || '')); } catch (e) {} }
+  // Estado de conexión de cada app por usuario (Apple Salud es el flag real; el resto se marca en este móvil).
+  function _appKey(name) { return 'app_con_' + (_ctx.email || '') + '_' + String(name).replace(/\s+/g, '_'); }
+  function appConectado(name) { if (name === 'Apple Salud') return saludConectado(); try { return localStorage.getItem(_appKey(name)) === '1'; } catch (e) { return false; } }
+  function conectarApp(name) { try { localStorage.setItem(_appKey(name), '1'); } catch (e) {} }
+  function desconectarApp(name) { try { localStorage.removeItem(_appKey(name)); } catch (e) {} }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
   function registrarComida(mealId, opcion, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
@@ -335,7 +340,7 @@
       }
       return (creds ? passwordLogin(creds.e, creds.p).catch(noSesion) : noSesion());
     },
-    logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
+    logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
     registrarComida: registrarComida,
     desregistrarComida: desregistrarComida,
     guardarPerfil: guardarPerfil,
@@ -346,6 +351,9 @@
     conectarSalud: conectarSalud,
     saludConectado: saludConectado,
     desconectarSalud: desconectarSalud,
+    appConectado: appConectado,
+    conectarApp: conectarApp,
+    desconectarApp: desconectarApp,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
