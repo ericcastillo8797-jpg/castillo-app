@@ -297,6 +297,13 @@
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
     p = p || {};
     var row = { cliente_email: _ctx.email, nombre: p.nombre || null, apellidos: p.apellidos || null, nombre_publico: p.nombrePublico || null, fecha_nac: p.fechaNac || null, prefijo: p.prefijo || null, telefono: p.telefono || null, foto: p.foto || null, updated_at: new Date().toISOString() };
+    // Propaga nombre/apellidos/teléfono a la ficha del CRM (clientes_app + clientes) con el JWT del cliente (Edge Function service role).
+    try {
+      fetch(SUPA + '/functions/v1/perfil-update', {
+        method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: p.nombre || '', apellido: p.apellidos || '', telefono: p.telefono || '', prefix: p.prefijo || '' })
+      }).catch(function () {});
+    } catch (e) {}
     return api('/rest/v1/perfil_cliente?on_conflict=cliente_email', {
       method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
     }, _ctx.token);
