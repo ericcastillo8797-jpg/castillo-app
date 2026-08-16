@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=123"></script>
-<script src="./castillo-transform.js?v=123"></script>
-<script src="./castillo-equiv.js?v=123"></script>
-<script src="./castillo-data.js?v=123"></script>
+<script src="./castillo-i18n.js?v=124"></script>
+<script src="./castillo-transform.js?v=124"></script>
+<script src="./castillo-equiv.js?v=124"></script>
+<script src="./castillo-data.js?v=124"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2516,6 +2516,8 @@ class Component extends DCLogic {
     else if (v.replace(',', '').length < 5) v += k;
     if (p.t === 'set') this.setLog(p.ex, p.i, p.f, v);
     else this.setState(s => ({ ck: Object.assign({}, s.ck, { [p.k]: v }) }));
+    // Repeticiones: máx 2 dígitos (nadie hace >99 reps) → al llegar a 2 dígitos se cierra el teclado solo
+    if (p.t === 'set' && p.f === 'r' && k !== '⌫' && k !== ',' && v.replace(/\D/g, '').length >= 2) this.closePad();
   };
 
   openCheckin = (mode) => {
