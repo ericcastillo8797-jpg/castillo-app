@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=124"></script>
-<script src="./castillo-transform.js?v=124"></script>
-<script src="./castillo-equiv.js?v=124"></script>
-<script src="./castillo-data.js?v=124"></script>
+<script src="./castillo-i18n.js?v=125"></script>
+<script src="./castillo-transform.js?v=125"></script>
+<script src="./castillo-equiv.js?v=125"></script>
+<script src="./castillo-data.js?v=125"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2226,7 +2226,8 @@ class Component extends DCLogic {
   chooseFood = (swapKey, mealName, origName, alt) => () => {
     this.setState(s => ({ foodSwaps: Object.assign({}, s.foodSwaps, { [swapKey]: { name: alt.name, grams: alt.grams } }) }));
     if (typeof window !== 'undefined' && window.CastilloData && window.CastilloData.registrarSustitucion) {
-      try { window.CastilloData.registrarSustitucion(mealName, origName, alt.name, alt.grams, { kcal: alt.kcal, p: alt.p, c: alt.c, g: alt.g }).catch(function () { }); } catch (e) { }
+      const _sf = (DAYS.find(d => d.d === this.state.day) || DAYS.find(d => d.today) || {}).fecha;
+      try { window.CastilloData.registrarSustitucion(mealName, origName, alt.name, alt.grams, { kcal: alt.kcal, p: alt.p, c: alt.c, g: alt.g }, _sf).catch(function () { }); } catch (e) { }
     }
     this.flash(this.state.lang === 'en' ? 'Food swapped' : 'Alimento cambiado');
     this.closeSwap();
@@ -2452,7 +2453,7 @@ class Component extends DCLogic {
       // marca inmediata en la pantalla principal (no espera al servidor)
       this.setState(s => ({ marks: Object.assign({}, s.marks, { [dS.fecha + '|entreno']: true }) }));
       if (window.CastilloData && window.CastilloData.registrarEntreno) {
-        window.CastilloData.registrarEntreno(dS.t || 'Entrenamiento', ejercicios, completo).then(() => this.refreshData(), () => {});
+        window.CastilloData.registrarEntreno(dS.t || 'Entrenamiento', ejercicios, completo, dS.fecha).then(() => this.refreshData(), () => {});
       }
     } catch (e) {}
     this.flash('Entreno registrado · enviado al equipo');
@@ -2520,9 +2521,13 @@ class Component extends DCLogic {
     if (p.t === 'set' && p.f === 'r' && k !== '⌫' && k !== ',' && v.replace(/\D/g, '').length >= 2) this.closePad();
   };
 
-  openCheckin = (mode) => {
+  openCheckin = (mode, fecha) => {
     // mode: 'medidas' (solo peso/medidas) | 'fotos' (solo fotos) | undefined (ambos). Se pueden registrar por separado.
-    this.openSheet({ k: 'ck', mode: (mode === 'medidas' || mode === 'fotos') ? mode : 'both' });
+    const fok = /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : null;
+    const _today = (DAYS.find(d => d.today) || {}).fecha;
+    // si se registra un día distinto de hoy, empezar en blanco (no copiar los datos de hoy a otro día)
+    if (fok && fok !== _today) this.setState({ ck: {}, ckPhotos: {} });
+    this.openSheet({ k: 'ck', mode: (mode === 'medidas' || mode === 'fotos') ? mode : 'both', fecha: fok });
   };
   tapPhoto = id => () => {
     // ya subida: permite quitarla
@@ -2551,7 +2556,7 @@ class Component extends DCLogic {
     else if (mode === 'fotos' && !Object.keys(fotos).length) { this.flash('Añade al menos una foto'); return; }
     else if (mode === 'both' && !Object.keys(vals).length && !Object.keys(fotos).length) { this.flash('Escribe algún dato o añade una foto'); return; }
     this.closeSheet();
-    const _tf = (DAYS.find(d => d.today) || {}).fecha;   // marca la tarea correspondiente hecha al instante
+    const _tf = sh.fecha || (DAYS.find(d => d.today) || {}).fecha;   // marca la tarea del día correspondiente hecha al instante
     if (_tf) {
       const _mks = {};
       if (Object.keys(vals).length) { _mks[_tf + '|medidas'] = true; _mks[_tf + '|metricas'] = true; }
@@ -2560,7 +2565,7 @@ class Component extends DCLogic {
     }
     // Se envían medidas Y fotos del estado (ya trae lo existente de hoy), así guardar una no borra la otra.
     if (window.CastilloData && window.CastilloData.registrarCheckin) {
-      window.CastilloData.registrarCheckin(vals, fotos).then(() => { this.flash('Guardado'); this.refreshData(); }, () => this.flash('No se pudo guardar'));
+      window.CastilloData.registrarCheckin(vals, fotos, sh.fecha).then(() => { this.flash('Guardado'); this.refreshData(); }, () => this.flash('No se pudo guardar'));
     } else { this.flash('Guardado'); }
   };
 
@@ -2872,9 +2877,9 @@ class Component extends DCLogic {
       let done = a.done || !!st.marks[dS.fecha + '|' + a.type] || (a.type === 'workout' && !!st.marks[dS.fecha + '|entreno']);
       if (a.type === 'nutricion' && DIET && DIET.length) { const _nm = ((_dd.mealsByDate) || {})[dS.fecha] || {}; done = DIET.every(function (m) { return _nm[m.id] != null; }); }
       let open, thumb = '';
-      if (a.type === 'metricas') open = this.openCheckin;
-      else if (a.type === 'medidas') open = () => this.openCheckin('medidas');
-      else if (a.type === 'fotos') open = () => this.openCheckin('fotos');
+      if (a.type === 'metricas') open = () => this.openCheckin(undefined, dS.fecha);
+      else if (a.type === 'medidas') open = () => this.openCheckin('medidas', dS.fecha);
+      else if (a.type === 'fotos') open = () => this.openCheckin('fotos', dS.fecha);
       else if (a.type === 'nutricion') open = this.openDietSheet(dS.fecha);
       // cardio: una vez marcado ya NO se puede desmarcar (ni hoy ni en días pasados)
       else if (a.type === 'cardio') open = done ? (() => {}) : this.toggleMark(dS.fecha, 'cardio', 'Cardio marcado');

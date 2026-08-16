@@ -396,27 +396,30 @@
       return loadData(_ctx.token, _ctx.email);
     },
     // guarda el entreno de HOY que apunta el cliente en su app (mismo sitio que el CRM: entreno_registros)
-    registrarEntreno: function (titulo, ejercicios, completo) {
+    registrarEntreno: function (titulo, ejercicios, completo, fecha) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
-      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, titulo: titulo || 'Entrenamiento', ejercicios: ejercicios || [], estado: completo ? 'completado' : 'en_progreso', registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+      var row = { cliente_email: _ctx.email, fecha: f, titulo: titulo || 'Entrenamiento', ejercicios: ejercicios || [], estado: completo ? 'completado' : 'en_progreso', registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);
     },
     // guarda el check-in de HOY (peso, medidas y fotos) que apunta el cliente
-    registrarCheckin: function (valores, fotos) {
+    registrarCheckin: function (valores, fotos, fecha) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
-      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, valores: valores || {}, fotos: fotos || {}, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
-      if (window.__DATA) { window.__DATA.checkinHoy = valores || {}; window.__DATA.checkinFotosHoy = fotos || {}; }
+      var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+      var row = { cliente_email: _ctx.email, fecha: f, valores: valores || {}, fotos: fotos || {}, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      if (window.__DATA && f === _ctx.hoy) { window.__DATA.checkinHoy = valores || {}; window.__DATA.checkinFotosHoy = fotos || {}; }
       return api('/rest/v1/checkin_registros?on_conflict=cliente_email,fecha', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);
     },
     // registra una sustitución de alimento del día (equivalencias); lo verá el entrenador en el CRM
-    registrarSustitucion: function (comida, original, nuevo, gramos, macros) {
+    registrarSustitucion: function (comida, original, nuevo, gramos, macros, fecha) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var mc = macros || {};
-      var row = { cliente_email: _ctx.email, fecha: _ctx.hoy, comida: comida || '', original: original || '', nuevo: nuevo || '', gramos: (gramos != null ? gramos : null), kcal_new: (mc.kcal != null ? mc.kcal : null), p_new: (mc.p != null ? mc.p : null), c_new: (mc.c != null ? mc.c : null), g_new: (mc.g != null ? mc.g : null), registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+      var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+      var row = { cliente_email: _ctx.email, fecha: f, comida: comida || '', original: original || '', nuevo: nuevo || '', gramos: (gramos != null ? gramos : null), kcal_new: (mc.kcal != null ? mc.kcal : null), p_new: (mc.p != null ? mc.p : null), c_new: (mc.c != null ? mc.c : null), g_new: (mc.g != null ? mc.g : null), registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       return api('/rest/v1/sustituciones_dieta?on_conflict=cliente_email,fecha,comida,original', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
       }, _ctx.token);
