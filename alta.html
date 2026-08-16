@@ -162,7 +162,7 @@
           <div class="box" id="consentBox"></div>
           <div id="consentTxt" style="font-size:13.5px;color:var(--dim);line-height:1.55;cursor:pointer">Acepto que Castillo Private trate mis datos (incluidos los de salud) para mi seguimiento, según los términos y la política de privacidad.</div>
         </div>
-        <a id="privacyLink" href="https://castilloprivate.com/privacy-policy" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;font-size:13px;color:var(--fg,#fff);text-decoration:underline;cursor:pointer">Ver la política de privacidad</a>
+        <a id="privacyLink" href="#" style="display:inline-block;margin-top:12px;font-size:13px;color:var(--fg,#fff);text-decoration:underline;cursor:pointer">Ver la política de privacidad</a>
       </div>
     </div></div>
 
@@ -178,6 +178,17 @@
   <div class="nav" id="nav">
     <button class="btn ghost" id="backBtn" style="display:none">Atrás</button>
     <button class="btn prim" id="nextBtn">Siguiente</button>
+  </div>
+</div>
+
+<!-- Política de privacidad (modal, bilingüe) -->
+<div id="privacyModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.62);align-items:flex-end;justify-content:center">
+  <div style="background:var(--bg,#0b0b0d);color:var(--fg,#fff);width:100%;max-width:560px;max-height:88vh;border-radius:18px 18px 0 0;overflow:hidden;display:flex;flex-direction:column;border:.5px solid rgba(255,255,255,.12)">
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:.5px solid rgba(255,255,255,.1)">
+      <div id="privacyTitle" style="flex:1;font-size:16px;font-weight:600">Política de privacidad</div>
+      <div id="privacyClose" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">✕</div>
+    </div>
+    <div id="privacyBody" style="padding:16px 18px 28px;overflow-y:auto;font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.82)"></div>
   </div>
 </div>
 
@@ -251,6 +262,36 @@
     });
   }
 
+  // Política de privacidad (texto real de castilloprivate.com, EN + ES) — se muestra en el idioma activo del formulario
+  var PRIVACY={
+    en:{ title:'Privacy Policy', updated:'Last updated: July 2026', sections:[
+      ['Who we are','Castillo Private is operated by Alex Fitness Solutions LLC, Miami, Florida. This policy describes what personal information we collect and how we use it.'],
+      ['What we collect','Your name, email, phone and the data you enter for your coaching (goal, health questionnaire, measurements, progress photos and training/nutrition logs). We collect nothing you do not give us.'],
+      ['Why we collect it','Solely to provide and manage your coaching. We do not sell your information, and we do not share it with third parties beyond the service providers that run the app.'],
+      ['Health data','The measurements, photos and health answers you enter are used only for your follow-up with your coach and are stored securely. You can ask us to delete them at any time.'],
+      ['Communications','If you leave your details, we will contact you by phone, email or WhatsApp using the information you provided. You may ask us to stop at any time.'],
+      ['Your rights','You may request access to, correction of, or deletion of your personal information at any time by writing to alexfitness.asesorias@gmail.com.'],
+      ['Contact','Alex Fitness Solutions LLC — Miami, Florida. Phone: (786) 580-2691. Email: alexfitness.asesorias@gmail.com.'] ] },
+    es:{ title:'Política de privacidad', updated:'Última actualización: julio de 2026', sections:[
+      ['Quiénes somos','Castillo Private es operado por Alex Fitness Solutions LLC, Miami, Florida. Esta política describe qué información personal recogemos y cómo la utilizamos.'],
+      ['Qué recogemos','Su nombre, correo, teléfono y los datos que introduce para su seguimiento (objetivo, cuestionario de salud, medidas, fotos de progreso y registros de entreno/nutrición). No recogemos nada que usted no nos facilite.'],
+      ['Para qué lo recogemos','Únicamente para prestar y gestionar su seguimiento. No vendemos su información ni la compartimos con terceros más allá de los proveedores que hacen funcionar la app.'],
+      ['Datos de salud','Las medidas, fotos y respuestas de salud que introduce se usan solo para su seguimiento con su entrenador y se guardan de forma segura. Puede pedir que las eliminemos en cualquier momento.'],
+      ['Comunicaciones','Si deja sus datos, le contactaremos por teléfono, correo o WhatsApp usando la información facilitada. Puede pedirnos que dejemos de hacerlo en cualquier momento.'],
+      ['Sus derechos','Puede solicitar el acceso, la corrección o la eliminación de su información personal en cualquier momento escribiendo a alexfitness.asesorias@gmail.com.'],
+      ['Contacto','Alex Fitness Solutions LLC — Miami, Florida. Teléfono: (786) 580-2691. Correo: alexfitness.asesorias@gmail.com.'] ] }
+  };
+  function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function openPrivacy(){
+    var p=PRIVACY[lang]||PRIVACY.en;
+    $('privacyTitle').textContent=p.title;
+    var html='<div style="font-size:11.5px;color:rgba(255,255,255,.4);margin-bottom:14px">'+escHtml(p.updated)+'</div>';
+    p.sections.forEach(function(sec){ html+='<div style="font-weight:600;color:#fff;margin:14px 0 4px">'+escHtml(sec[0])+'</div><div>'+escHtml(sec[1])+'</div>'; });
+    $('privacyBody').innerHTML=html;
+    $('privacyModal').style.display='flex';
+  }
+  function closePrivacy(){ $('privacyModal').style.display='none'; }
+
   function applyLang(){
     var t=T[lang]; $('langBtn').textContent=t.btn; document.documentElement.lang=lang;
     ['t0','s0','l_foto','l_nombre','l_apellido','l_email','l_tel','l_bd','l_gen','gen_h','gen_m','gen_x','t1','s1','obj1','obj2','obj3','obj4',
@@ -261,6 +302,9 @@
     renderParq(); updateNav();
   }
   $('langBtn').onclick=function(){ lang=(lang==='es'?'en':'es'); applyLang(); };
+  $('privacyLink').onclick=function(e){ e.preventDefault(); openPrivacy(); };
+  $('privacyClose').onclick=closePrivacy;
+  $('privacyModal').onclick=function(e){ if(e.target===$('privacyModal')) closePrivacy(); };
 
   document.querySelectorAll('[data-choice]').forEach(function(g){
     var key=g.getAttribute('data-choice');
