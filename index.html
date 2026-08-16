@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=110"></script>
-<script src="./castillo-transform.js?v=110"></script>
-<script src="./castillo-equiv.js?v=110"></script>
-<script src="./castillo-data.js?v=110"></script>
+<script src="./castillo-i18n.js?v=111"></script>
+<script src="./castillo-transform.js?v=111"></script>
+<script src="./castillo-equiv.js?v=111"></script>
+<script src="./castillo-data.js?v=111"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2902,7 +2902,9 @@ class Component extends DCLogic {
     });
 
     const _hasW = WEIGHTS.length > 0;   // cliente nuevo sin registros de peso → gráfico vacío (no demo)
-    const mn = _hasW ? Math.min.apply(null, WEIGHTS) : 0, mx = _hasW ? Math.max.apply(null, WEIGHTS) : 0;
+    let mn = _hasW ? Math.min.apply(null, WEIGHTS) : 0, mx = _hasW ? Math.max.apply(null, WEIGHTS) : 0;
+    // 1 solo valor o valores casi planos → sin esto, mn===mx y las etiquetas del eje Y se salen del gráfico (se solapaban con "composición y medidas")
+    if (_hasW && mx - mn < 0.6) { const _mid = (mx + mn) / 2; mn = _mid - 0.6; mx = _mid + 0.6; }
     const cw = 320, chh = 82, padL = 34, rngW = (mx - mn) || 1;   // padL = hueco para las etiquetas de peso (eje Y)
     const yOfW = v => chh - ((v - mn) / rngW) * (chh - 12) - 6;
     const _wDen = (WEIGHTS.length - 1) || 1;
