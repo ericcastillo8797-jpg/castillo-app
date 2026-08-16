@@ -600,20 +600,25 @@
       }
       var _cardioSum = cardioDias.reduce(function (s, d) { return s + (d.pasos || 0); }, 0);
       var cardioMedia = cardioDias.length ? Math.round(_cardioSum / cardioDias.length) : 0;
-      // nutrición: días con TODAS las comidas registradas + recuento por opción (agrupado por comida) + kcal por día
-      var nutDoneDias = 0, nutTotalDias = 0, nutDias = [], _cont = {};
+      // nutrición MENSUAL por COMIDAS: comidas marcadas ÷ comidas planificadas del mes (no por días). Ej: 3 comidas/día × días con dieta.
+      var nutDias = [], _cont = {};
       function kcalDe(m, op, kn2) {
         if (op === 'libre') return ((comLibreByDate[kn2] || {})[m.n]) || 0;
         if (op === 'mp') return (m.okcal && m.okcal[0]) || 0;
         return (m.okcal && m.okcal[op]) || 0;
       }
+      // días del mes en los que la dieta está planificada (evento nutritionPlan). Si el plan no usa eventos por día pero hay dieta, se cuenta cada día.
+      var _nutDaySet = {}, _hasNutEv = false;
+      events.forEach(function (e) { if (e.removed) return; if (e.type !== 'nutritionPlan' && e.type !== 'nutrition') return; var ed = new Date(ms(e.date)); if (!isNaN(ed) && _mkey(ed) === mk) { _nutDaySet[ed.getDate()] = 1; _hasNutEv = true; } });
+      var nutDoneMeals = 0, nutPlanMeals = 0;
       if (DIET.length) {
         DIET.forEach(function (m) { _cont[m.id] = {}; });
         for (var dn2 = 1; dn2 <= lastDay; dn2++) {
-          var kn = dk(dn2), com = comByDate[kn] || {}, nreg = Object.keys(com).length;
+          var kn = dk(dn2), com = comByDate[kn] || {};
+          var plannedNut = _hasNutEv ? !!_nutDaySet[dn2] : true;   // ese día toca dieta
+          if (plannedNut) { nutPlanMeals += DIET.length; DIET.forEach(function (m) { if (com[m.id] != null) nutDoneMeals++; }); }
+          var nreg = Object.keys(com).length;
           if (!nreg) continue;
-          nutTotalDias++;
-          if (DIET.every(function (m) { return com[m.id] != null; })) nutDoneDias++;
           var items = [], dayKcal = 0;
           DIET.forEach(function (m) {
             var op = com[m.id]; if (op == null) return;
@@ -631,7 +636,7 @@
         var ops = Object.keys(_cont[m.id] || {}).map(function (lbl) { return { lbl: lbl, veces: _cont[m.id][lbl] }; }).sort(function (a, b) { return b.veces - a.veces; });
         return { meal: m.n, opciones: ops };
       }).filter(function (g) { return g.opciones.length; });
-      var nutPct = nutTotalDias ? Math.round(nutDoneDias / nutTotalDias * 100) : 0;
+      var nutPct = nutPlanMeals ? Math.round(nutDoneMeals / nutPlanMeals * 100) : 0;
       // ejercicios: progresión de peso dentro del mes
       var ejercicios = Object.keys(progMap).map(function (nombre) {
         var pts = progMap[nombre].filter(function (p) { return (p.date || '').slice(0, 7) === mk && p.top != null; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
@@ -652,14 +657,15 @@
       var pDelta = (!isNaN(_pi) && !isNaN(_pf2)) ? Math.round((_pf2 - _pi) * 10) / 10 : 0;
       // fotos del mes
       var fotosN = _allSets.filter(function (s) { var dt = new Date(s.t); return dt.getFullYear() === yr && dt.getMonth() === mo; }).length;
-      var gDone = mEnt.done + mCar.done + mMet.done + nutDoneDias, gTot = mEnt.total + mCar.total + mMet.total + nutTotalDias;
+      // cumplimiento global = MEDIA de los % de las áreas que aplican (no ponderado por volumen, para que la nutrición en comidas no lo desequilibre)
+      var _gp = []; if (mEnt.total) _gp.push(mEnt.pct); if (mCar.total) _gp.push(mCar.pct); if (mMet.total) _gp.push(mMet.pct); if (nutPlanMeals) _gp.push(nutPct);
       return {
         key: mk, label: MO[mo].charAt(0).toUpperCase() + MO[mo].slice(1) + ' ' + yr,
         cerrado: !isCurrent,   // el mes ya terminó (se puede compartir/imprimir/guardar); el mes en curso, NO
         entrenos: mEnt, cardio: { done: mCar.done, total: mCar.total, pct: mCar.pct, objetivo: _pasosObj, media: cardioMedia, dias: cardioDias },
-        nutricion: { done: nutDoneDias, total: nutTotalDias, pct: nutPct, dias: nutDias, conteoGrupos: conteoGrupos },
+        nutricion: { done: nutDoneMeals, total: nutPlanMeals, pct: nutPct, dias: nutDias, conteoGrupos: conteoGrupos },
         metricas: { done: mMet.done, total: mMet.total, pct: mMet.pct, checkins: checkins },
-        global: gTot ? Math.round(gDone / gTot * 100) : 0,
+        global: _gp.length ? Math.round(_gp.reduce(function (a, b) { return a + b; }, 0) / _gp.length) : 0,
         peso: { ini: pIni || '—', fin: pFin || '—', delta: pDelta }, fotos: fotosN, ejercicios: ejercicios
       };
     });
