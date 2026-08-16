@@ -54,6 +54,8 @@
   .consent{ display:flex; gap:12px; align-items:flex-start; }
   .box{ width:24px; height:24px; flex:none; border-radius:7px; border:1.5px solid var(--faint); margin-top:1px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s; }
   .box.on{ background:var(--fg); border-color:var(--fg); }
+  .box svg{ opacity:0; transition:.15s; }
+  .box.on svg{ opacity:1; }
   .err{ background:rgba(220,80,70,.12); border:.5px solid rgba(220,80,70,.4); color:#ff9a90; border-radius:11px; padding:11px 14px; font-size:13.5px; margin-bottom:14px; line-height:1.4; display:none; }
 
   /* navegación inferior */
@@ -101,7 +103,13 @@
             <input id="telefono" type="tel" autocomplete="tel-national" inputmode="tel" data-ph-es="Número de teléfono" data-ph-en="Phone number" style="flex:1"/>
           </div>
         </div>
-        <div class="mt"><label id="l_bd">Fecha de nacimiento</label><input id="birthdate" type="date"/></div>
+        <div class="mt"><label id="l_bd">Fecha de nacimiento</label>
+          <div style="display:flex;gap:8px">
+            <select id="bd_d" style="flex:1"></select>
+            <select id="bd_m" style="flex:1.5"></select>
+            <select id="bd_y" style="flex:1.2"></select>
+          </div>
+        </div>
         <div class="mt"><label id="l_gen">Género</label>
           <div class="yn" data-choice="genero">
             <button type="button" data-v="hombre" id="gen_h">Hombre</button>
@@ -159,7 +167,7 @@
       </div>
       <div class="card">
         <div class="consent">
-          <div class="box" id="consentBox"></div>
+          <div class="box" id="consentBox"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0b0b0d" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"></path></svg></div>
           <div id="consentTxt" style="font-size:13.5px;color:var(--dim);line-height:1.55;cursor:pointer">Acepto que Castillo Private trate mis datos (incluidos los de salud) para mi seguimiento, según los términos y la política de privacidad.</div>
         </div>
         <a id="privacyLink" href="#" style="display:inline-block;margin-top:12px;font-size:13px;color:var(--fg,#fff);text-decoration:underline;cursor:pointer">Ver la política de privacidad</a>
@@ -292,6 +300,27 @@
   }
   function closePrivacy(){ $('privacyModal').style.display='none'; }
 
+  // Fecha de nacimiento con 3 selectores nativos en orden DÍA · MES · AÑO (igual en cualquier móvil, sin depender del idioma del sistema)
+  var MONTHS={ es:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+               en:['January','February','March','April','May','June','July','August','September','October','November','December'] };
+  function fillBD(){
+    var d=$('bd_d'), m=$('bd_m'), y=$('bd_y'); if(!d||!m||!y) return;
+    var sd=d.value, sm=m.value, sy=y.value;
+    var dOpt='<option value="">'+(lang==='es'?'Día':'Day')+'</option>';
+    for(var i=1;i<=31;i++) dOpt+='<option value="'+i+'">'+i+'</option>';
+    var mOpt='<option value="">'+(lang==='es'?'Mes':'Month')+'</option>';
+    MONTHS[lang].forEach(function(nm,i){ mOpt+='<option value="'+(i+1)+'">'+nm+'</option>'; });
+    var yOpt='<option value="">'+(lang==='es'?'Año':'Year')+'</option>', now=new Date().getFullYear();
+    for(var yr=now-13; yr>=1925; yr--) yOpt+='<option value="'+yr+'">'+yr+'</option>';
+    d.innerHTML=dOpt; m.innerHTML=mOpt; y.innerHTML=yOpt;
+    d.value=sd; m.value=sm; y.value=sy;
+  }
+  function getBirthdate(){
+    var d=$('bd_d').value, m=$('bd_m').value, y=$('bd_y').value;
+    if(!d||!m||!y) return null;
+    return y+'-'+(m.length<2?'0'+m:m)+'-'+(d.length<2?'0'+d:d);
+  }
+
   function applyLang(){
     var t=T[lang]; $('langBtn').textContent=t.btn; document.documentElement.lang=lang;
     ['t0','s0','l_foto','l_nombre','l_apellido','l_email','l_tel','l_bd','l_gen','gen_h','gen_m','gen_x','t1','s1','obj1','obj2','obj3','obj4',
@@ -299,7 +328,7 @@
       var a=p.split(':'), id=a[0], key=a[1]||a[0]; var el=$(id); if(el) el.textContent=t[key];
     });
     document.querySelectorAll('[data-ph-es]').forEach(function(el){ el.placeholder=el.getAttribute('data-ph-'+lang); });
-    renderParq(); updateNav();
+    fillBD(); renderParq(); updateNav();
   }
   $('langBtn').onclick=function(){ lang=(lang==='es'?'en':'es'); applyLang(); };
   $('privacyLink').onclick=function(e){ e.preventDefault(); openPrivacy(); };
@@ -401,7 +430,7 @@
     var email=$('email').value.trim().toLowerCase(), pass=$('password').value, codigo=$('codigo').value.trim();
     var parq={}; PARQ.forEach(function(p){ parq[p.k]={ q:p.es, si:!!yn[p.k] }; });
     var payload={ token:codigo, code:codigo, email:email, password:pass, nombre:$('nombre').value.trim(), apellido:$('apellido').value.trim(),
-      telefono:$('telefono').value.trim(), prefix:$('prefijo').value.trim(), genero:choice.genero||null, birthdate:$('birthdate').value||null,
+      telefono:$('telefono').value.trim(), prefix:$('prefijo').value.trim(), genero:choice.genero||null, birthdate:getBirthdate(),
       objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true, lang:lang, foto:fotoData||null };
     submitting=true; $('nextBtn').disabled=true; $('backBtn').disabled=true; $('nextBtn').textContent=t.creando;
     fetch(SUPA+'/functions/v1/alta-cliente',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'}, body:JSON.stringify(payload) })
