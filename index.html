@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=125"></script>
-<script src="./castillo-transform.js?v=125"></script>
-<script src="./castillo-equiv.js?v=125"></script>
-<script src="./castillo-data.js?v=125"></script>
+<script src="./castillo-i18n.js?v=126"></script>
+<script src="./castillo-transform.js?v=126"></script>
+<script src="./castillo-equiv.js?v=126"></script>
+<script src="./castillo-data.js?v=126"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2326,9 +2326,7 @@ class Component extends DCLogic {
   pickMeal = (id, i) => () => {
     const dd = DAYS.find(d => d.d === this.state.day) || DAYS.find(d => d.today) || {};
     const fecha = dd.fecha;
-    // no se puede rellenar un día futuro
-    const tIdx = DAYS.findIndex(d => d.today), sIdx = DAYS.findIndex(d => d.d === this.state.day);
-    if (tIdx >= 0 && sIdx > tIdx) return;
+    // Alex 2026-08-17: el cliente puede registrar cualquier día (sin bloqueo de futuro)
     const byDate = (window.__DATA && window.__DATA.mealsByDate) || {};
     const day = byDate[fecha] || {};
     const CD = window.CastilloData;
@@ -2440,20 +2438,21 @@ class Component extends DCLogic {
   };
   closeWorkout = () => { this.setState({ wIn: false }); this.later(() => this.setState({ wOpen: false }), 540); };
   finishWorkout = () => {
-    const _dF = DAYS.find(d => d.d === this.state.day) || DAYS[2] || DAYS[0];
-    // no se puede registrar el entreno de un día futuro (solo el del día de hoy)
-    if (this._fechaFutura(_dF.fecha)) { this.closeWorkout(); this.flash(this.state.lang === 'en' ? "It's not that day yet" : 'Aún no es ese día — solo puedes registrar el entreno de hoy'); return; }
+    // Alex 2026-08-17: se puede registrar cualquier día. Se guarda SIEMPRE en el día abierto (dS.fecha).
     this.closeWorkout();
     try {
       const dS = DAYS.find(d => d.d === this.state.day) || DAYS[2] || DAYS[0];
-      const list = (WK[dS.wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
+      // Usa el entreno que el cliente ABRIÓ (wWk/wTitle), no el recalculado del día, para no perder los ejercicios rellenados.
+      const wk = this.state.wWk || dS.wk;
+      const title = this.state.wTitle || dS.t || 'Entrenamiento';
+      const list = (WK[wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
       const logs = this.state.logs || {}, swaps = this.state.swaps || {};
       const ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, y: e.y, objetivo: e.p, series: (logs[e.id] || []).slice(0, e.s).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && l.done) })) }));
       const completo = ejercicios.length > 0 && ejercicios.every(ej => ej.series.length > 0 && ej.series.every(s => String(s.reps).trim() && String(s.peso).trim()));
       // marca inmediata en la pantalla principal (no espera al servidor)
       this.setState(s => ({ marks: Object.assign({}, s.marks, { [dS.fecha + '|entreno']: true }) }));
       if (window.CastilloData && window.CastilloData.registrarEntreno) {
-        window.CastilloData.registrarEntreno(dS.t || 'Entrenamiento', ejercicios, completo, dS.fecha).then(() => this.refreshData(), () => {});
+        window.CastilloData.registrarEntreno(title, ejercicios, completo, dS.fecha).then(() => this.refreshData(), (e) => { this.flash('No se pudo guardar el entreno'); });
       }
     } catch (e) {}
     this.flash('Entreno registrado · enviado al equipo');
