@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=112"></script>
-<script src="./castillo-transform.js?v=112"></script>
-<script src="./castillo-equiv.js?v=112"></script>
-<script src="./castillo-data.js?v=112"></script>
+<script src="./castillo-i18n.js?v=113"></script>
+<script src="./castillo-transform.js?v=113"></script>
+<script src="./castillo-equiv.js?v=113"></script>
+<script src="./castillo-data.js?v=113"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -50,9 +50,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 </style>
 <script src="./image-slot.js"></script>
 </helmet>
-<div style="height:100vh;height:100dvh;position:relative;overflow:hidden;background:#08080A">
+<div style="height:100vh;height:100dvh;position:relative;overflow:hidden;background:#08080A;display:flex;justify-content:center">
 
-<div style="height:{{ appWH }};width:{{ appWH }};max-width:480px;margin:0 auto;zoom:{{ appZoom }};position:relative;overflow:hidden;background:var(--bg,#000);color:var(--fg,#fff);font-family:-apple-system,BlinkMacSystemFont,'Geist','Helvetica Neue',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.01em;{{ themeVars }}">
+<div style="height:{{ appWH }};width:{{ appWH }};max-width:480px;flex:0 0 auto;{{ appZoomStyle }}position:relative;overflow:hidden;background:var(--bg,#000);color:var(--fg,#fff);font-family:-apple-system,BlinkMacSystemFont,'Geist','Helvetica Neue',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.01em;{{ themeVars }}">
 
 <div style="position:absolute;inset:0;transform-origin:50% 0%;overflow:hidden;transition:transform .5s cubic-bezier(.32,.72,0,1),opacity .55s cubic-bezier(.32,.72,0,1),border-radius .5s cubic-bezier(.32,.72,0,1);{{ appLayerStyle }}">
 
@@ -3167,6 +3167,8 @@ class Component extends DCLogic {
       evoCompOpen: st.evoCompOpen, evoCompChevron: st.evoCompOpen ? 'rotate(180deg)' : 'rotate(0deg)', toggleEvoComp: () => this.setState({ evoCompOpen: !st.evoCompOpen }),
       evoCompHint: st.evoCompOpen ? T('Toca para ocultar') : T('Toca para ver todas tus medidas'),
       appZoom: st.fontScale || 1, appWH: '100%',
+      // 'zoom' rompe/congela la grabación de pantalla en iOS → solo lo aplicamos si de verdad se escala el texto (no en el caso normal fontScale=1)
+      appZoomStyle: (st.fontScale && st.fontScale !== 1) ? ('zoom:' + st.fontScale + ';') : '',
       fontSizes: [[T('Normal'), 1, 13], [T('Grande'), 1.1, 15], [T('Más grande'), 1.22, 17]].map(([n, v, fs]) => {
         const sel = (st.fontScale || 1) === v;
         return { n, fs: fs + 'px', pick: this.setFontScale(v), bg: sel ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', fg: sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)' };
