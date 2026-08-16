@@ -186,7 +186,9 @@
   var ANON='sb_publishable_0vGKDo8tHn-jf88-CZb1UA_dTKD4mkx';
   var LS='castillo_session', CR='castillo_creds';
   var params=new URLSearchParams(location.search);
-  var lang='en';   // el formulario arranca SIEMPRE en inglés (la mayoría de clientes son en inglés); el cliente puede pasarlo a español arriba a la derecha
+  // el formulario arranca en el idioma del móvil (español si el teléfono está en español, si no inglés); el cliente puede cambiarlo con el botón de arriba a la derecha
+  var _navLang=((navigator.languages&&navigator.languages[0])||navigator.language||'en').toLowerCase();
+  var lang=(_navLang.indexOf('es')===0)?'es':'en';
   var choice={}, yn={}, consent=false, cur=0, TOTAL=5, submitting=false, fotoData='';
 
   var PARQ=[
