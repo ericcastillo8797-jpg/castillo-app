@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=109"></script>
-<script src="./castillo-transform.js?v=109"></script>
-<script src="./castillo-equiv.js?v=109"></script>
-<script src="./castillo-data.js?v=109"></script>
+<script src="./castillo-i18n.js?v=110"></script>
+<script src="./castillo-transform.js?v=110"></script>
+<script src="./castillo-equiv.js?v=110"></script>
+<script src="./castillo-data.js?v=110"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1767,11 +1767,12 @@ let PHOTOSETS = [
 
 // Lista FIJA de medidas del check-in (siempre las mismas para todos los clientes, se puedan rellenar aunque sea nuevo).
 // MET (arriba) guarda solo los valores YA registrados (para el histórico); esta es la lista de CAMPOS que siempre se muestran.
+// Claves CANÓNICAS (mismas que Harbiz/el CRM, ej. Eric) para que las medidas se vean en la app Y en el CRM.
 const MEAS_GROUPS = [
-  { g: 'Composición', f: [ { k: 'peso', l: 'Peso corporal', u: 'kg' }, { k: 'rollitos', l: 'Rollitos', u: 'mm' } ] },
+  { g: 'Composición', f: [ { k: 'peso-corporal', l: 'Peso corporal', u: 'kg' }, { k: 'rollitos', l: 'Rollitos', u: 'cm' } ] },
   { g: 'Tronco', f: [ { k: 'cuello', l: 'Cuello', u: 'cm' }, { k: 'hombros', l: 'Hombros', u: 'cm' }, { k: 'pecho', l: 'Pecho', u: 'cm' }, { k: 'cintura', l: 'Cintura', u: 'cm' }, { k: 'cadera', l: 'Cadera', u: 'cm' } ] },
-  { g: 'Brazos', f: [ { k: 'bi', l: 'Bíceps izquierdo', u: 'cm' }, { k: 'bd', l: 'Bíceps derecho', u: 'cm' }, { k: 'ai', l: 'Antebrazo izquierdo', u: 'cm' }, { k: 'ad', l: 'Antebrazo derecho', u: 'cm' } ] },
-  { g: 'Piernas', f: [ { k: 'mi', l: 'Muslo izquierdo', u: 'cm' }, { k: 'md', l: 'Muslo derecho', u: 'cm' }, { k: 'gem', l: 'Gemelo', u: 'cm' } ] }
+  { g: 'Brazos', f: [ { k: 'b-ceps-izquierdo', l: 'Bíceps izquierdo', u: 'cm' }, { k: 'b-ceps-derecho', l: 'Bíceps derecho', u: 'cm' }, { k: 'antebrazo-izquierdo', l: 'Antebrazo izquierdo', u: 'cm' }, { k: 'antebrazo-derecho', l: 'Antebrazo derecho', u: 'cm' } ] },
+  { g: 'Piernas', f: [ { k: 'muslo-izquierdo', l: 'Muslo izquierdo', u: 'cm' }, { k: 'muslo-derecho', l: 'Muslo derecho', u: 'cm' }, { k: 'gemelo-izquierdo', l: 'Gemelo izquierdo', u: 'cm' }, { k: 'gemelo-derecho', l: 'Gemelo derecho', u: 'cm' } ] }
 ];
 function applyRealData(d) {
   if (!d) return;

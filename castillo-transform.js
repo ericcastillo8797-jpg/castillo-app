@@ -335,7 +335,7 @@
         f.hist = f.hist.slice(0, 12);
       });
       var wField = fields.filter(function (f) { return /peso|weight/i.test(f.l) || f.k === 'peso'; })[0];
-      var wKey = wField ? wField.k : (chkByKey['peso'] ? 'peso' : null);
+      var wKey = wField ? wField.k : (chkByKey['peso-corporal'] ? 'peso-corporal' : (chkByKey['peso'] ? 'peso' : null));
       if (wKey && chkByKey[wKey]) {
         chkByKey[wKey].forEach(function (pt) { var n = parseFloat(String(pt.val).replace(',', '.')); if (!isNaN(n) && n > 0) { WEIGHTS.push(n); WDATES.push(fmtShort(dtOf(pt.fecha).getTime())); } });
         if (WEIGHTS.length === 1) { WEIGHTS = [WEIGHTS[0], WEIGHTS[0]]; WDATES = [WDATES[0] || '', WDATES[0] || '']; }
@@ -349,6 +349,21 @@
     // Cada semana muestra sus 3 fotos; antes, si había 1 check-in, se ocultaban TODAS las de Harbiz.
     var SLUG_LABEL = { 'peso-corporal': 'Peso corporal', 'peso': 'Peso corporal', 'peso_corporal': 'Peso corporal', 'pecho': 'Pecho', 'cadera': 'Cadera', 'cuello': 'Cuello', 'cintura': 'Cintura', 'hombros': 'Hombros', 'rollitos': 'Rollitos', 'muslo-derecho': 'Muslo derecho', 'muslo-izquierdo': 'Muslo izquierdo', 'b-ceps-derecho': 'Bíceps derecho', 'b-ceps-izquierdo': 'Bíceps izquierdo', 'gemelo-derecho': 'Gemelo derecho', 'gemelo-izquierdo': 'Gemelo izquierdo', 'antebrazo-derecho': 'Antebrazo derecho', 'antebrazo-izquierdo': 'Antebrazo izquierdo' };
     function unslug(s) { return SLUG_LABEL[s] || String(s).replace(/-/g, ' ').replace(/^./, function (c) { return c.toUpperCase(); }); }
+    // Cliente NUEVO (o medidas que no venían de Harbiz): crea la métrica de "Composición y medidas" desde sus check-ins.
+    (function () {
+      if (!Object.keys(chkByKey).length) return;
+      var _dtOf = function (fecha) { return new Date(String(fecha).slice(0, 10) + 'T00:00:00'); };
+      var _have = {}; fields.forEach(function (f) { _have[f.k] = 1; });
+      Object.keys(chkByKey).forEach(function (k) {
+        if (_have[k] || /peso|weight|grasa|fat|body/i.test(k)) return;   // el peso va al gráfico; la grasa se excluye
+        var arr = chkByKey[k]; if (!arr || !arr.length) return;
+        var hist = arr.slice().reverse().map(function (pt) { var raw = parseFloat(String(pt.val).replace(',', '.')); return isNaN(raw) ? null : { v: comma(pt.val), raw: raw, weekLabel: 'Semana ' + isoWeek(_dtOf(pt.fecha)), range: weekRange(_dtOf(pt.fecha)) }; }).filter(Boolean).slice(0, 12);
+        if (!hist.length) return;
+        var last = arr[arr.length - 1], prev = arr.length >= 2 ? arr[arr.length - 2] : null;
+        fields.push({ k: k, l: unslug(k), u: 'cm', v: comma(last.val), p: comma(prev ? prev.val : last.val), hist: hist });
+      });
+      MET = fields.length ? [{ g: 'Composición y medidas', f: fields }] : [];
+    })();
     var dtOf2 = function (fecha) { return new Date(String(fecha).slice(0, 10) + 'T00:00:00'); };
     // Índice unificado de TODAS las medidas por fecha (métricas de Harbiz + check-ins del cliente),
     // para que CUALQUIER foto (semana con check-in o histórica) muestre TODAS las medidas de esa fecha.
