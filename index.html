@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=122"></script>
-<script src="./castillo-transform.js?v=122"></script>
-<script src="./castillo-equiv.js?v=122"></script>
-<script src="./castillo-data.js?v=122"></script>
+<script src="./castillo-i18n.js?v=123"></script>
+<script src="./castillo-transform.js?v=123"></script>
+<script src="./castillo-equiv.js?v=123"></script>
+<script src="./castillo-data.js?v=123"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2307,7 +2307,7 @@ class Component extends DCLogic {
     }, () => {});
   };
   // true si esa fecha ('YYYY-MM-DD') es POSTERIOR a hoy (en la zona del cliente) → no se puede registrar aún
-  _fechaFutura = (fecha) => { const t = DAYS.find(d => d.today); return !!(t && fecha && String(fecha) > t.fecha); };
+  _fechaFutura = (fecha) => false; /* Alex 2026-08-17: el cliente puede registrar cualquier día (pasado/hoy/futuro), sin bloqueo */
   toggleMark = (fecha, type, msg) => () => {
     // no se puede marcar/registrar un día que aún no ha llegado (igual que la nutrición)
     if (this._fechaFutura(fecha)) { this.flash(this.state.lang === 'en' ? "It's not that day yet" : 'Aún no es ese día'); return; }
@@ -3002,7 +3002,7 @@ class Component extends DCLogic {
     const _sIdx = DAYS.findIndex(d => d.d === st.day);
     const dietToday = _tIdx >= 0 && _sIdx === _tIdx;
     const dietPast = _tIdx >= 0 && _sIdx >= 0 && _sIdx < _tIdx;
-    const dietFuture = _tIdx >= 0 && _sIdx > _tIdx;
+    const dietFuture = false; /* Alex 2026-08-17: sin bloqueo de días futuros */
     // hoy y días pasados: lo YA registrado se ve y queda bloqueado; lo vacío se puede rellenar. Futuro: bloqueado.
     const dietRows = DIET.map((m) => {
       const reg = _selMeals[m.id];               // opción registrada ese día (o undefined)
