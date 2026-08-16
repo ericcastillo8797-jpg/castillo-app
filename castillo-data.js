@@ -102,7 +102,10 @@
     // comidas libres / cheat meals (para las kcal del desglose mensual)
     var pLibre = api('/rest/v1/comida_libre?select=fecha,comida,alimentos&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
       .catch(function () { return []; });
-    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre]).then(function (res) {
+    // config de medidas (qué medidas rellena el cliente) — la edita Alex en el CRM; si no hay, la app usa su lista por defecto
+    var pCfg = api('/rest/v1/app_config?select=valor&clave=eq.medidas&limit=1', {}, token)
+      .catch(function () { return []; });
+    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre, pCfg]).then(function (res) {
       var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
       var comAll = res[4] || [], chkAll = res[5] || [];
       var perfilRow = (res[6] && res[6][0]) || null;
@@ -146,6 +149,7 @@
         api('/rest/v1/whoop_tokens?select=cliente_email&limit=1&cliente_email=ilike.' + encodeURIComponent(_ctx.email), {}, token)
           .then(function (rows) { try { var k = 'app_con_' + _ctx.email + '_WHOOP'; if (rows && rows.length) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) {} })
           .catch(function () {});
+        data.medidasConfig = (res[8] && res[8][0] && res[8][0].valor) || null;   // {grupos:[{g,f:[{key,label,unit}]}]}
         window.__DATA = data;
         try { registerPush(); } catch (e) {}   // registra el móvil para notificaciones (solo app nativa)
         try { syncSaludPasos(); } catch (e) {}   // lee pasos de Apple Salud → marca cardio (solo app nativa)
