@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=107"></script>
-<script src="./castillo-transform.js?v=107"></script>
-<script src="./castillo-equiv.js?v=107"></script>
-<script src="./castillo-data.js?v=107"></script>
+<script src="./castillo-i18n.js?v=108"></script>
+<script src="./castillo-transform.js?v=108"></script>
+<script src="./castillo-equiv.js?v=108"></script>
+<script src="./castillo-data.js?v=108"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1898,6 +1898,18 @@ class Component extends DCLogic {
     // al volver a la app, refresca por si cambió el día (zona horaria del cliente) o los pasos
     this._visH = () => { if (document.visibilityState === 'visible' && this.stage === 'app') { try { this.refreshData(); } catch (e) {} } };
     document.addEventListener('visibilitychange', this._visH);
+    // Reintento de fotos: si el WebView de iOS falla al cargar una foto del bucket privado, la re-firmamos y reintentamos UNA vez.
+    this._imgErr = (e) => {
+      const img = e && e.target;
+      if (!img || img.tagName !== 'IMG') return;
+      const src = img.getAttribute('src') || '';
+      if (src.indexOf('/progreso/') < 0 || img.dataset.reSigned) return;
+      img.dataset.reSigned = '1';
+      if (window.CastilloData && window.CastilloData.reSignPhoto) {
+        window.CastilloData.reSignPhoto(src).then((u) => { if (u) img.src = u; });
+      }
+    };
+    document.addEventListener('error', this._imgErr, true);   // capture: los eventos 'error' de <img> no burbujean
   }
   runSplash = () => {
     this.later(() => { if (this.stage === 'splash') this.setState({ stage: 'splashOut' }); }, 2200);

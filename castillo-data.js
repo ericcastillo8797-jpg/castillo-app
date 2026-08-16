@@ -63,6 +63,17 @@
     }).catch(function () { return {}; });
   }
 
+  // Re-firma UNA foto del bucket 'progreso' (para reintentar si el WebView falla al cargarla). Devuelve una URL firmada fresca o null.
+  function reSignPhoto(url) {
+    var p = _progresoPath(url);
+    if (!p || !_ctx.token) return Promise.resolve(null);
+    return fetch(SUPA + '/storage/v1/object/sign/progreso', {
+      method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: 604800, paths: [p] })
+    }).then(function (r) { return r.ok ? r.json() : []; }).then(function (arr) {
+      var o = (arr || [])[0]; return (o && o.signedURL) ? SUPA + '/storage/v1' + o.signedURL : null;
+    }).catch(function () { return null; });
+  }
   // fecha de HOY (YYYY-MM-DD) en la ZONA HORARIA DEL CLIENTE (no la del dispositivo)
   function tzToday(tz) {
     try { return new Intl.DateTimeFormat('en-CA', { timeZone: tz || 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
@@ -374,6 +385,7 @@
     conectarApp: conectarApp,
     desconectarApp: desconectarApp,
     conectarWhoop: conectarWhoop,
+    reSignPhoto: reSignPhoto,
     // recarga los datos del cliente (registros, comidas...) y reconstruye __DATA con los conteos frescos
     reload: function () {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
