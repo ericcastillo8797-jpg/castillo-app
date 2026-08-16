@@ -501,9 +501,9 @@
     if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: _cItem.title || 'Caminar', sub: cardioSubReal(_cItem, regToday.pasos), pasos: (_cItem.config && _cItem.config.pasos) || '', pasosHechos: (regToday.pasos != null ? regToday.pasos : ''), done: doneT('cardio') || !!regToday.cardio }); }
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
+    // Nutrición SOLO los días que el entrenador la haya puesto (con su título del CRM), no todos los días.
     var _nutToday = todayItems.filter(function (x) { return x.type === 'nutritionPlan' || x.type === 'nutrition'; })[0];
-    if (DIET.length) todayTasks.push({ key: 'nutricion', label: 'Pauta alimenticia', sub: DIET.length + ' comidas', done: DIET.every(function (m) { return comHoy[m.id] != null; }) });
-    else if (_nutToday) todayTasks.push({ key: 'nutricion', label: _nutToday.title || 'Nutrición', sub: 'Marca lo que has comido', done: !!_nutToday.done });
+    if (_nutToday) todayTasks.push({ key: 'nutricion', label: _nutToday.title || 'Nutrición', sub: (DIET.length ? DIET.length + ' comidas' : 'Marca lo que has comido'), done: (DIET.length ? DIET.every(function (m) { return comHoy[m.id] != null; }) : !!_nutToday.done) });
     var trainDoneN = todayTasks.filter(function (t) { return t.done; }).length;
     var planHoyPct = todayTasks.length ? Math.round(trainDoneN / todayTasks.length * 100) : 0;
     // cumplimiento semanal (planificado vs completado en la semana actual)

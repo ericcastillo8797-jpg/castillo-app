@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=106"></script>
-<script src="./castillo-transform.js?v=106"></script>
-<script src="./castillo-equiv.js?v=106"></script>
-<script src="./castillo-data.js?v=106"></script>
+<script src="./castillo-i18n.js?v=107"></script>
+<script src="./castillo-transform.js?v=107"></script>
+<script src="./castillo-equiv.js?v=107"></script>
+<script src="./castillo-data.js?v=107"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2830,15 +2830,7 @@ class Component extends DCLogic {
         ckBd: done ? _c : 'rgba(var(--fgc,255,255,255),.24)'
       };
     });
-    // Nutrición como una tarea más del día (verde), que lleva a registrar las comidas (lo pidió Alex).
-    // Solo si el programa NO trajo ya una tarea de nutrición ese día (esa lleva el título del CRM y tiene prioridad).
-    if (DIET && DIET.length && !dayActs.some(function (a) { return a.type === 'nutricion'; })) {
-      const _nf = dS.fecha;
-      const _nm = ((_dd.mealsByDate) || {})[_nf] || {};
-      const _nd = DIET.every(function (m) { return _nm[m.id] != null; });
-      dayActs.push({ type: 'nutricion', label: T('Nutrición'), sub: T('Marca lo que has comido'), done: _nd, open: this.openDietSheet(_nf), thumb: '',
-        ckBg: _nd ? '#3DD68C' : 'transparent', ckFg: _nd ? '#0C0C0E' : 'transparent', ckBd: _nd ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.24)' });
-    }
+    // (La nutrición sale SOLO los días que el entrenador la puso en el calendario, con el título del CRM — se añade en el bucle de arriba desde la agenda.)
     const daySel = {
       long: tD(dS.long), rom: dS.rom, t: dS.t, s: tr(dS.s), ses: dS.ses, isToday: !!dS.today,
       acts: dayActs, hasActs: dayActs.length > 0, rest: dayActs.length === 0
