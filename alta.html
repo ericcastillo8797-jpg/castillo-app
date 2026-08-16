@@ -162,6 +162,7 @@
           <div class="box" id="consentBox"></div>
           <div id="consentTxt" style="font-size:13.5px;color:var(--dim);line-height:1.55;cursor:pointer">Acepto que Castillo Private trate mis datos (incluidos los de salud) para mi seguimiento, según los términos y la política de privacidad.</div>
         </div>
+        <a id="privacyLink" href="https://castilloprivate.com/privacy-policy" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;font-size:13px;color:var(--fg,#fff);text-decoration:underline;cursor:pointer">Ver la política de privacidad</a>
       </div>
     </div></div>
 
@@ -212,6 +213,7 @@
       t4:'Crea tu cuenta', s4:'Con esto entrarás en tu app. El código te lo dio tu entrenador.', l_pass:'Contraseña', l_code:'Código de tu entrenador',
       t5:'Un último paso', s5:'Revisa y acepta para terminar.',
       consent:'Acepto que Castillo Private trate mis datos (incluidos los de salud) para mi seguimiento, según los términos y la política de privacidad.',
+      verPolitica:'Ver la política de privacidad',
       d_t:'¡Cuenta creada!', d_s:'Ya puedes entrar con tu email y tu contraseña.', dl:'Entrar a la app',
       e_datos:'Completa nombre, apellidos y un email válido.', e_obj:'Elige tu objetivo.', e_med:'Pon tu peso y tu altura.', e_yn:'Responde todas las preguntas.',
       e_pass:'La contraseña debe tener al menos 6 caracteres.', e_code:'Escribe el código que te dio tu entrenador.', e_consent:'Debes aceptar para continuar.', e_conn:'Error de conexión. Inténtalo de nuevo.' },
@@ -224,6 +226,7 @@
       t4:'Create your account', s4:'This is how you log into your app. Your coach gave you the code.', l_pass:'Password', l_code:'Your coach code',
       t5:'One last step', s5:'Review and accept to finish.',
       consent:'I agree that Castillo Private processes my data (including health data) for my coaching, per the terms and privacy policy.',
+      verPolitica:'View the privacy policy',
       d_t:'Account created!', d_s:'You can now log in with your email and password.', dl:'Enter the app',
       e_datos:'Please complete first name, last name and a valid email.', e_obj:'Choose your goal.', e_med:'Enter your weight and height.', e_yn:'Please answer all questions.',
       e_pass:'Password must be at least 6 characters.', e_code:'Enter the code your coach gave you.', e_consent:'You must accept to continue.', e_conn:'Connection error. Try again.' }
@@ -251,7 +254,7 @@
   function applyLang(){
     var t=T[lang]; $('langBtn').textContent=t.btn; document.documentElement.lang=lang;
     ['t0','s0','l_foto','l_nombre','l_apellido','l_email','l_tel','l_bd','l_gen','gen_h','gen_m','gen_x','t1','s1','obj1','obj2','obj3','obj4',
-     't2','s2','l_peso','l_alt','t3','s3','t4','s4','l_pass','l_code','consentTxt:consent','d_title:d_t','d_sub:d_s','dl:dl'].forEach(function(p){
+     't2','s2','l_peso','l_alt','t3','s3','t4','s4','l_pass','l_code','consentTxt:consent','privacyLink:verPolitica','d_title:d_t','d_sub:d_s','dl:dl'].forEach(function(p){
       var a=p.split(':'), id=a[0], key=a[1]||a[0]; var el=$(id); if(el) el.textContent=t[key];
     });
     document.querySelectorAll('[data-ph-es]').forEach(function(el){ el.placeholder=el.getAttribute('data-ph-'+lang); });
