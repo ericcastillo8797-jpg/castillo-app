@@ -423,7 +423,8 @@
     // Comparativa antes/después para Hoy: primer set (más antiguo) vs último (más reciente). El render añade el open de cada foto.
     var progresoFotos = null;
     if (PHOTOSETS.length) {
-      progresoFotos = { hay: true, dos: PHOTOSETS.length > 1,
+      // dos columnas SIEMPRE que haya fotos: si solo hay un set, la derecha ("Últimas") se rellena con el mismo (mejor que una foto suelta gigante)
+      progresoFotos = { hay: true, dos: PHOTOSETS.length >= 1,
         primeras: PHOTOSETS[PHOTOSETS.length - 1], ultimas: PHOTOSETS[0] };
     }
     var DATES = (wm && wm.data ? wm.data : []).slice().reverse().slice(0, 10).map(function (p) { var dt = new Date(ms(p.t)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
@@ -654,6 +655,7 @@
       var gDone = mEnt.done + mCar.done + mMet.done + nutDoneDias, gTot = mEnt.total + mCar.total + mMet.total + nutTotalDias;
       return {
         key: mk, label: MO[mo].charAt(0).toUpperCase() + MO[mo].slice(1) + ' ' + yr,
+        cerrado: !isCurrent,   // el mes ya terminó (se puede compartir/imprimir/guardar); el mes en curso, NO
         entrenos: mEnt, cardio: { done: mCar.done, total: mCar.total, pct: mCar.pct, objetivo: _pasosObj, media: cardioMedia, dias: cardioDias },
         nutricion: { done: nutDoneDias, total: nutTotalDias, pct: nutPct, dias: nutDias, conteoGrupos: conteoGrupos },
         metricas: { done: mMet.done, total: mMet.total, pct: mMet.pct, checkins: checkins },
