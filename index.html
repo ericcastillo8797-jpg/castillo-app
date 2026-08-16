@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=105"></script>
-<script src="./castillo-transform.js?v=105"></script>
-<script src="./castillo-equiv.js?v=105"></script>
-<script src="./castillo-data.js?v=105"></script>
+<script src="./castillo-i18n.js?v=106"></script>
+<script src="./castillo-transform.js?v=106"></script>
+<script src="./castillo-equiv.js?v=106"></script>
+<script src="./castillo-data.js?v=106"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1765,6 +1765,14 @@ let PHOTOSETS = [
   { w:'Semana 22', date:'05 jun', kg:'86,9 kg' }
 ];
 
+// Lista FIJA de medidas del check-in (siempre las mismas para todos los clientes, se puedan rellenar aunque sea nuevo).
+// MET (arriba) guarda solo los valores YA registrados (para el histórico); esta es la lista de CAMPOS que siempre se muestran.
+const MEAS_GROUPS = [
+  { g: 'Composición', f: [ { k: 'peso', l: 'Peso corporal', u: 'kg' }, { k: 'rollitos', l: 'Rollitos', u: 'mm' } ] },
+  { g: 'Tronco', f: [ { k: 'cuello', l: 'Cuello', u: 'cm' }, { k: 'hombros', l: 'Hombros', u: 'cm' }, { k: 'pecho', l: 'Pecho', u: 'cm' }, { k: 'cintura', l: 'Cintura', u: 'cm' }, { k: 'cadera', l: 'Cadera', u: 'cm' } ] },
+  { g: 'Brazos', f: [ { k: 'bi', l: 'Bíceps izquierdo', u: 'cm' }, { k: 'bd', l: 'Bíceps derecho', u: 'cm' }, { k: 'ai', l: 'Antebrazo izquierdo', u: 'cm' }, { k: 'ad', l: 'Antebrazo derecho', u: 'cm' } ] },
+  { g: 'Piernas', f: [ { k: 'mi', l: 'Muslo izquierdo', u: 'cm' }, { k: 'md', l: 'Muslo derecho', u: 'cm' }, { k: 'gem', l: 'Gemelo', u: 'cm' } ] }
+];
 function applyRealData(d) {
   if (!d) return;
   var nz = function (v) { return v && (v.length || Object.keys(v).length); };
@@ -3011,9 +3019,10 @@ class Component extends DCLogic {
         line: pp.map(p => p[0] + ',' + p[1]).join(' '), lx: pp[pp.length - 1][0], ly: pp[pp.length - 1][1] };
     }
 
-    const ckGroups = MET.map(g => ({ g: g.g, f: g.f.map(f => {
+    const _metPrev = {}; MET.forEach(g => (g.f || []).forEach(f => { _metPrev[f.k] = f.p || f.v; }));   // valor anterior si ya lo tiene registrado
+    const ckGroups = MEAS_GROUPS.map(g => ({ g: g.g, f: g.f.map(f => {
       const v = st.ck[f.k];
-      return { l: f.l, u: f.u, p: f.p, v: v || '—',
+      return { l: f.l, u: f.u, p: _metPrev[f.k] || '—', v: v || '—',
         fg: v ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.28)',
         bg: st.pad && st.pad.k === f.k ? 'rgba(var(--fgc,255,255,255),.07)' : 'transparent',
         edit: () => this.openPad({ t: 'ck', k: f.k, label: f.l, unit: f.u }) };
