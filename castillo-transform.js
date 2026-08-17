@@ -30,7 +30,9 @@
     return ' g';
   }
 
-  function buildAppData(row, programs, ejercicios, registros, comidaRegs, checkinRegs, comidaLibre) {
+  function buildAppData(row, programs, ejercicios, registros, comidaRegs, checkinRegs, comidaLibre, customMetrics) {
+    // métricas personalizadas del cliente: key -> {label, unit} (para etiquetar bien en la Evolución)
+    var customByKey = {}; (Array.isArray(customMetrics) ? customMetrics : []).forEach(function (m) { if (m && m.key) customByKey[m.key] = { label: m.label || m.key, unit: m.unit || '' }; });
     // kcal de cheat meals por día y comida: comLibreByDate['YYYY-MM-DD'][nombreComida] = kcal total
     var comLibreByDate = {};
     (Array.isArray(comidaLibre) ? comidaLibre : []).forEach(function (r) {
@@ -385,7 +387,8 @@
       var esPeso = sg.indexOf('peso') >= 0;
       var pts = chkByKey[sg].map(function (pt) { var d = dtOf2(pt.fecha); return { t: d.getTime(), y: pt.val }; })
         .filter(function (p) { var n = valNum(p.y); return !isNaN(p.t) && !isNaN(n) && n > 0; }).sort(function (a, b) { return a.t - b.t; });
-      if (pts.length) _metSeries.push({ label: unslug(sg), esPeso: esPeso, unit: esPeso ? 'kg' : 'cm', pts: pts });
+      var _cm = customByKey[sg];
+      if (pts.length) _metSeries.push({ label: _cm ? _cm.label : unslug(sg), esPeso: esPeso, unit: _cm ? (_cm.unit || '') : (esPeso ? 'kg' : 'cm'), pts: pts });
     });
     _metSeries.sort(function (a, b) { return (b.esPeso ? 1 : 0) - (a.esPeso ? 1 : 0); }); // peso primero
     // devuelve el valor de cada medida en la fecha de la foto: mismo día exacto → el más reciente hasta esa
