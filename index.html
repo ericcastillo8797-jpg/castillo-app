@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=127"></script>
-<script src="./castillo-transform.js?v=127"></script>
-<script src="./castillo-equiv.js?v=127"></script>
-<script src="./castillo-data.js?v=127"></script>
+<script src="./castillo-i18n.js?v=128"></script>
+<script src="./castillo-transform.js?v=128"></script>
+<script src="./castillo-equiv.js?v=128"></script>
+<script src="./castillo-data.js?v=128"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2050,8 +2050,9 @@ class Component extends DCLogic {
   };
   // registrar nutrición SIEMPRE en un sheet que sube desde abajo (como el entreno), sin cambiar de pantalla
   openDietSheet = fecha => () => {
-    const d = DAYS.find(x => x.fecha === fecha) || DAYS.find(x => x.today);
-    this.setState({ day: d ? d.d : this.state.day, dietMealIdx: 0 });
+    // Resuelve el día en la semana correcta (no resetear a hoy si estás viendo otra semana)
+    const loc = this._locByFecha(fecha);
+    this.setState(Object.assign({ dietMealIdx: 0 }, loc ? { day: loc.day, weekIdx: loc.weekIdx } : {}));
     this.openSheet({ k: 'dietday' });
   };
   // abre el selector de equivalencias de un alimento
@@ -2331,6 +2332,12 @@ class Component extends DCLogic {
     const days = wk.days || DAYS;
     return days.find(d => d.d === this.state.day) || days.find(d => d.today) || DAYS.find(d => d.today) || days[0] || DAYS[0] || {};
   };
+  // Localiza {day, weekIdx} de una fecha 'YYYY-MM-DD' en TODAS las semanas (no solo la actual). null si no está.
+  _locByFecha = (fecha) => {
+    const weeks = (WEEKS && WEEKS.length) ? WEEKS : [{ days: DAYS }];
+    for (let wi = 0; wi < weeks.length; wi++) { const dd = (weeks[wi].days || []).find(x => x.fecha === fecha); if (dd) return { day: dd.d, weekIdx: wi }; }
+    return null;
+  };
   pickMeal = (id, i) => () => {
     const dd = this._selDay();
     const fecha = dd.fecha;
@@ -2499,8 +2506,8 @@ class Component extends DCLogic {
   skipRest = () => { clearInterval(this._iv); this.setState({ rest: 0 }); };
 
   openPad = p => { this.setState({ pad: p, padIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ padIn: true }))); };
-  // Pasa el teclado del campo REPETICIONES al de PESO de la misma serie SIN cerrarlo (ahorra un toque)
-  _padToWeight = p => this.setState({ pad: { t: 'set', ex: p.ex, i: p.i, f: 'w', label: 'Peso', unit: 'kg' } });
+  // Pasa el teclado del campo REPETICIONES al de PESO de la misma serie SIN cerrarlo (ahorra un toque). Vibra para que se note el cambio.
+  _padToWeight = p => { this._haptic(); this.setState({ pad: { t: 'set', ex: p.ex, i: p.i, f: 'w', label: 'Peso', unit: 'kg' } }); };
   closePad = () => {
     const p = this.state.pad;
     // Repeticiones con valor + "Listo" → pasa directo al PESO sin cerrar el teclado
@@ -2729,7 +2736,7 @@ class Component extends DCLogic {
     const evoCounts = _hdr ? (_hdr.nPhotos + ' fotos · ' + _hdr.nMetrics + ' métricas') : 'Fotos · métricas';
 
     // día seleccionado en la pantalla de dieta (la tira de días fija st.day) y comidas REGISTRADAS ese día
-    const _selDayObj = DAYS.find(d => d.d === st.day) || DAYS.find(d => d.today) || {};
+    const _selDayObj = this._selDay();
     const _selFecha = _selDayObj.fecha || _todayFecha;
     const _selMeals = ((_dd.mealsByDate) || {})[_selFecha] || {};   // { meal_id: opcion } registradas ese día
     const mealRows = DIET.map(m => {
