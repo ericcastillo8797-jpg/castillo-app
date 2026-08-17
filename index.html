@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=131"></script>
-<script src="./castillo-transform.js?v=131"></script>
-<script src="./castillo-equiv.js?v=131"></script>
-<script src="./castillo-data.js?v=131"></script>
+<script src="./castillo-i18n.js?v=132"></script>
+<script src="./castillo-transform.js?v=132"></script>
+<script src="./castillo-equiv.js?v=132"></script>
+<script src="./castillo-data.js?v=132"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -830,6 +830,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </sc-for>
 
       <div onClick="{{ finishWorkout }}" style="margin-top:10px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ L.finalizar }}</div>
+      <sc-if value="{{ wPadOpen }}" hint-placeholder-val="{{ false }}"><div style="height:52vh;flex:none"></div></sc-if>
     </div>
   </div>
 
@@ -2452,7 +2453,8 @@ class Component extends DCLogic {
   };
 
   startWorkout = (wk, title) => {
-    this.setState({ wOpen: true, wIn: false, tab: 'home', wWk: (typeof wk === 'string' ? wk : null), wTitle: (typeof title === 'string' ? title : '') });
+    // NO forzar tab:'home' — así al finalizar el entreno vuelves al MISMO sitio desde donde lo abriste (p.ej. Agenda), igual que la nutrición.
+    this.setState({ wOpen: true, wIn: false, wWk: (typeof wk === 'string' ? wk : null), wTitle: (typeof title === 'string' ? title : '') });
     requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ wIn: true })));
   };
   closeWorkout = () => { this.setState({ wIn: false }); this.later(() => this.setState({ wOpen: false }), 540); };
@@ -3324,6 +3326,8 @@ class Component extends DCLogic {
 
       wMounted: st.wOpen, wTransform: st.wIn ? 'none' : 'translateY(100%)',
       exercises, closeWorkout: this.closeWorkout, finishWorkout: this.finishWorkout,
+      wPadOpen: !!(st.pad && st.pad.t === 'set'),   // teclado numérico abierto en el entreno → deja hueco abajo para poder subir el último ejercicio
+
       resting: st.rest > 0, restLabel: Math.floor(st.rest / 60) + ':' + String(st.rest % 60).padStart(2, '0'),
       restOffset: 65.97 - 65.97 * (st.rest / st.restMax), skipRest: this.skipRest,
 
