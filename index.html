@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=132"></script>
-<script src="./castillo-transform.js?v=132"></script>
-<script src="./castillo-equiv.js?v=132"></script>
-<script src="./castillo-data.js?v=132"></script>
+<script src="./castillo-i18n.js?v=133"></script>
+<script src="./castillo-transform.js?v=133"></script>
+<script src="./castillo-equiv.js?v=133"></script>
+<script src="./castillo-data.js?v=133"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -31,6 +31,9 @@
 html,body{margin:0;padding:0;background:#08080A;-webkit-font-smoothing:antialiased;position:fixed;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 *{box-sizing:border-box;scrollbar-width:none}
 *::-webkit-scrollbar{display:none}
+/* App nativa: no se puede seleccionar/copiar texto ni sale el menú de iOS (salvo en los campos de escribir) */
+*{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 a{color:var(--fg,#fff);text-decoration:none}
 a:hover{color:rgba(var(--fgc,255,255,255),.62)}
 input{font:inherit;color:inherit;background:none;border:none;outline:none}
