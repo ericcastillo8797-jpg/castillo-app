@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=129"></script>
-<script src="./castillo-transform.js?v=129"></script>
-<script src="./castillo-equiv.js?v=129"></script>
-<script src="./castillo-data.js?v=129"></script>
+<script src="./castillo-i18n.js?v=130"></script>
+<script src="./castillo-transform.js?v=130"></script>
+<script src="./castillo-equiv.js?v=130"></script>
+<script src="./castillo-data.js?v=130"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2510,6 +2510,12 @@ class Component extends DCLogic {
   skipRest = () => { clearInterval(this._iv); this.setState({ rest: 0 }); };
 
   openPad = p => { this.setState({ pad: p, padIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ padIn: true }))); };
+  // abre el teclado numérico Y sube el campo tocado por encima del teclado (para que el cliente vea lo que rellena)
+  openPadAt = (ev, p) => {
+    this.openPad(p);
+    var el = ev && (ev.currentTarget || ev.target);
+    if (el && el.scrollIntoView) { requestAnimationFrame(function () { setTimeout(function () { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }, 60); }); }
+  };
   // Pasa el teclado del campo REPETICIONES al de PESO de la misma serie SIN cerrarlo (ahorra un toque). Vibra para que se note el cambio.
   _padToWeight = p => { this._haptic(); this.setState({ pad: { t: 'set', ex: p.ex, i: p.i, f: 'w', label: 'Peso', unit: 'kg' } }); };
   closePad = () => {
@@ -2884,8 +2890,8 @@ class Component extends DCLogic {
             ckBg: done ? 'var(--fg,#fff)' : 'transparent',
             ckBd: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.2)',
             ckFg: done ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.25)',
-            editR: () => this.openPad({ t: 'set', ex: e.id, i, f: 'r', label: 'Repeticiones', unit: '' }),
-            editW: () => this.openPad({ t: 'set', ex: e.id, i, f: 'w', label: 'Peso', unit: 'kg' }),
+            editR: (ev) => this.openPadAt(ev, { t: 'set', ex: e.id, i, f: 'r', label: 'Repeticiones', unit: '' }),
+            editW: (ev) => this.openPadAt(ev, { t: 'set', ex: e.id, i, f: 'w', label: 'Peso', unit: 'kg' }),
             mark: this.markSet(e.id, i)
           };
         })
