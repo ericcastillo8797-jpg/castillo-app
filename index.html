@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=126"></script>
-<script src="./castillo-transform.js?v=126"></script>
-<script src="./castillo-equiv.js?v=126"></script>
-<script src="./castillo-data.js?v=126"></script>
+<script src="./castillo-i18n.js?v=127"></script>
+<script src="./castillo-transform.js?v=127"></script>
+<script src="./castillo-equiv.js?v=127"></script>
+<script src="./castillo-data.js?v=127"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2202,7 +2202,7 @@ class Component extends DCLogic {
     const en = this.state.lang === 'en', ch = this.state.cheat; if (!ch) return;
     const sel = (this.state.cheatSel || []).filter(x => x.cantidad > 0);
     if (!sel.length) { this.flash(en ? 'Add at least one food' : 'Añade al menos un alimento'); return; }
-    const dd = DAYS.find(d => d.d === this.state.day) || DAYS.find(d => d.today) || {}; const fecha = dd.fecha;
+    const dd = this._selDay(); const fecha = dd.fecha;
     const alimentos = sel.map(x => ({ nombre: x.nombre, kcal100: x.kcal100, gpu: x.gpu, modo: x.modo, cantidad: x.cantidad, gramos: (x.modo === 'ud' ? Math.round(x.cantidad * (x.gpu || 100)) : x.cantidad), kcal: x.kcal }));
     const cd = window.CastilloData;
     if (cd && cd.guardarComidaLibre) cd.guardarComidaLibre(ch.comida, alimentos, fecha).catch(() => {});
@@ -2226,7 +2226,7 @@ class Component extends DCLogic {
   chooseFood = (swapKey, mealName, origName, alt) => () => {
     this.setState(s => ({ foodSwaps: Object.assign({}, s.foodSwaps, { [swapKey]: { name: alt.name, grams: alt.grams } }) }));
     if (typeof window !== 'undefined' && window.CastilloData && window.CastilloData.registrarSustitucion) {
-      const _sf = (DAYS.find(d => d.d === this.state.day) || DAYS.find(d => d.today) || {}).fecha;
+      const _sf = this._selDay().fecha;
       try { window.CastilloData.registrarSustitucion(mealName, origName, alt.name, alt.grams, { kcal: alt.kcal, p: alt.p, c: alt.c, g: alt.g }, _sf).catch(function () { }); } catch (e) { }
     }
     this.flash(this.state.lang === 'en' ? 'Food swapped' : 'Alimento cambiado');
@@ -2323,8 +2323,16 @@ class Component extends DCLogic {
 
   openSheet = s => { this.setState({ sheet: s, sheetIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ sheetIn: true }))); };
   closeSheet = () => { const sh = this.state.sheet; if (sh && sh.back) { this.openSheet(sh.back); return; } this.setState({ sheetIn: false }); this.later(() => this.setState({ sheet: null }), 480); };
+  // Día seleccionado en la SEMANA ACTIVA (weekIdx). Imprescindible: DAYS global solo tiene la semana actual, así que
+  // al navegar a otra semana hay que resolver el día desde WEEKS[weekIdx], no desde DAYS (si no, cae a un día equivocado).
+  _selDay = () => {
+    const weeks = (WEEKS && WEEKS.length) ? WEEKS : [{ days: DAYS }];
+    const wk = weeks[Math.max(0, Math.min(weeks.length - 1, this.state.weekIdx || 0))] || { days: DAYS };
+    const days = wk.days || DAYS;
+    return days.find(d => d.d === this.state.day) || days.find(d => d.today) || DAYS.find(d => d.today) || days[0] || DAYS[0] || {};
+  };
   pickMeal = (id, i) => () => {
-    const dd = DAYS.find(d => d.d === this.state.day) || DAYS.find(d => d.today) || {};
+    const dd = this._selDay();
     const fecha = dd.fecha;
     // Alex 2026-08-17: el cliente puede registrar cualquier día (sin bloqueo de futuro)
     const byDate = (window.__DATA && window.__DATA.mealsByDate) || {};
@@ -2441,7 +2449,7 @@ class Component extends DCLogic {
     // Alex 2026-08-17: se puede registrar cualquier día. Se guarda SIEMPRE en el día abierto (dS.fecha).
     this.closeWorkout();
     try {
-      const dS = DAYS.find(d => d.d === this.state.day) || DAYS[2] || DAYS[0];
+      const dS = this._selDay();
       // Usa el entreno que el cliente ABRIÓ (wWk/wTitle), no el recalculado del día, para no perder los ejercicios rellenados.
       const wk = this.state.wWk || dS.wk;
       const title = this.state.wTitle || dS.t || 'Entrenamiento';
@@ -2491,8 +2499,12 @@ class Component extends DCLogic {
   skipRest = () => { clearInterval(this._iv); this.setState({ rest: 0 }); };
 
   openPad = p => { this.setState({ pad: p, padIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ padIn: true }))); };
+  // Pasa el teclado del campo REPETICIONES al de PESO de la misma serie SIN cerrarlo (ahorra un toque)
+  _padToWeight = p => this.setState({ pad: { t: 'set', ex: p.ex, i: p.i, f: 'w', label: 'Peso', unit: 'kg' } });
   closePad = () => {
     const p = this.state.pad;
+    // Repeticiones con valor + "Listo" → pasa directo al PESO sin cerrar el teclado
+    if (p && p.t === 'set' && p.f === 'r' && String(this.padValue(p)).trim()) { this._padToWeight(p); return; }
     // al registrar el PESO de una serie: se marca hecha y sale el descanso (sin tick)
     if (p && p.t === 'set' && p.f === 'w') {
       const l = (this.state.logs[p.ex] || [])[p.i] || {};
@@ -2516,8 +2528,8 @@ class Component extends DCLogic {
     else if (v.replace(',', '').length < 5) v += k;
     if (p.t === 'set') this.setLog(p.ex, p.i, p.f, v);
     else this.setState(s => ({ ck: Object.assign({}, s.ck, { [p.k]: v }) }));
-    // Repeticiones: máx 2 dígitos (nadie hace >99 reps) → al llegar a 2 dígitos se cierra el teclado solo
-    if (p.t === 'set' && p.f === 'r' && k !== '⌫' && k !== ',' && v.replace(/\D/g, '').length >= 2) this.closePad();
+    // Repeticiones: máx 2 dígitos (nadie hace >99 reps) → al meter el 2º dígito pasa SOLO al campo de PESO (sin cerrar el teclado)
+    if (p.t === 'set' && p.f === 'r' && k !== '⌫' && k !== ',' && v.replace(/\D/g, '').length >= 2) this._padToWeight(p);
   };
 
   openCheckin = (mode, fecha) => {
