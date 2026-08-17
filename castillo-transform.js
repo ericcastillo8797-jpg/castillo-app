@@ -181,7 +181,9 @@
         // lista de actividades del día (como Harbiz > Planificación): métricas (foto incluida) / cardio / entreno
         var acts = [];
         if (statsItem) acts.push({ type: 'medidas', label: 'Métricas personales · medidas', sub: 'Peso y medidas', done: !!((statsItem && statsItem.done) || chkMedDates[key]) });
-        if (photoItem) acts.push({ type: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: !!((photoItem && photoItem.done) || chkFotoDates[key]) });
+        // La foto de progreso va SIEMPRE con las métricas: si hay tarea de métricas (aunque el evento sea solo bodyStats
+        // "Registrar evolución"), también sale la de fotos, para que el cliente pueda subirlas (igual que en el CRM).
+        if (photoItem || statsItem) acts.push({ type: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: !!((photoItem && photoItem.done) || chkFotoDates[key]) });
         if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: cardioSubReal(cardio, regDay.pasos), pasos: (cardio.config && cardio.config.pasos) || '', pasosHechos: (regDay.pasos != null ? regDay.pasos : ''), done: !!cardio.done });
         if (wkItem) acts.push({ type: 'workout', label: wkItem.title, sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
         // Nutrición del programa (con el título TAL CUAL lo puso el entrenador en el CRM, ej. "P.S Alimentación aumento músculo M.1")
