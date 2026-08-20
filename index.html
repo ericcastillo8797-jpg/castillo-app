@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=134"></script>
-<script src="./castillo-transform.js?v=134"></script>
-<script src="./castillo-equiv.js?v=134"></script>
-<script src="./castillo-data.js?v=134"></script>
+<script src="./castillo-i18n.js?v=135"></script>
+<script src="./castillo-transform.js?v=135"></script>
+<script src="./castillo-equiv.js?v=135"></script>
+<script src="./castillo-data.js?v=135"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1500,9 +1500,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 </sc-if>
 
 <sc-if value="{{ pad }}" hint-placeholder-val="{{ false }}">
-<div style="position:absolute;inset:0;z-index:13">
-  <div onClick="{{ closePad }}" style="position:absolute;inset:0;background:rgba(0,0,0,.35);transition:opacity .4s;opacity:{{ padDim }}"></div>
-  <div style="position:absolute;left:0;right:0;bottom:0;background:var(--s4,#141418);border-top:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:26px 26px 0 0;padding:16px 14px 30px;transition:transform .44s cubic-bezier(.32,.72,0,1);transform:{{ padY }};box-shadow:0 -18px 50px rgba(0,0,0,.4)">
+<div style="position:absolute;inset:0;z-index:13;pointer-events:none">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.28);transition:opacity .4s;opacity:{{ padDim }};pointer-events:none"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:var(--s4,#141418);border-top:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:26px 26px 0 0;padding:16px 14px 30px;transition:transform .44s cubic-bezier(.32,.72,0,1);transform:{{ padY }};box-shadow:0 -18px 50px rgba(0,0,0,.4)">
     <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 6px 14px">
       <div>
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.38)">{{ pad.label }}</div>
@@ -1555,11 +1555,11 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.11);border-radius:16px;overflow:hidden">
         <div style="display:flex;align-items:center;gap:11px;padding:15px 16px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" opacity=".34" stroke-width="1.3"><rect x="1.4" y="3.2" width="13.2" height="9.6" rx="2"></rect><path d="m1.8 4.4 6.2 4.4 6.2-4.4" stroke-linecap="round"></path></svg>
-          <input value="{{ email }}" onChange="{{ setEmail }}" placeholder="Correo electrónico" style="flex:1;font-size:14.5px" />
+          <input type="email" name="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" value="{{ email }}" onChange="{{ setEmail }}" placeholder="Correo electrónico" style="flex:1;font-size:14.5px" />
         </div>
         <div style="display:flex;align-items:center;gap:11px;padding:15px 16px">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" opacity=".34" stroke-width="1.3"><rect x="2.8" y="7" width="10.4" height="7.4" rx="2"></rect><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7"></path></svg>
-          <input type="password" value="{{ pass }}" onChange="{{ setPass }}" placeholder="Contraseña" style="flex:1;font-size:14.5px" />
+          <input type="password" name="password" autocomplete="current-password" value="{{ pass }}" onChange="{{ setPass }}" placeholder="Contraseña" style="flex:1;font-size:14.5px" />
         </div>
       </div>
       <div onClick="{{ doLogin }}" style="margin-top:14px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:16px;text-align:center;font-size:14.5px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">Acceder</div>
@@ -2241,16 +2241,33 @@ class Component extends DCLogic {
     this.flash(this.state.lang === 'en' ? 'Food swapped' : 'Alimento cambiado');
     this.closeSwap();
   };
+  // Genera una semana VACÍA (descanso) para un lunes dado → permite navegar a cualquier semana/mes/año sin límite.
+  _makeWeek = (monTime) => {
+    const WD1 = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+    const MO = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const p2 = n => String(n).padStart(2, '0');
+    const todayF = (DAYS.find(d => d.today) || {}).fecha || '';
+    const mon = new Date(monTime); const days = [];
+    for (let i = 0; i < 7; i++) {
+      const dt = new Date(mon); dt.setDate(mon.getDate() + i);
+      const fecha = dt.getFullYear() + '-' + p2(dt.getMonth() + 1) + '-' + p2(dt.getDate());
+      days.push({ d: dt.getDate(), w: WD1[dt.getDay()], long: '', rom: ROM[i], t: 'Descanso', s: 'Descanso', wk: 'descanso', n: '—', acts: [], fecha, ses: 'Sin sesión', dot: 0, today: fecha === todayF });
+    }
+    const last = new Date(mon); last.setDate(mon.getDate() + 6);
+    const lbl = (mon.getMonth() === last.getMonth()) ? (MO[mon.getMonth()].charAt(0).toUpperCase() + MO[mon.getMonth()].slice(1) + ' ' + mon.getFullYear()) : (MO[mon.getMonth()].slice(0, 3) + '–' + MO[last.getMonth()].slice(0, 3) + ' ' + last.getFullYear());
+    return { label: lbl, subtitle: 'Semana del ' + mon.getDate() + ' al ' + last.getDate(), mon: monTime, days };
+  };
   shiftWeek = dir => () => {
-    const weeks = (WEEKS && WEEKS.length) ? WEEKS : [{ days: DAYS }];
-    this.setState(s => {
-      const idx = Math.max(0, Math.min(weeks.length - 1, (s.weekIdx || 0) + dir));
-      const wk = weeks[idx] || { days: DAYS };
-      const days = wk.days || [];
-      const today = days.filter(d => d.today)[0];
-      const day = today ? today.d : (days[0] ? days[0].d : s.day);
-      return { weekIdx: idx, day };
-    });
+    if (!(WEEKS && WEEKS.length)) { WEEKS = [{ days: DAYS, mon: 0 }]; }
+    const monOf = w => w.mon || (w.days && w.days[0] ? Date.parse(w.days[0].fecha + 'T00:00:00') : Date.now());
+    let idx = (this.state.weekIdx || 0) + dir;
+    if (idx < 0) { WEEKS.unshift(this._makeWeek(monOf(WEEKS[0]) - 7 * 86400000)); idx = 0; }               // semana anterior (sin tope)
+    else if (idx > WEEKS.length - 1) { WEEKS.push(this._makeWeek(monOf(WEEKS[WEEKS.length - 1]) + 7 * 86400000)); idx = WEEKS.length - 1; }  // semana siguiente (sin tope)
+    const wk = WEEKS[idx] || { days: DAYS };
+    const days = wk.days || [];
+    const today = days.filter(d => d.today)[0];
+    const day = today ? today.d : (days[0] ? days[0].d : this.state.day);
+    this.setState({ weekIdx: idx, day });
   };
   playEvo = () => {
     cancelAnimationFrame(this._raf);
@@ -2662,8 +2679,8 @@ class Component extends DCLogic {
     const _agDays = _agWeek.days || DAYS;
     const agendaHdr = tD(_agWeek.label || (_hdr ? (_hdr.monthCap + ' ' + _hdr.year) : 'Julio 2026'));
     const agendaSub = tD(_agWeek.subtitle || '');
-    const canPrevWeek = _wIdx > 0;
-    const canNextWeek = _wIdx < _weeksArr.length - 1;
+    const canPrevWeek = true;   // navegación de semanas SIN límite (se generan al vuelo)
+    const canNextWeek = true;
     const prevWeek = this.shiftWeek(-1);
     const nextWeek = this.shiftWeek(1);
     const prevWeekOpacity = canPrevWeek ? '1' : '.25';
@@ -2914,9 +2931,10 @@ class Component extends DCLogic {
       else if (a.type === 'medidas') open = () => this.openCheckin('medidas', dS.fecha);
       else if (a.type === 'fotos') open = () => this.openCheckin('fotos', dS.fecha);
       else if (a.type === 'nutricion') open = this.openDietSheet(dS.fecha);
-      // cardio: una vez marcado ya NO se puede desmarcar (ni hoy ni en días pasados)
-      else if (a.type === 'cardio') open = done ? (() => {}) : this.toggleMark(dS.fecha, 'cardio', 'Cardio marcado');
-      else { open = done ? (() => this.flash('Entrenamiento ya completado')) : (() => this.startWorkout(a.wk, a.label)); const first = (WK[a.wk] || [])[0]; const exr = first ? EX.find(e => e.n === first.split('|')[0]) : null; thumb = (exr && exr.y) ? THUMB(exr.y) : ''; }
+      // cardio: EDITABLE — al pulsar se marca/desmarca (por si el cliente se equivoca)
+      else if (a.type === 'cardio') open = this.toggleMark(dS.fecha, 'cardio', 'Cardio marcado');
+      // entreno: EDITABLE — se puede reabrir aunque esté hecho, para corregir reps/pesos
+      else { open = () => this.startWorkout(a.wk, a.label); const first = (WK[a.wk] || [])[0]; const exr = first ? EX.find(e => e.n === first.split('|')[0]) : null; thumb = (exr && exr.y) ? THUMB(exr.y) : ''; }
       // día futuro → no se puede registrar; solo avisar
       if (_dayFuturo && !done) open = () => this.flash(st.lang === 'en' ? "It's not that day yet" : 'Aún no es ese día');
       const _c = taskColor(a.type);

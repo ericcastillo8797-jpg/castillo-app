@@ -80,7 +80,7 @@
     <div class="stepno" id="stepno">Paso 1 de 6</div>
   </div>
 
-  <div class="stage" id="stage">
+  <form class="stage" id="stage" onsubmit="return false;" novalidate>
     <!-- PASO 1 · DATOS PERSONALES -->
     <div class="step active" data-step="0"><div class="maxw">
       <h1 id="t0">Tus datos</h1>
@@ -181,7 +181,7 @@
       <p class="sub" id="d_sub" style="margin-bottom:26px">Ya puedes entrar con tu email y tu contraseña.</p>
       <a id="dl" href="index.html" class="btn prim" style="display:block;text-decoration:none;min-width:220px;box-sizing:border-box">Entrar a la app</a>
     </div>
-  </div>
+  </form>
 
   <div class="nav" id="nav">
     <button class="btn ghost" id="backBtn" style="display:none">Atrás</button>
@@ -437,6 +437,8 @@
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
       .then(function(res){
         if(!res.ok || !res.j.ok){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(4,res.j.error||'Error'); return; }
+        // Dispara el submit del form (email+contraseña) para que iOS/Safari ofrezca GUARDAR la contraseña en el llavero
+        try{ var _f=document.getElementById('stage'); if(_f&&_f.requestSubmit) _f.requestSubmit(); }catch(e){}
         saveSessionAndEnter(email, pass).catch(function(){
           document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('active'); });
           $('nav').style.display='none'; $('done').style.display='flex';
