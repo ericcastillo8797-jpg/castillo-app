@@ -80,7 +80,8 @@
     <div class="stepno" id="stepno">Paso 1 de 6</div>
   </div>
 
-  <form class="stage" id="stage" onsubmit="return false;" novalidate>
+  <form class="stage" id="stage" action="index.html" method="get" novalidate>
+    <input type="hidden" name="entrar" value="1"/>
     <!-- PASO 1 · DATOS PERSONALES -->
     <div class="step active" data-step="0"><div class="maxw">
       <h1 id="t0">Tus datos</h1>
@@ -96,7 +97,7 @@
           <div><label id="l_nombre">Nombre</label><input id="nombre" autocomplete="given-name"/></div>
           <div><label id="l_apellido">Apellidos</label><input id="apellido" autocomplete="family-name"/></div>
         </div>
-        <div class="mt"><label id="l_email">Email</label><input id="email" type="email" autocomplete="email" data-ph-es="tucorreo@email.com" data-ph-en="youremail@email.com"/></div>
+        <div class="mt"><label id="l_email">Email</label><input id="email" type="email" autocomplete="username" data-ph-es="tucorreo@email.com" data-ph-en="youremail@email.com"/></div>
         <div class="mt"><label id="l_tel">Teléfono</label>
           <div style="display:flex;gap:9px">
             <input id="prefijo" type="tel" autocomplete="tel-country-code" inputmode="tel" data-ph-es="+1" data-ph-en="+1" style="flex:0 0 78px;text-align:center;letter-spacing:.02em"/>
@@ -421,6 +422,20 @@
         if(!s || !s.access_token) throw new Error('nologin');
         try{ localStorage.setItem(LS, JSON.stringify({ access_token:s.access_token, refresh_token:s.refresh_token, email:(s.user&&s.user.email)||email, ts:Date.now() })); }catch(e){}
         try{ localStorage.setItem(CR, btoa(unescape(encodeURIComponent(JSON.stringify({ e:email, p:pass }))))); }catch(e){}
+        // Enviar el FORMULARIO (con email+contraseña dentro) provoca una navegación real: así iOS/Safari
+        // ofrece "Guardar contraseña" en el llavero, como en Airbnb/Spotify. Se quitan los "name" para que
+        // los datos NO viajen en la URL (solo va ?entrar=1).
+        try{
+          var _f=document.getElementById('stage');
+          if(_f){
+            var _em=document.getElementById('email'), _pw=document.getElementById('password');
+            if(_em) _em.setAttribute('name','username');
+            if(_pw) _pw.setAttribute('name','password');
+            setTimeout(function(){ try{ if(_em) _em.removeAttribute('name'); if(_pw) _pw.removeAttribute('name'); _f.submit(); }catch(e){ location.replace('index.html?entrar=1'); } }, 40);
+            setTimeout(function(){ try{ if(location.pathname.indexOf('alta')>=0) location.replace('index.html?entrar=1'); }catch(e){} }, 2500);   // salvavidas
+            return;
+          }
+        }catch(e){}
         location.replace('index.html?entrar=1');
       });
   }
@@ -437,8 +452,6 @@
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
       .then(function(res){
         if(!res.ok || !res.j.ok){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(4,res.j.error||'Error'); return; }
-        // Dispara el submit del form (email+contraseña) para que iOS/Safari ofrezca GUARDAR la contraseña en el llavero
-        try{ var _f=document.getElementById('stage'); if(_f&&_f.requestSubmit) _f.requestSubmit(); }catch(e){}
         saveSessionAndEnter(email, pass).catch(function(){
           document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('active'); });
           $('nav').style.display='none'; $('done').style.display='flex';
