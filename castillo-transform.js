@@ -548,30 +548,30 @@
     // cumplimiento semanal (planificado vs completado en la semana actual)
     var wkEnd = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7);
     var weekEv = events.filter(function (e) { if (e.removed) return false; var dt = new Date(ms(e.date)); return dt >= mon && dt < wkEnd; });
-    function compl(types) {
-      var pl = weekEv.filter(function (e) { return types.indexOf(e.type) >= 0; });
-      var dn = pl.filter(function (e) {
-        if (e.completed) return true;
-        var dt = new Date(ms(e.date)); var k = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
-        var reg = regByDate[k] || {};
-        if (types.indexOf('workout') >= 0 && reg.workout) return true;
-        if (types.indexOf('cardio') >= 0 && reg.cardio) return true;
-        return false;
+    // CUMPLIMIENTO SEMANAL = las MISMAS tareas que ve el cliente en su agenda de esta semana.
+    // Cuenta como hecho lo que registre el cliente CUALQUIER día de la semana (aunque rellene el viernes
+    // las tareas del lunes) y también lo que marque el entrenador. Antes las métricas solo contaban si las
+    // marcaba el entrenador, por eso salía 0 aunque el cliente las hubiera registrado.
+    var _wkDays = buildWeek(new Date(mon.getTime())).days || [];
+    function complTareas(tipos) {
+      var tot = 0, dn = 0;
+      _wkDays.forEach(function (d) {
+        (d.acts || []).forEach(function (a) {
+          if (tipos.indexOf(a.type) < 0) return;
+          tot++;
+          var hecho = !!a.done;
+          if (a.type === 'nutricion' && DIET.length) {   // nutrición: hecha si están TODAS las comidas de ese día
+            var _c = comByDate[d.fecha] || {};
+            hecho = DIET.every(function (m) { return _c[m.id] != null; });
+          }
+          if (hecho) dn++;
+        });
       });
-      return { done: dn.length, total: pl.length, pct: pl.length ? Math.round(dn.length / pl.length * 100) : 0 };
+      return { done: dn, total: tot, pct: tot ? Math.round(dn / tot * 100) : 0 };
     }
-    var cEntreno = compl(['workout']), cCardio = compl(['cardio']), cMetricas = compl(['bodyStats', 'bodyPhoto']);
-    // nutrición semanal: días de ESTA semana con TODAS las comidas registradas ÷ 7 (cumplimiento semanal, no 100% por día)
-    var nutDone = 0;
-    if (DIET.length) {
-      for (var _di = 0; _di < 7; _di++) {
-        var _dd2 = new Date(mon); _dd2.setDate(mon.getDate() + _di);
-        var _dk = _dd2.getFullYear() + '-' + d2(_dd2.getMonth() + 1) + '-' + d2(_dd2.getDate());
-        var _com = comByDate[_dk] || {};
-        if (DIET.every(function (m) { return _com[m.id] != null; })) nutDone++;
-      }
-    }
-    var cNutricion = { done: nutDone, total: DIET.length ? 7 : 0, pct: DIET.length ? Math.round(nutDone / 7 * 100) : 0 };
+    var cEntreno = complTareas(['workout']), cCardio = complTareas(['cardio']);
+    var cMetricas = complTareas(['medidas', 'fotos']), cNutricion = complTareas(['nutricion']);
+
     var totPl = cEntreno.total + cCardio.total + cMetricas.total + cNutricion.total, totDn = cEntreno.done + cCardio.done + cMetricas.done + cNutricion.done;
     var weekSummary = {
       entrenos: cEntreno, cardio: cCardio, metricas: cMetricas, nutricion: cNutricion,
