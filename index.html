@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=137"></script>
-<script src="./castillo-transform.js?v=137"></script>
-<script src="./castillo-equiv.js?v=137"></script>
-<script src="./castillo-data.js?v=137"></script>
+<script src="./castillo-i18n.js?v=138"></script>
+<script src="./castillo-transform.js?v=138"></script>
+<script src="./castillo-equiv.js?v=138"></script>
+<script src="./castillo-data.js?v=138"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2603,12 +2603,12 @@ class Component extends DCLogic {
     // mode: 'medidas' (solo peso/medidas) | 'fotos' (solo fotos) | undefined (ambos). Se pueden registrar por separado.
     const fok = /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : null;
     const _today = (DAYS.find(d => d.today) || {}).fecha;
-    // Prerellena con lo YA guardado de ESE día (no con lo de hoy): así se ve/edita lo que hay y no se pierde nada.
-    if (fok && fok !== _today) {
-      const _d = (window.__DATA && window.__DATA.checkinByDate && window.__DATA.checkinByDate[fok]) || { valores: {}, fotos: {} };
-      const _ph = {}; Object.keys(_d.fotos || {}).forEach(k => { if (_d.fotos[k]) _ph[k] = _d.fotos[k]; });
-      this.setState({ ck: Object.assign({}, _d.valores || {}), ckPhotos: _ph });
-    }
+    // Prerellena SIEMPRE con lo ya guardado de ESE día (medidas y fotos): al reabrir una tarea hecha
+    // se ven los valores puestos y las fotos en su hueco, y se puede corregir sin perder nada.
+    const _f = fok || _today;
+    const _d = (window.__DATA && window.__DATA.checkinByDate && window.__DATA.checkinByDate[_f]) || { valores: {}, fotos: {} };
+    const _ph = {}; Object.keys(_d.fotos || {}).forEach(k => { if (_d.fotos[k]) _ph[k] = _d.fotos[k]; });
+    this.setState({ ck: Object.assign({}, _d.valores || {}), ckPhotos: _ph });
     this.openSheet({ k: 'ck', mode: (mode === 'medidas' || mode === 'fotos') ? mode : 'both', fecha: fok });
   };
   tapPhoto = id => () => {
