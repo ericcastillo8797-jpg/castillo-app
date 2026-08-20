@@ -108,7 +108,10 @@
     // métricas PERSONALIZADAS de este cliente (las crea Alex en el CRM) — se añaden a su registro de medidas
     var pMet = api('/rest/v1/metricas_cliente?select=key,label,unit,objetivo,orden&cliente_email=ilike.' + e + '&order=orden.asc&order=created_at.asc', {}, token)
       .catch(function () { return []; });
-    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre, pCfg, pMet]).then(function (res) {
+    // set de medidas PROPIO de este cliente (si Alex se lo ha personalizado); si no hay, se usa la base global
+    var pMedC = api('/rest/v1/medidas_cliente_cfg?select=grupos&cliente_email=ilike.' + e + '&limit=1', {}, token)
+      .catch(function () { return []; });
+    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre, pCfg, pMet, pMedC]).then(function (res) {
       var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
       var comAll = res[4] || [], chkAll = res[5] || [];
       var perfilRow = (res[6] && res[6][0]) || null;
@@ -152,7 +155,9 @@
         api('/rest/v1/whoop_tokens?select=cliente_email&limit=1&cliente_email=ilike.' + encodeURIComponent(_ctx.email), {}, token)
           .then(function (rows) { try { var k = 'app_con_' + _ctx.email + '_WHOOP'; if (rows && rows.length) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) {} })
           .catch(function () {});
-        data.medidasConfig = (res[8] && res[8][0] && res[8][0].valor) || null;   // {grupos:[{g,f:[{key,label,unit}]}]}
+        // Medidas del cliente: manda SU set propio (medidas_cliente_cfg); si no tiene, la base global (app_config)
+        var _setPropio = (res[10] && res[10][0] && res[10][0].grupos) || null;
+        data.medidasConfig = _setPropio ? { grupos: _setPropio } : ((res[8] && res[8][0] && res[8][0].valor) || null);   // {grupos:[{g,f:[{key,label,unit}]}]}
         data.customMetrics = res[9] || [];   // métricas personalizadas del cliente [{key,label,unit,objetivo}]
         window.__DATA = data;
         try { registerPush(); } catch (e) {}   // registra el móvil para notificaciones (solo app nativa)
@@ -409,14 +414,25 @@
       }, _ctx.token);
     },
     // guarda el check-in de HOY (peso, medidas y fotos) que apunta el cliente
-    registrarCheckin: function (valores, fotos, fecha) {
+    // mode: 'medidas' (solo valores) | 'fotos' (solo fotos) | 'both'. SIEMPRE fusiona con lo ya guardado
+    // de ese día: así subir fotos NO borra las medidas (ni al revés), que era el bug.
+    registrarCheckin: function (valores, fotos, fecha, mode) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
-      var row = { cliente_email: _ctx.email, fecha: f, valores: valores || {}, fotos: fotos || {}, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
-      if (window.__DATA && f === _ctx.hoy) { window.__DATA.checkinHoy = valores || {}; window.__DATA.checkinFotosHoy = fotos || {}; }
-      return api('/rest/v1/checkin_registros?on_conflict=cliente_email,fecha', {
-        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
-      }, _ctx.token);
+      var m = (mode === 'medidas' || mode === 'fotos') ? mode : 'both';
+      return api('/rest/v1/checkin_registros?select=valores,fotos&cliente_email=ilike.' + encodeURIComponent(_ctx.email) + '&fecha=eq.' + f + '&limit=1', {}, _ctx.token)
+        .catch(function () { return []; })
+        .then(function (prev) {
+          var p = (prev && prev[0]) || {};
+          var pv = p.valores || {}, pf = p.fotos || {};
+          var outV = (m === 'fotos') ? pv : Object.assign({}, pv, valores || {});     // añadir/actualizar medidas sin perder las previas
+          var outF = (m === 'medidas') ? pf : (fotos || {});                          // en fotos manda lo que hay en pantalla (permite quitar)
+          var row = { cliente_email: _ctx.email, fecha: f, valores: outV, fotos: outF, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+          if (window.__DATA && f === _ctx.hoy) { window.__DATA.checkinHoy = outV; window.__DATA.checkinFotosHoy = outF; }
+          return api('/rest/v1/checkin_registros?on_conflict=cliente_email,fecha', {
+            method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+          }, _ctx.token);
+        });
     },
     // registra una sustitución de alimento del día (equivalencias); lo verá el entrenador en el CRM
     registrarSustitucion: function (comida, original, nuevo, gramos, macros, fecha) {

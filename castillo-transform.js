@@ -470,6 +470,24 @@
         if (ex && Array.isArray(re.series)) logsInit[ex.id] = re.series.map(function (s) { return { r: s.reps || '', w: s.peso || '', done: !!s.done }; });
       });
     }
+    // logsByDate: lo registrado en CADA día (no solo hoy) → al abrir un entreno pasado se ven sus reps/pesos.
+    // lastByEx: último registro ANTERIOR de cada ejercicio (para "peso de la sesión anterior" real).
+    // check-ins por fecha (para prerellenar el formulario de CUALQUIER día, no solo hoy)
+    var checkinByDate = {};
+    chkList.forEach(function (c) { var f = (c.fecha || '').slice(0, 10); if (f) checkinByDate[f] = { valores: c.valores || {}, fotos: c.fotos || {} }; });
+    var logsByDate = {}, doneByDate = {}, lastByEx = {};
+    regList.slice().sort(function (a, b) { return (a.fecha || '') < (b.fecha || '') ? -1 : 1; }).forEach(function (r) {
+      var f = (r.fecha || '').slice(0, 10); if (!f || !Array.isArray(r.ejercicios)) return;
+      var slot = logsByDate[f] || (logsByDate[f] = {});
+      doneByDate[f] = (r.estado === 'completado');
+      r.ejercicios.forEach(function (re) {
+        var ex = EX.filter(function (e) { return e.n === re.nombre; })[0];
+        if (!ex || !Array.isArray(re.series)) return;
+        var series = re.series.map(function (s) { return { r: s.reps || '', w: s.peso || '', done: !!s.done }; });
+        slot[ex.id] = series;
+        if (series.some(function (s) { return String(s.r).trim() || String(s.w).trim(); })) lastByEx[ex.id] = { fecha: f, series: series };
+      });
+    });
     // ---------- EXPROG: progreso por ejercicio (a partir de TODO el histórico de registros) ----------
     function toNum(v) { var n = parseFloat(String(v == null ? '' : v).replace(',', '.').replace(/[^0-9.\-]/g, '')); return isNaN(n) ? null : n; }
     var progMap = {}; // nombre ejercicio -> [{date, top, reps, vol, sets}]
@@ -678,7 +696,7 @@
     return {
       DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID, resumenMeses: resumenMeses,
       WEIGHTS: WEIGHTS, chartLabels: chartLabels, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
-      mealsSel: mealsSel, header: header, logsInit: logsInit,
+      mealsSel: mealsSel, header: header, logsInit: logsInit, logsByDate: logsByDate, doneByDate: doneByDate, lastByEx: lastByEx, checkinByDate: checkinByDate,
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary, macros: macros,
       mealsByDate: comByDate, checkinDoneThisWeek: checkinDoneThisWeek, progresoFotos: progresoFotos,
       WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG
