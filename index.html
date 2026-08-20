@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=139"></script>
-<script src="./castillo-transform.js?v=139"></script>
-<script src="./castillo-equiv.js?v=139"></script>
-<script src="./castillo-data.js?v=139"></script>
+<script src="./castillo-i18n.js?v=140"></script>
+<script src="./castillo-transform.js?v=140"></script>
+<script src="./castillo-equiv.js?v=140"></script>
+<script src="./castillo-data.js?v=140"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1297,6 +1297,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </sc-if>
 
         <div onClick="{{ submitCheckin }}" style="margin-top:22px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ ckSubmitLabel }}</div>
+        <div style="height:{{ ckPadH }};flex:none;transition:height .34s cubic-bezier(.32,.72,0,1)"></div>
         <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:10px">Revisado por su equipo antes de la sesión del viernes.</div>
       </div>
     </div>
@@ -3417,6 +3418,7 @@ class Component extends DCLogic {
       isDetEnt: st.mesDetail === 'entrenos', isDetCar: st.mesDetail === 'cardio', isDetNut: st.mesDetail === 'nutricion', isDetMet: st.mesDetail === 'metricas',
       foodSwapSheet: st.swap ? { origName: st.swap.origName, opts: (st.swap.alts || []).map((a, i) => ({ name: a.name, detail: a.grams + ' g · ~' + a.kcal + ' kcal', delay: (0.05 + i * 0.05) + 's', choose: this.chooseFood(st.swap.swapKey, st.swap.mealName, st.swap.origName, a) })) } : {},
       isCkSheet: sh.k === 'ck', ckShots, ckGroups, submitCheckin: this.submitCheckin,
+      ckPadH: (st.pad && st.pad.t === 'ck') ? '52vh' : '0px',
       ckShowFotos: sh.mode !== 'medidas', ckShowMedidas: sh.mode !== 'fotos',
       ckSheetTitle: sh.mode === 'fotos' ? T('Fotos de progreso') : (sh.mode === 'medidas' ? T('Medidas personales') : T('Check-in semanal')),
       ckSheetSub: sh.mode === 'fotos' ? T('Sube tus fotos de esta semana') : (sh.mode === 'medidas' ? T('Registra tu peso y medidas') : T('Registra tus medidas y fotos')),
