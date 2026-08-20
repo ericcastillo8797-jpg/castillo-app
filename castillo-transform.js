@@ -615,7 +615,7 @@
       var mEnt = evMonth(['workout']), mCar = evMonth(['cardio']), mMet = evMonth(['bodyStats', 'bodyPhoto']);
       // cardio día a día (planificado o hecho)
       var cardioDias = [];
-      for (var dc = 1; dc <= lastDay; dc++) {
+      for (var dc = 1; dc <= daysInMonth; dc++) {   // cardio día a día: mes completo
         var kc = dk(dc), regc = regByDate[kc] || {};
         var plannedC = events.some(function (e) { if (e.type !== 'cardio' || e.removed) return false; var ed = new Date(ms(e.date)); return ed.getFullYear() === yr && ed.getMonth() === mo && ed.getDate() === dc; });
         var doneC = !!regc.cardio || events.some(function (e) { if (e.type !== 'cardio' || !e.completed) return false; var ed = new Date(ms(e.date)); return ed.getFullYear() === yr && ed.getMonth() === mo && ed.getDate() === dc; });
@@ -636,7 +636,7 @@
       var nutDoneMeals = 0, nutPlanMeals = 0;
       if (DIET.length) {
         DIET.forEach(function (m) { _cont[m.id] = {}; });
-        for (var dn2 = 1; dn2 <= lastDay; dn2++) {
+        for (var dn2 = 1; dn2 <= daysInMonth; dn2++) {   // TODO el mes (igual que entrenos/cardio), no solo hasta hoy
           var kn = dk(dn2), com = comByDate[kn] || {};
           var plannedNut = _hasNutEv ? !!_nutDaySet[dn2] : true;   // ese día toca dieta
           if (plannedNut) { nutPlanMeals += DIET.length; DIET.forEach(function (m) { if (com[m.id] != null) nutDoneMeals++; }); }
