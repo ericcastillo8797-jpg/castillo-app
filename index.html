@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=141"></script>
-<script src="./castillo-transform.js?v=141"></script>
-<script src="./castillo-equiv.js?v=141"></script>
-<script src="./castillo-data.js?v=141"></script>
+<script src="./castillo-i18n.js?v=142"></script>
+<script src="./castillo-transform.js?v=142"></script>
+<script src="./castillo-equiv.js?v=142"></script>
+<script src="./castillo-data.js?v=142"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2766,7 +2766,7 @@ class Component extends DCLogic {
     const mesDetailSheet = (_det && _rm) ? (() => {
       const base = { title: _rm.label };
       if (_det === 'entrenos') return Object.assign(base, { kind: 'ent', sub: T('Progresión de peso por ejercicio este mes'), ejercicios: (_rm.ejercicios || []).map(e => ({ nombre: tEx(e.nombre), rango: e.ini + ' → ' + e.fin + ' kg', delta: (e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + ' kg', subio: e.subio, dColor: e.subio ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.5)', ses: e.sesiones + ' ' + (e.sesiones === 1 ? T('sesión') : T('sesiones')) })), vacio: !(_rm.ejercicios || []).length });
-      if (_det === 'cardio') return Object.assign(base, { kind: 'car', sub: (_rm.cardio.objetivo ? (T('Objetivo') + ': ' + _milesN(_rm.cardio.objetivo) + ' ' + T('pasos')) : (_rm.cardio.done + '/' + _rm.cardio.total + ' ' + T('días'))), media: _milesN(_rm.cardio.media) + ' ' + T('pasos'), dias: (_rm.cardio.dias || []).map(d => ({ lbl: d.lbl, done: d.done, ck: d.done ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.2)', pasos: d.done ? (_milesN(d.pasos) + ' ' + T('pasos')) : '—' })), vacio: !(_rm.cardio.dias || []).length });
+      if (_det === 'cardio') return Object.assign(base, { kind: 'car', sub: (_rm.cardio.objetivo ? (T('Objetivo') + ': ' + _milesN(_rm.cardio.objetivo) + ' ' + T('pasos')) : (_rm.cardio.done + '/' + _rm.cardio.total + ' ' + T('días'))), media: _milesN(_rm.cardio.media) + ' ' + T('pasos') + (_rm.cardio.totalPasos ? ('  ·  ' + T('total') + ' ' + _milesN(_rm.cardio.totalPasos)) : ''), dias: (_rm.cardio.dias || []).map(d => ({ lbl: d.lbl, done: d.done, ck: d.done ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.2)', pasos: (d.pasos ? (_milesN(d.pasos) + ' ' + T('pasos')) : (d.done ? '—' : '—')) })), vacio: !(_rm.cardio.dias || []).length });
       if (_det === 'nutricion') return Object.assign(base, { kind: 'nut', sub: T('Qué comió cada día y recuento del mes'), grupos: (_rm.nutricion.conteoGrupos || []).map(g => ({ meal: tMeal(g.meal), opciones: (g.opciones || []).map(o => ({ lbl: o.lbl, veces: o.veces + '×' })) })), dias: (_rm.nutricion.dias || []).map(d => ({ lbl: d.lbl, kcal: (d.kcal || 0) + ' kcal', items: (d.items || []).map(it => ({ meal: tMeal(it.meal), opcion: it.opcion + ' · ' + (it.kcal || 0) + ' kcal' })) })), vacio: !(_rm.nutricion.dias || []).length });
       if (_det === 'metricas') return Object.assign(base, { kind: 'met', sub: T('Check-ins registrados este mes'), checkins: (_rm.metricas.checkins || []).map(c => ({ lbl: c.lbl, peso: c.peso, n: c.n + ' ' + T('medidas') })), vacio: !(_rm.metricas.checkins || []).length });
       return base;

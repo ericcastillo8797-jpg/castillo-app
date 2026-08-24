@@ -619,10 +619,13 @@
         var kc = dk(dc), regc = regByDate[kc] || {};
         var plannedC = events.some(function (e) { if (e.type !== 'cardio' || e.removed) return false; var ed = new Date(ms(e.date)); return ed.getFullYear() === yr && ed.getMonth() === mo && ed.getDate() === dc; });
         var doneC = !!regc.cardio || events.some(function (e) { if (e.type !== 'cardio' || !e.completed) return false; var ed = new Date(ms(e.date)); return ed.getFullYear() === yr && ed.getMonth() === mo && ed.getDate() === dc; });
-        if (plannedC || doneC) cardioDias.push({ lbl: d2(dc) + ' ' + MO[mo].slice(0, 3), done: doneC, pasos: doneC ? (_pasosObj || 0) : 0 });
+        // pasos REALES del día (Apple Salud). Si no hay pero está marcado a mano, se cuenta el objetivo (regla de Alex).
+        var _pasosReal = (regc && regc.pasos != null && regc.pasos !== '') ? (parseInt(String(regc.pasos).replace(/[^0-9]/g, ''), 10) || 0) : null;
+        if (plannedC || doneC) cardioDias.push({ lbl: d2(dc) + ' ' + MO[mo].slice(0, 3), done: doneC, pasos: (_pasosReal != null ? _pasosReal : (doneC ? (_pasosObj || 0) : 0)) });
       }
       var _cardioSum = cardioDias.reduce(function (s, d) { return s + (d.pasos || 0); }, 0);
       var cardioMedia = cardioDias.length ? Math.round(_cardioSum / cardioDias.length) : 0;
+      var cardioTotal = _cardioSum;   // pasos TOTALES del mes
       // nutrición MENSUAL por COMIDAS: comidas marcadas ÷ comidas planificadas del mes (no por días). Ej: 3 comidas/día × días con dieta.
       var nutDias = [], _cont = {};
       function kcalDe(m, op, kn2) {
@@ -685,7 +688,7 @@
       return {
         key: mk, label: MO[mo].charAt(0).toUpperCase() + MO[mo].slice(1) + ' ' + yr,
         cerrado: !isCurrent,   // el mes ya terminó (se puede compartir/imprimir/guardar); el mes en curso, NO
-        entrenos: mEnt, cardio: { done: mCar.done, total: mCar.total, pct: mCar.pct, objetivo: _pasosObj, media: cardioMedia, dias: cardioDias },
+        entrenos: mEnt, cardio: { done: mCar.done, total: mCar.total, pct: mCar.pct, objetivo: _pasosObj, media: cardioMedia, totalPasos: cardioTotal, dias: cardioDias },
         nutricion: { done: nutDoneMeals, total: nutPlanMeals, pct: nutPct, dias: nutDias, conteoGrupos: conteoGrupos },
         metricas: { done: mMet.done, total: mMet.total, pct: mMet.pct, checkins: checkins },
         global: _gp.length ? Math.round(_gp.reduce(function (a, b) { return a + b; }, 0) / _gp.length) : 0,
