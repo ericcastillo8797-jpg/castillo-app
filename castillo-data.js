@@ -203,22 +203,43 @@
     return (H.isHealthAvailable ? H.isHealthAvailable() : Promise.resolve({ available: true })).then(function (a) {
       if (a && a.available === false) return;
       return H.requestHealthPermissions({ permissions: ['READ_STEPS'] }).catch(function () {}).then(function () {
+        // Antes solo se leía HOY: si el cliente no abría la app un día, esos pasos se perdían para
+        // siempre. Ahora se recuperan los últimos 7 días de una sola consulta, día a día.
         var now = new Date();
-        var start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-        return H.queryAggregated({ startDate: start, endDate: now.toISOString(), dataType: 'steps', bucket: 'day' });
+        var desde = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6).toISOString();
+        return H.queryAggregated({ startDate: desde, endDate: now.toISOString(), dataType: 'steps', bucket: 'day' });
       }).then(function (res) {
-        var pasos = 0;
-        if (res && res.aggregatedData && res.aggregatedData.length) pasos = Math.round(res.aggregatedData.reduce(function (s, x) { return s + (x.value || 0); }, 0));
-        if (!pasos) return;
+        var buckets = (res && res.aggregatedData) || [];
+        if (!buckets.length) return;
         var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
-        var hoyF = tzToday(_ctx.tz);   // fecha fresca en la zona del cliente
-        var row = { cliente_email: _ctx.email, fecha: hoyF, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
-        if (pasos >= objetivo) row.cardio = true;   // objetivo alcanzado → cardio hecho
+        var hoyF = tzToday(_ctx.tz);
+        // agrupa por fecha local: el plugin puede devolver varios trozos del mismo día
+        var porDia = {};
+        buckets.forEach(function (b) {
+          var d = b && (b.startDate || b.date || b.start);
+          var k = d ? fechaLocalDe(d) : hoyF;
+          if (!k || k > hoyF) return;                      // nunca escribe días futuros
+          porDia[k] = (porDia[k] || 0) + Math.round(b.value || 0);
+        });
+        var filas = Object.keys(porDia).filter(function (k) { return porDia[k] > 0; }).map(function (k) {
+          var row = { cliente_email: _ctx.email, fecha: k, pasos: porDia[k], registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+          if (porDia[k] >= objetivo) row.cardio = true;     // llegó a SU objetivo → cardio hecho
+          return row;
+        });
+        if (!filas.length) return;
         return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
-          method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+          method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(filas)
         }, _ctx.token);
       });
     }).catch(function () {});
+  }
+  // fecha LOCAL (no UTC) de lo que devuelva el plugin: si se pasa a UTC, la medianoche se va al día anterior
+  function fechaLocalDe(v) {
+    try {
+      var d = new Date(v);
+      if (isNaN(d)) return null;
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    } catch (e) { return null; }
   }
   // Conexión MANUAL de Apple Salud (botón "Conectar"): pide permiso, lee pasos de hoy y marca cardio. Devuelve {available, ok, pasos}.
   function conectarSalud() {

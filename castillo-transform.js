@@ -58,6 +58,14 @@
     function wkKeyOf(dt) { return dt.getFullYear() + '-W' + isoWeek(dt); }
     function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
     function cardioSub(item) { var p = item && item.config && item.config.pasos; return p ? (miles(p) + ' pasos') : 'Cardio'; }
+    // Un día de cardio se da por cumplido si lo marcó el cliente O si los pasos reales que trae
+    // Apple Salud llegan al objetivo que Alex le puso a ESE cliente (no a un 10.000 fijo para todos).
+    function cardioCumplido(marcado, pasosHechos, objetivo) {
+      if (marcado) return true;
+      var obj = parseInt(String(objetivo == null ? '' : objetivo).replace(/[^0-9]/g, ''), 10) || 0;
+      var hechos = parseInt(String(pasosHechos == null ? '' : pasosHechos).replace(/[^0-9]/g, ''), 10) || 0;
+      return obj > 0 && hechos >= obj;
+    }
     // sub del cardio mostrando los pasos REALES de Apple Salud hacia el objetivo (ej. "5.547 / 12.000 pasos")
     function cardioSubReal(item, hechos) {
       var p = item && item.config && item.config.pasos;
@@ -184,7 +192,7 @@
         // La foto de progreso va SIEMPRE con las métricas: si hay tarea de métricas (aunque el evento sea solo bodyStats
         // "Registrar evolución"), también sale la de fotos, para que el cliente pueda subirlas (igual que en el CRM).
         if (photoItem || statsItem) acts.push({ type: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: !!((photoItem && photoItem.done) || chkFotoDates[key]) });
-        if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: cardioSubReal(cardio, regDay.pasos), pasos: (cardio.config && cardio.config.pasos) || '', pasosHechos: (regDay.pasos != null ? regDay.pasos : ''), done: !!cardio.done });
+        if (cardio) acts.push({ type: 'cardio', label: cardio.title || 'Caminar', sub: cardioSubReal(cardio, regDay.pasos), pasos: (cardio.config && cardio.config.pasos) || '', pasosHechos: (regDay.pasos != null ? regDay.pasos : ''), done: cardioCumplido(!!cardio.done || !!regDay.cardio, regDay.pasos, (cardio.config && cardio.config.pasos)) });
         if (wkItem) acts.push({ type: 'workout', label: wkItem.title, sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
         // Nutrición del programa (con el título TAL CUAL lo puso el entrenador en el CRM, ej. "P.S Alimentación aumento músculo M.1")
         if (nutriItem) acts.push({ type: 'nutricion', label: nutriItem.title || 'Nutrición', sub: 'Marca lo que has comido', done: !!nutriItem.done });
@@ -533,11 +541,21 @@
     function doneT(type) { return todayItems.some(function (x) { return x.type === type && x.done; }); }
     var regToday = regByDate[todayKey] || {};
     var entrenoHecho = regToday.workout || doneT('workout');
+    // Objetivo de pasos ASIGNADO A ESTE CLIENTE (lo pone Alex en la tarea de cardio del CRM).
+    // Antes se usaba 10.000 fijo para todos, que no es lo que tiene asignado cada uno.
+    var pasosObjetivo = 0;
+    Object.keys(byDay).forEach(function (k) {
+      (byDay[k].items || []).forEach(function (it) {
+        if (!pasosObjetivo && it.type === 'cardio' && it.config && it.config.pasos) {
+          pasosObjetivo = parseInt(String(it.config.pasos).replace(/[^0-9]/g, ''), 10) || 0;
+        }
+      });
+    });
     var todayTasks = [];
     var checkinDoneThisWeek = !!chkWeeks[wkKeyOf(now)];
     if (hasT('bodyStats')) todayTasks.push({ key: 'medidas', label: 'Métricas personales · medidas', sub: 'Peso y medidas', done: doneT('bodyStats') || !!chkMedDates[todayKey] });
     if (hasT('bodyPhoto')) todayTasks.push({ key: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: doneT('bodyPhoto') || !!chkFotoDates[todayKey] });
-    if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: _cItem.title || 'Caminar', sub: cardioSubReal(_cItem, regToday.pasos), pasos: (_cItem.config && _cItem.config.pasos) || '', pasosHechos: (regToday.pasos != null ? regToday.pasos : ''), done: doneT('cardio') || !!regToday.cardio }); }
+    if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: _cItem.title || 'Caminar', sub: cardioSubReal(_cItem, regToday.pasos), pasos: (_cItem.config && _cItem.config.pasos) || '', pasosHechos: (regToday.pasos != null ? regToday.pasos : ''), done: cardioCumplido(doneT('cardio') || !!regToday.cardio, regToday.pasos, (_cItem.config && _cItem.config.pasos) || pasosObjetivo) }); }
     if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', sub: (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title || 'Entrenamiento', done: entrenoHecho });
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
     // Nutrición SOLO los días que el entrenador la haya puesto (con su título del CRM), no todos los días.
@@ -702,7 +720,7 @@
       mealsSel: mealsSel, header: header, logsInit: logsInit, logsByDate: logsByDate, doneByDate: doneByDate, lastByEx: lastByEx, checkinByDate: checkinByDate,
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary, macros: macros,
       mealsByDate: comByDate, checkinDoneThisWeek: checkinDoneThisWeek, progresoFotos: progresoFotos,
-      WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG
+      WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG, pasosObjetivo: pasosObjetivo
     };
   }
 
