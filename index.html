@@ -1828,6 +1828,9 @@ function _measGroupsFromConfig(cfg) {
 }
 function applyRealData(d) {
   if (!d) return;
+  // El objetivo de pasos de ESTE cliente sale del programa (lo pone Alex). Se publica para que
+  // el sincronizador de Apple Salud marque el cardio con SU cifra, no con los 10.000 por defecto.
+  try { if (window.__DATA && d.pasosObjetivo) window.__DATA.pasosObjetivo = d.pasosObjetivo; } catch (e) {}
   MEAS_GROUPS = _measGroupsFromConfig(d.medidasConfig) || MEAS_GROUPS_DEFAULT;
   // Métricas PERSONALIZADAS de este cliente (las crea Alex en el CRM) → grupo extra al final del formulario de medidas
   if (d.customMetrics && d.customMetrics.length) {
