@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=145"></script>
-<script src="./castillo-transform.js?v=145"></script>
-<script src="./castillo-equiv.js?v=145"></script>
-<script src="./castillo-data.js?v=145"></script>
+<script src="./castillo-i18n.js?v=146"></script>
+<script src="./castillo-transform.js?v=146"></script>
+<script src="./castillo-equiv.js?v=146"></script>
+<script src="./castillo-data.js?v=146"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2122,24 +2122,129 @@ class Component extends DCLogic {
   openMesDetail = which => () => { this.setState({ mesDetail: which, mesDetailIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ mesDetailIn: true }))); };
   closeMesDetail = () => { this.setState({ mesDetailIn: false }); this.later(() => this.setState({ mesDetail: null }), 420); };
   toggleResumen = () => this.setState({ resumenOpen: !this.state.resumenOpen });
-  // PDF del resumen del mes (reutiliza el motor de la dieta: html2canvas + jsPDF, 1 hoja)
+  // ─── PDF DEL RESUMEN DEL MES ───────────────────────────────────────────────
+  // Informe COMPLETO de 7 páginas (el diseño largo que validó Alex), no la hoja suelta de antes:
+  // portada · entrenamientos · progreso por ejercicio · cardio · calorías por día ·
+  // opciones y comidas libres · métricas. Cada página lleva su cabecera.
   _resumenDocHtml = (m) => {
     const en = this.state.lang === 'en', T = s => (window.I18N ? window.I18N.t(s, this.state.lang) : s);
     const hdr = (window.__DATA && window.__DATA.header) || {};
-    const miles = n => String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const nombre = hdr.nombre || '';
+    const miles = n => String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const pct = o => (o && o.total) ? (o.pct + '%') : '—';
-    const sub = o => o ? (o.done + ' / ' + o.total) : '';
-    const card = (n, o, extra) => '<div style="flex:1;border:1px solid #e6e6e6;border-radius:12px;padding:12px 14px"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a">' + n + '</div><div style="font-family:Georgia,serif;font-size:30px;margin-top:4px">' + pct(o) + '</div><div style="font-size:11px;color:#6b6b6b;margin-top:2px">' + (extra || sub(o)) + '</div></div>';
-    const doc = '<!doctype html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#141414;background:#fff;padding:40px 44px;width:794px}</style></head><body>'
-      + '<div style="font-size:11px;font-weight:700;letter-spacing:.28em;color:#9a9a9a">C A S T I L L O   P R I V A T E</div>'
-      + '<div style="font-family:Georgia,serif;font-size:40px;margin-top:8px">' + (en ? 'Summary — ' : 'Resumen — ') + m.label + '</div>'
-      + '<div style="font-size:13px;color:#6b6b6b;margin-top:4px">' + (hdr.nombre || '') + '</div>'
-      + '<div style="height:1px;background:#e6e6e6;margin:18px 0"></div>'
-      + '<div style="display:flex;gap:12px">' + card(T('Entrenos'), m.entrenos) + card(T('Cardio'), m.cardio, m.cardio.done + '/' + m.cardio.total + ' · ' + miles(m.cardio.media) + ' ' + T('pasos')) + '</div>'
-      + '<div style="display:flex;gap:12px;margin-top:12px">' + card(T('Nutrición'), m.nutricion) + card(T('Métricas'), m.metricas) + '</div>'
-      + '<div style="display:flex;gap:12px;margin-top:12px"><div style="width:120px;background:#141414;color:#fff;border-radius:12px;padding:14px"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a">' + T('Global') + '</div><div style="font-family:Georgia,serif;font-size:34px;margin-top:6px">' + m.global + '%</div></div>'
-      + '<div style="flex:1;border:1px solid #e6e6e6;border-radius:12px;padding:14px"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a">' + T('Peso corporal') + '</div><div style="font-family:Georgia,serif;font-size:24px;margin-top:6px">' + m.peso.ini + ' → ' + m.peso.fin + '</div><div style="font-size:12px;color:#6b6b6b;margin-top:2px">' + (m.peso.delta > 0 ? '+' : '') + String(m.peso.delta).replace('.', ',') + ' kg · ' + m.fotos + ' ' + (en ? 'photos' : 'fotos') + '</div></div></div>'
-      + '<div style="font-size:10px;color:#9a9a9a;margin-top:26px">Castillo Private · ' + (en ? 'Monthly summary' : 'Resumen mensual') + '</div>'
+
+    // ── piezas de maquetación ──
+    const CAB = (n, titulo) => '<div style="display:flex;align-items:baseline;justify-content:space-between">'
+      + '<div><div style="font-size:10px;font-weight:600;letter-spacing:.26em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">— ' + (en ? 'Monthly summary' : 'Resumen mensual') + '</span></div>'
+      + '<div style="font-family:Georgia,serif;font-size:27px;margin-top:9px">' + (n ? (n + ' · ') : '') + titulo + '</div></div>'
+      + '<div style="font-size:11px;color:#6b6b6b">' + esc(nombre) + ' · ' + m.label + '</div></div>'
+      + '<div style="height:1px;background:#e6e6e6;margin:15px 0 16px"></div>';
+    const PAG = (contenido) => '<div class="pg" style="width:794px;height:1123px;padding:40px 44px;background:#fff;overflow:hidden">' + contenido + '</div>';
+    const ROT = t => '<div style="font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a9a9a;margin-bottom:7px">' + t + '</div>';
+    // tabla a dos columnas: reparte las filas en dos bloques para que quepan de largo
+    const DOSCOL = (filas, cabs) => {
+      const mitad = Math.ceil(filas.length / 2);
+      const bloque = (arr) => arr.length ? ('<table style="width:100%;border-collapse:collapse;font-size:12px">'
+        + '<tr>' + cabs.map((c, i) => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px' + (i ? ';text-align:right' : '') + '">' + c + '</td>').join('') + '</tr>'
+        + arr.join('') + '</table>') : '';
+      return '<div style="display:flex;gap:26px"><div style="flex:1">' + bloque(filas.slice(0, mitad)) + '</div><div style="flex:1">' + bloque(filas.slice(mitad)) + '</div></div>';
+    };
+    const FILA = (izq, der, rojo) => '<tr><td style="padding:8px 0;border-top:1px solid #eee">' + izq + '</td>'
+      + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right' + (rojo ? ';color:#c0392b' : '') + '">' + der + '</td></tr>';
+
+    // ── PÁGINA 1 · portada ──
+    const barra = (p, oscura) => '<div style="height:5px;border-radius:3px;background:' + (oscura ? 'rgba(255,255,255,.25)' : '#e6e6e6') + ';margin-top:11px;overflow:hidden"><div style="height:100%;width:' + Math.max(0, Math.min(100, p || 0)) + '%;background:' + (oscura ? '#fff' : '#141414') + ';border-radius:3px"></div></div>';
+    const tarjeta = (t, o, extra) => '<div style="flex:1;background:#faf9f6;border-radius:14px;padding:15px 17px">'
+      + ROT(t) + '<div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:Georgia,serif;font-size:33px">' + pct(o) + '</div>'
+      + '<div style="font-size:11px;color:#6b6b6b">' + (extra || ((o ? o.done : 0) + ' / ' + (o ? o.total : 0))) + '</div></div>' + barra(o ? o.pct : 0) + '</div>';
+    const veredicto = m.global >= 85 ? (en ? 'Great month' : 'Muy buen mes') : m.global >= 70 ? (en ? 'Good month' : 'Buen mes') : (en ? 'Room to improve' : 'Se puede mejorar');
+    const p1 = '<div style="font-size:10px;font-weight:600;letter-spacing:.26em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">— ' + (en ? 'Monthly summary' : 'Resumen mensual') + '</span></div>'
+      + '<div style="font-family:Georgia,serif;font-size:42px;margin-top:12px">' + (en ? 'Summary of ' : 'Resumen de ') + m.label.split(' ')[0] + '</div>'
+      + '<div style="font-size:12.5px;color:#6b6b6b;margin-top:5px">' + esc(nombre) + ' · ' + m.label + '</div>'
+      + '<div style="height:1px;background:#e6e6e6;margin:20px 0"></div>'
+      + '<div style="display:flex;gap:14px">' + tarjeta(T('Entrenos'), m.entrenos) + tarjeta(T('Cardio') + ' · ' + T('pasos'), m.cardio, (m.cardio.done + ' / ' + m.cardio.total + ' ' + (en ? 'days' : 'días'))) + '</div>'
+      + '<div style="display:flex;gap:14px;margin-top:14px">' + tarjeta(T('Nutrición'), m.nutricion, (m.nutricion.done + ' / ' + m.nutricion.total + ' ' + (en ? 'meals' : 'comidas'))) + tarjeta(T('Métricas'), m.metricas) + '</div>'
+      + '<div style="background:#141414;color:#fff;border-radius:16px;padding:18px 20px;margin-top:14px">'
+      + '<div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a9a9a">' + (en ? 'Overall for the month' : 'Cumplimiento global del mes') + '</div><div style="font-size:12px;color:#7ddc9a;font-weight:600">' + veredicto + '</div></div>'
+      + '<div style="font-family:Georgia,serif;font-size:38px;margin-top:6px">' + m.global + '%</div>'
+      + '<div style="font-size:11px;color:#9a9a9a">' + (en ? 'average of training, cardio, nutrition and metrics' : 'media de entrenos, cardio, nutrición y métricas') + '</div>' + barra(m.global, true) + '</div>'
+      + '<div style="display:flex;gap:14px;margin-top:14px">'
+      + '<div style="flex:1;background:#faf9f6;border-radius:14px;padding:15px 17px">' + ROT(T('Peso corporal')) + '<div style="font-family:Georgia,serif;font-size:27px">' + m.peso.ini + ' → ' + m.peso.fin + ' kg</div>'
+      + '<div style="font-size:11.5px;font-weight:600;margin-top:3px;color:' + (m.peso.delta < 0 ? '#1e7e34' : m.peso.delta > 0 ? '#c0392b' : '#6b6b6b') + '">' + (m.peso.delta > 0 ? '+' : '') + String(m.peso.delta).replace('.', ',') + ' kg ' + (en ? 'this month' : 'este mes') + '</div></div>'
+      + '<div style="flex:1;background:#faf9f6;border-radius:14px;padding:15px 17px">' + ROT(en ? 'Progress photos' : 'Fotos de progreso') + '<div style="font-family:Georgia,serif;font-size:27px">' + m.fotos + '</div>'
+      + '<div style="font-size:11px;color:#6b6b6b;margin-top:3px">' + (en ? 'front, side and back' : 'frontal, lateral y espalda') + '</div></div></div>'
+      + '<div style="height:1px;background:#e6e6e6;margin:22px 0 10px"></div>'
+      + '<div style="font-size:10.5px;color:#9a9a9a">' + (en ? 'Generated automatically from what you logged in the app. The following pages break down where each number comes from.' : 'Generado automáticamente a partir de lo que marcaste en la app. Las páginas siguientes detallan de dónde sale cada dato.') + '</div>';
+
+    // ── PÁGINA 2 · entrenamientos ──
+    const ses = (m.entrenos.sesiones || []);
+    const filasSes = ses.map(x => FILA(esc(x.lbl), '<span style="color:' + (x.done ? '#141414' : '#c0392b') + '">' + esc(x.titulo) + (x.done ? '' : ' · ' + (en ? 'missed' : 'sin hacer')) + '</span>'));
+    const p2 = CAB(1, en ? 'Training' : 'Entrenamientos')
+      + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.entrenos.done + ' ' + (en ? 'of' : 'de') + ' ' + m.entrenos.total + '</b> ' + (en ? 'sessions completed' : 'sesiones completadas') + ' · <b>' + m.entrenos.pct + '%</b></div>'
+      + (filasSes.length ? ROT(en ? 'Sessions this month' : 'Sesiones del mes') + DOSCOL(filasSes, [en ? 'Day' : 'Día', en ? 'Workout' : 'Entrenamiento'])
+                        : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No sessions planned this month.' : 'Este mes no había sesiones planificadas.') + '</div>');
+
+    // ── PÁGINA 3 · progreso por ejercicio ──
+    const ejs = (m.ejercicios || []);
+    const p3 = CAB(2, en ? 'Progress by exercise' : 'Progreso por ejercicio')
+      + (ejs.length ? ROT(en ? 'Weight lifted, start vs end of month' : 'Peso levantado, inicio y final del mes')
+          + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+          + '<tr>' + [en ? 'Exercise' : 'Ejercicio', en ? 'Start' : 'Inicio', en ? 'End' : 'Final', en ? 'Change' : 'Cambio'].map((c, i) => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px' + (i ? ';text-align:right' : '') + '">' + c + '</td>').join('') + '</tr>'
+          + ejs.map(e => '<tr><td style="padding:9px 0;border-top:1px solid #eee">' + esc(e.nombre) + '</td>'
+              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + e.ini + ' kg</td>'
+              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + e.fin + ' kg</td>'
+              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + (e.delta > 0 ? '#1e7e34' : e.delta < 0 ? '#c0392b' : '#6b6b6b') + '">' + (e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + ' kg</td></tr>').join('')
+          + '</table>'
+        : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No weights logged this month.' : 'Este mes no se registraron pesos.') + '</div>');
+
+    // ── PÁGINA 4 · cardio ──
+    const cd = (m.cardio.dias || []);
+    const filasCar = cd.map(d => FILA(esc(d.lbl), miles(d.pasos) + (m.cardio.objetivo && d.pasos < m.cardio.objetivo ? '' : ''), m.cardio.objetivo ? (d.pasos < m.cardio.objetivo) : false));
+    const p4 = CAB(3, 'Cardio')
+      + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.cardio.done + ' ' + (en ? 'of' : 'de') + ' ' + m.cardio.total + '</b> ' + (en ? 'days reached the goal of' : 'días con el objetivo de') + ' <b>' + miles(m.cardio.objetivo) + ' ' + T('pasos') + '</b> · <b>' + m.cardio.pct + '%</b>'
+      + '<br><span style="color:#6b6b6b">' + (en ? 'Daily average' : 'Media diaria') + ': <b>' + miles(m.cardio.media) + '</b> · ' + (en ? 'total' : 'total') + ': <b>' + miles(m.cardio.totalPasos) + '</b></span></div>'
+      + (filasCar.length ? ROT(en ? 'Steps day by day' : 'Pasos día a día') + DOSCOL(filasCar, [en ? 'Day' : 'Día', T('pasos')])
+                         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No cardio planned this month.' : 'Este mes no había cardio planificado.') + '</div>');
+
+    // ── PÁGINA 5 · calorías por día ──
+    const nd = (m.nutricion.dias || []).slice().reverse();
+    const kcalMedia = nd.length ? Math.round(nd.reduce((a, d) => a + (d.kcal || 0), 0) / nd.length) : 0;
+    const filasKcal = nd.map(d => FILA(esc(d.lbl), miles(d.kcal) + ' kcal'));
+    const p5 = CAB(4, en ? 'Nutrition · calories per day' : 'Nutrición · calorías por día')
+      + '<div style="font-size:12.5px;margin-bottom:14px">' + (en ? 'Calories logged each day. Average' : 'Calorías registradas cada día del mes. Media') + ': <b>' + miles(kcalMedia) + ' kcal/' + (en ? 'day' : 'día') + '</b>.</div>'
+      + (filasKcal.length ? ROT(en ? 'Calories day by day' : 'Calorías día a día') + DOSCOL(filasKcal, [en ? 'Day' : 'Día', en ? 'Calories' : 'Calorías'])
+                          : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No meals logged this month.' : 'Este mes no se registró ninguna comida.') + '</div>');
+
+    // ── PÁGINA 6 · opciones elegidas y comidas libres ──
+    const grupos = (m.nutricion.conteoGrupos || []);
+    const p6 = CAB(5, en ? 'Nutrition · options chosen' : 'Nutrición · opciones elegidas')
+      + '<div style="font-size:12.5px;margin-bottom:14px">' + (en ? 'Month compliance' : 'Cumplimiento del mes') + ': <b>' + m.nutricion.pct + '%</b> — <b>' + m.nutricion.done + '</b> ' + (en ? 'meals logged out of' : 'comidas registradas de') + ' <b>' + m.nutricion.total + '</b> ' + (en ? 'possible' : 'posibles') + '.</div>'
+      + (grupos.length ? ROT(en ? 'What was chosen at each meal' : 'Qué eligió en cada comida')
+          + grupos.map(g => '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">' + esc(g.meal) + '</div>'
+              + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+              + g.opciones.map(o => '<tr><td style="padding:7px 0;border-top:1px solid #eee"><b>' + esc(o.lbl) + '</b></td>'
+                  + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + o.veces + ' ' + (en ? (o.veces === 1 ? 'time' : 'times') : (o.veces === 1 ? 'vez' : 'veces')) + '</td></tr>').join('')
+              + '</table></div>').join('')
+        : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'Nothing logged this month.' : 'Este mes no se registró nada.') + '</div>');
+
+    // ── PÁGINA 7 · métricas ──
+    const cks = (m.metricas.checkins || []).slice().reverse();
+    const p7 = CAB(6, en ? 'Metrics' : 'Métricas')
+      + '<div style="font-size:12.5px;margin-bottom:14px">' + T('Peso corporal') + ': <b>' + m.peso.ini + ' → ' + m.peso.fin + ' kg</b> (' + (m.peso.delta > 0 ? '+' : '') + String(m.peso.delta).replace('.', ',') + ' kg ' + (en ? 'this month' : 'en el mes') + ').</div>'
+      + (cks.length ? ROT(en ? 'Weekly check-ins' : 'Check-ins del mes')
+          + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+          + '<tr>' + [en ? 'Date' : 'Fecha', en ? 'Weight' : 'Peso', en ? 'Measurements' : 'Medidas'].map((c, i) => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px' + (i ? ';text-align:right' : '') + '">' + c + '</td>').join('') + '</tr>'
+          + cks.map(c => '<tr><td style="padding:9px 0;border-top:1px solid #eee">' + esc(c.lbl) + '</td>'
+              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right">' + (c.peso || '—') + '</td>'
+              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + c.n + '</td></tr>').join('')
+          + '</table>'
+        : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No check-ins this month.' : 'Este mes no hubo check-ins.') + '</div>')
+      + '<div style="height:1px;background:#e6e6e6;margin:26px 0 10px"></div>'
+      + '<div style="font-size:10px;font-weight:600;letter-spacing:.24em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">· ' + (en ? 'Monthly summary' : 'Resumen mensual') + ' · ' + m.label + '</span></div>';
+
+    const doc = '<!doctype html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#141414;background:#fff;width:794px}</style></head><body>'
+      + PAG(p1) + PAG(p2) + PAG(p3) + PAG(p4) + PAG(p5) + PAG(p6) + PAG(p7)
       + '</body></html>';
     return { doc: doc, nombre: 'Resumen-' + m.label.replace(/\s+/g, '-') + '.pdf' };
   };
@@ -2204,12 +2309,21 @@ class Component extends DCLogic {
     document.body.appendChild(f);
     var fd = f.contentWindow.document; fd.open(); fd.write(built.doc); fd.close();
     await new Promise(r => setTimeout(r, 220));
-    var canvas = await window.html2canvas(fd.body, { scale: 2, backgroundColor: '#ffffff', windowWidth: 794, width: 794 });
-    f.remove();
-    var img = canvas.toDataURL('image/jpeg', 0.92);
+    // Una hoja de PDF por cada página del informe. Antes se metía TODO en una sola hoja:
+    // por eso el cliente veía el resumen aplastado en un folio en vez del informe completo.
+    var paginas = Array.prototype.slice.call(fd.querySelectorAll('.pg'));
+    if (!paginas.length) paginas = [fd.body];
     var jsPDF = window.jspdf.jsPDF, pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-    var pw = 210, ph = 297, iw = pw, ih = canvas.height * pw / canvas.width; if (ih > ph) { ih = ph; iw = canvas.width * ph / canvas.height; }
-    pdf.addImage(img, 'JPEG', (pw - iw) / 2, 8, iw, ih);
+    var pw = 210, ph = 297;
+    for (var i = 0; i < paginas.length; i++) {
+      var canvas = await window.html2canvas(paginas[i], { scale: 2, backgroundColor: '#ffffff', windowWidth: 794, width: 794 });
+      var img = canvas.toDataURL('image/jpeg', 0.92);
+      var iw = pw, ih = canvas.height * pw / canvas.width;
+      if (ih > ph) { ih = ph; iw = canvas.width * ph / canvas.height; }
+      if (i > 0) pdf.addPage();
+      pdf.addImage(img, 'JPEG', (pw - iw) / 2, (ph - ih) / 2, iw, ih);
+    }
+    f.remove();
     return { blob: pdf.output('blob'), nombre: built.nombre };
   };
   // el resumen del mes solo se puede compartir/guardar/imprimir cuando el mes YA HA TERMINADO (no el mes en curso ni un alta reciente)
