@@ -807,13 +807,133 @@
       };
     });
 
+    // ─── RESÚMENES POR TRIMESTRE, SEMESTRE Y AÑO ────────────────────────────────
+    // Se agregan los meses ya calculados. Los porcentajes se recalculan SUMANDO totales, nunca
+    // promediando meses: 2/4 en enero y 18/20 en febrero es 83%, no el 70% que daría la media.
+    function agregaMeses(meses, label, key) {
+      var suma = function (sel) {
+        var d = 0, t = 0;
+        meses.forEach(function (m) { var o = sel(m) || {}; d += (o.done || 0); t += (o.total || 0); });
+        return { done: d, total: t, pct: t ? Math.round(d / t * 100) : 0 };
+      };
+      var ent = suma(function (m) { return m.entrenos; });
+      var car = suma(function (m) { return m.cardio; });
+      var nut = suma(function (m) { return m.nutricion; });
+      var met = suma(function (m) { return m.metricas; });
+
+      // cardio: pasos totales y media diaria REAL (sobre los días con dato)
+      var pasosTot = 0, diasCar = 0, obj = 0;
+      meses.forEach(function (m) {
+        pasosTot += (m.cardio && m.cardio.totalPasos) || 0;
+        diasCar += ((m.cardio && m.cardio.dias) || []).length;
+        if (!obj) obj = (m.cardio && m.cardio.objetivo) || 0;
+      });
+
+      // detalle mes a mes en vez de día a día: un año en días serían 365 filas
+      var dias = meses.map(function (m) {
+        var d2 = (m.cardio && m.cardio.dias) || [];
+        var media = d2.length ? Math.round(((m.cardio && m.cardio.totalPasos) || 0) / d2.length) : 0;
+        return { lbl: m.label.split(' ')[0], done: (m.cardio && m.cardio.pct) >= 50, pasos: media };
+      });
+      var nutDias = meses.map(function (m) {
+        var nd = (m.nutricion && m.nutricion.dias) || [];
+        var kc = nd.reduce(function (a, x) { return a + (x.kcal || 0); }, 0);
+        return { lbl: m.label.split(' ')[0], kcal: nd.length ? Math.round(kc / nd.length) : 0, items: [] };
+      });
+
+      // opciones de comida: se suman las veces de todos los meses
+      var gm = {};
+      meses.forEach(function (m) {
+        ((m.nutricion && m.nutricion.conteoGrupos) || []).forEach(function (g) {
+          var d3 = gm[g.meal] || (gm[g.meal] = {});
+          (g.opciones || []).forEach(function (o) { d3[o.lbl] = (d3[o.lbl] || 0) + o.veces; });
+        });
+      });
+      var conteoGrupos = Object.keys(gm).map(function (k) {
+        return { meal: k, opciones: Object.keys(gm[k]).map(function (l) { return { lbl: l, veces: gm[k][l] }; }).sort(function (a, b) { return b.veces - a.veces; }) };
+      });
+
+      // ejercicios: una columna por MES del periodo, con el máximo de cada mes
+      var porEj = {};
+      meses.forEach(function (m, idx) {
+        (m.ejercicios || []).forEach(function (e) {
+          var r = porEj[e.nombre] || (porEj[e.nombre] = { nombre: e.nombre, y: e.y, cols: [] });
+          if (!r.y && e.y) r.y = e.y;
+          var top = null;
+          (e.semanas || []).forEach(function (v) { var n = parseFloat(String(v).replace(',', '.')); if (!isNaN(n) && (top == null || n > top)) top = n; });
+          r.cols[idx] = top;
+        });
+      });
+      var ejercicios = Object.keys(porEj).map(function (k) {
+        var r = porEj[k];
+        var vals = [];
+        for (var i = 0; i < meses.length; i++) vals.push(r.cols[i] == null ? '' : comma(r.cols[i]));
+        var con = r.cols.filter(function (x) { return x != null; });
+        var ini2 = con[0], fin2 = con[con.length - 1];
+        var delta = (con.length >= 1) ? Math.round((fin2 - ini2) * 10) / 10 : 0;
+        return { nombre: r.nombre, y: r.y, semanas: vals, ini: comma(ini2), fin: comma(fin2), delta: delta, subio: delta > 0, igual: delta === 0, sesiones: con.length };
+      }).filter(function (e) { return e.sesiones; }).sort(function (a, b) { return b.delta - a.delta; });
+
+      var checkins = [];
+      meses.forEach(function (m) { checkins = checkins.concat((m.metricas && m.metricas.checkins) || []); });
+
+      var primeros = meses.slice().reverse();   // meses vienen del más nuevo al más viejo
+      var pIni2 = (primeros[0] && primeros[0].peso && primeros[0].peso.ini) || '—';
+      var pFin2 = (meses[0] && meses[0].peso && meses[0].peso.fin) || '—';
+      var _a = parseFloat(String(pIni2).replace(',', '.')), _b = parseFloat(String(pFin2).replace(',', '.'));
+      var pD = (!isNaN(_a) && !isNaN(_b)) ? Math.round((_b - _a) * 10) / 10 : 0;
+
+      var gp = []; if (ent.total) gp.push(ent.pct); if (car.total) gp.push(car.pct); if (met.total) gp.push(met.pct); if (nut.total) gp.push(nut.pct);
+      return {
+        key: key, label: label, cerrado: true, periodo: true,
+        entrenos: { done: ent.done, total: ent.total, pct: ent.pct, sesiones: meses.reduce(function (a, m) { return a.concat((m.entrenos && m.entrenos.sesiones) || []); }, []) },
+        cardio: { done: car.done, total: car.total, pct: car.pct, objetivo: obj, media: diasCar ? Math.round(pasosTot / diasCar) : 0, totalPasos: pasosTot, dias: dias },
+        nutricion: { done: nut.done, total: nut.total, pct: nut.pct, dias: nutDias, conteoGrupos: conteoGrupos },
+        metricas: { done: met.done, total: met.total, pct: met.pct, checkins: checkins },
+        global: gp.length ? Math.round(gp.reduce(function (a, b) { return a + b; }, 0) / gp.length) : 0,
+        peso: { ini: pIni2, fin: pFin2, delta: pD },
+        fotos: meses.reduce(function (a, m) { return a + (m.fotos || 0); }, 0),
+        ejercicios: ejercicios, semanasLbl: meses.slice().reverse().map(function (m) { return m.label.split(' ')[0].slice(0, 3); }),
+        kcalObjetivo: (macros && macros.kcal) || 0
+      };
+    }
+    // construye la lista de periodos hacia atrás (del más reciente al más antiguo)
+    function periodosDe(nMeses, etiqueta) {
+      var porKey = {}; resumenMeses.forEach(function (m) { porKey[m.key] = m; });
+      var hoyY = now.getFullYear(), hoyM = now.getMonth();
+      var out = [], guard = 0;
+      var masViejo = resumenMeses.length ? resumenMeses[resumenMeses.length - 1].key : (hoyY + '-' + d2(hoyM + 1));
+      var cursor = new Date(hoyY, hoyM, 1);
+      while (guard++ < 40) {
+        var bloque = [], primero = null;
+        for (var i = 0; i < nMeses; i++) {
+          var dd = new Date(cursor.getFullYear(), cursor.getMonth() - i, 1);
+          var k = dd.getFullYear() + '-' + d2(dd.getMonth() + 1);
+          if (!primero) primero = dd;
+          bloque.push(porKey[k] || agregaMeses([], '', k));
+          if (porKey[k]) bloque[bloque.length - 1] = porKey[k];
+        }
+        var ultimo = new Date(cursor.getFullYear(), cursor.getMonth() - (nMeses - 1), 1);
+        var lbl = etiqueta(ultimo, cursor);
+        out.push(agregaMeses(bloque.filter(Boolean), lbl, 'P' + nMeses + '-' + cursor.getFullYear() + '-' + d2(cursor.getMonth() + 1)));
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth() - nMeses, 1);
+        if ((cursor.getFullYear() + '-' + d2(cursor.getMonth() + 1)) < masViejo && out.length >= 4) break;
+      }
+      return out;
+    }
+    var MO3 = function (dt) { return MO[dt.getMonth()].slice(0, 3); };
+    var resumenTrimestres = periodosDe(3, function (a, b) { return MO3(a) + '–' + MO3(b) + ' ' + b.getFullYear(); });
+    var resumenSemestres  = periodosDe(6, function (a, b) { return MO3(a) + '–' + MO3(b) + ' ' + b.getFullYear(); });
+    var resumenAnios      = periodosDe(12, function (a, b) { return (a.getFullYear() === b.getFullYear() ? String(b.getFullYear()) : (MO3(a) + ' ' + a.getFullYear() + ' – ' + MO3(b) + ' ' + b.getFullYear())); });
+
     return {
       DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID, resumenMeses: resumenMeses,
       WEIGHTS: WEIGHTS, chartLabels: chartLabels, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header, logsInit: logsInit, logsByDate: logsByDate, doneByDate: doneByDate, lastByEx: lastByEx, checkinByDate: checkinByDate,
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary, macros: macros,
       mealsByDate: comByDate, checkinDoneThisWeek: checkinDoneThisWeek, progresoFotos: progresoFotos,
-      WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG, pasosObjetivo: pasosObjetivo
+      WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG, pasosObjetivo: pasosObjetivo,
+      resumenTrimestres: resumenTrimestres, resumenSemestres: resumenSemestres, resumenAnios: resumenAnios
     };
   }
 
