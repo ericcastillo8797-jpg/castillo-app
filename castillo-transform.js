@@ -709,10 +709,17 @@
         var doneC = !!regc.cardio || events.some(function (e) { if (e.type !== 'cardio' || !e.completed) return false; var ed = new Date(ms(e.date)); return ed.getFullYear() === yr && ed.getMonth() === mo && ed.getDate() === dc; });
         // pasos REALES del día (Apple Salud). Si no hay pero está marcado a mano, se cuenta el objetivo (regla de Alex).
         var _pasosReal = (regc && regc.pasos != null && regc.pasos !== '') ? (parseInt(String(regc.pasos).replace(/[^0-9]/g, ''), 10) || 0) : null;
-        if (plannedC || doneC) cardioDias.push({ lbl: d2(dc) + ' ' + MO[mo].slice(0, 3), done: doneC, pasos: (_pasosReal != null ? _pasosReal : (doneC ? (_pasosObj || 0) : 0)) });
+        // Regla de Alex: manda lo que diga Apple Salud. Si no hay lectura pero el cliente lo marcó
+        // a mano, se pone el objetivo redondo. Si no hay ni lectura ni marca, NO se inventa un 0:
+        // se deja sin dato (antes salía "0 pasos" en días que simplemente no se midieron).
+        if (plannedC || doneC) cardioDias.push({ lbl: d2(dc) + ' ' + MO[mo].slice(0, 3), done: doneC,
+          real: _pasosReal != null,
+          pasos: (_pasosReal != null ? _pasosReal : (doneC ? (_pasosObj || 0) : null)) });
       }
       var _cardioSum = cardioDias.reduce(function (s, d) { return s + (d.pasos || 0); }, 0);
-      var cardioMedia = cardioDias.length ? Math.round(_cardioSum / cardioDias.length) : 0;
+      // la media solo cuenta los días que tienen dato, no los días sin medir
+      var _conDato = cardioDias.filter(function (d) { return d.pasos != null; }).length;
+      var cardioMedia = _conDato ? Math.round(_cardioSum / _conDato) : 0;
       var cardioTotal = _cardioSum;   // pasos TOTALES del mes
       // nutrición MENSUAL por COMIDAS: comidas marcadas ÷ comidas planificadas del mes (no por días). Ej: 3 comidas/día × días con dieta.
       var nutDias = [], _cont = {};

@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=198"></script>
-<script src="./castillo-transform.js?v=198"></script>
-<script src="./castillo-equiv.js?v=198"></script>
-<script src="./castillo-data.js?v=198"></script>
+<script src="./castillo-i18n.js?v=199"></script>
+<script src="./castillo-transform.js?v=199"></script>
+<script src="./castillo-equiv.js?v=199"></script>
+<script src="./castillo-data.js?v=199"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 198;
+  var VERSION_ACTUAL = 199;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2383,6 +2383,7 @@ class Component extends DCLogic {
     const tOpc  = l => en ? String(l || '').replace(/^Opción/, 'Option').replace(/^Comida libre/, 'Free meal') : l;
     const tCom  = n => { try { return (window.I18N && window.I18N.meal) ? window.I18N.meal(n, this.state.lang) : n; } catch (er) { return n; } };
     const tFood = n => { try { return (window.I18N && window.I18N.food) ? window.I18N.food(n, this.state.lang) : n; } catch (er) { return n; } };
+    const tSport = n => { try { return (window.I18N && window.I18N.sport) ? window.I18N.sport(n, this.state.lang) : (n || ''); } catch (er) { return n || ''; } };
     // El nombre del periodo viene en español desde la capa de datos ("Agosto 2026", "sep 2025 – ago 2026").
     // En el informe hay que traducirlo igual que en pantalla, si no salía "Summary · Agosto 2026".
     const etiqueta = (function () { try { return window.I18N ? window.I18N.date(m.label, this.state.lang) : m.label; } catch (er) { return m.label; } }).call(this);
@@ -2491,7 +2492,11 @@ class Component extends DCLogic {
 
     // ── PÁGINA 4 · cardio ──
     const cd = (m.cardio.dias || []);
-    const filasCar = cd.map(d => FILA(esc(d.lbl), miles(d.pasos) + (m.cardio.objetivo && d.pasos < m.cardio.objetivo ? '' : ''), m.cardio.objetivo ? (d.pasos < m.cardio.objetivo) : false));
+    // días sin lectura de Apple Salud y sin marcar: no se inventa un 0, se deja "—"
+    const filasCar = cd.map(d => FILA(esc(d.lbl),
+      d.pasos == null ? '<span style="color:#c9c9c9">—</span>'
+                      : (miles(d.pasos) + (d.real ? '' : '<span style="font-size:9px;color:#9a9a9a"> ·' + (en ? ' marked' : ' marcado') + '</span>')),
+      (m.cardio.objetivo && d.pasos != null) ? (d.pasos < m.cardio.objetivo) : false));
     const p4 = CAB(3, 'Cardio')
       + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.cardio.done + ' ' + (en ? 'of' : 'de') + ' ' + m.cardio.total + '</b> ' + (en ? 'days reached the goal of' : 'días con el objetivo de') + ' <b>' + miles(m.cardio.objetivo) + ' ' + T('pasos') + '</b> · <b>' + m.cardio.pct + '%</b>'
       + '<br><span style="color:#6b6b6b">' + (en ? 'Total steps this month' : 'Pasos totales del mes') + ': <b>' + miles(m.cardio.totalPasos) + '</b></span></div>'
@@ -2629,16 +2634,23 @@ class Component extends DCLogic {
           + CAJA(en ? 'Day strain' : 'Esfuerzo del día', _num(md.esfuerzo), '/ 21')
         + '</div>'
         + ((wh.entrenos || []).length
-          ? ROT(en ? 'Workouts recorded by WHOOP' : 'Entrenamientos registrados por WHOOP')
+          ? ROT(en ? 'Activity recorded by WHOOP' : 'Actividad registrada por WHOOP')
+            + '<div style="font-size:11px;color:#9a9a9a;margin:-4px 0 10px;line-height:1.45">'
+            + esc(en ? 'WHOOP records every activity it detects on its own, not only gym sessions: a walk or a bike ride also appear here.'
+                     : 'WHOOP apunta toda la actividad que detecta por su cuenta, no solo los entrenos del gimnasio: un paseo o una vuelta en bici también salen aquí.') + '</div>'
             + '<div style="font-size:11.5px;color:#6b6b6b;margin:-6px 0 12px">'
-            + esc(en ? (er2.n + (er2.n === 1 ? ' session · ' : ' sessions · ') + miles(er2.kcalTotal || 0) + ' kcal in total')
-                     : (er2.n + (er2.n === 1 ? ' sesión · ' : ' sesiones · ') + miles(er2.kcalTotal || 0) + ' kcal en total'))
+            + esc(en ? (er2.n + (er2.n === 1 ? ' activity · ' : ' activities · ') + miles(er2.kcalTotal || 0) + ' kcal in total')
+                     : (er2.n + (er2.n === 1 ? ' actividad · ' : ' actividades · ') + miles(er2.kcalTotal || 0) + ' kcal en total'))
             + (er2.kcalMedia != null ? esc(en ? ' · ' + miles(er2.kcalMedia) + ' kcal on average' : ' · ' + miles(er2.kcalMedia) + ' kcal de media') : '') + '</div>'
             + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
             + '<tr><th style="text-align:left;padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + (en ? 'Day' : 'Día') + '</th>'
+            + '<th style="text-align:left;padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + (en ? 'Activity' : 'Actividad') + '</th>'
+            + '<th style="text-align:right;padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + (en ? 'Duration' : 'Duración') + '</th>'
             + '<th style="text-align:right;padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + (en ? 'Strain' : 'Esfuerzo') + '</th>'
             + '<th style="text-align:right;padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + (en ? 'Calories' : 'Calorías') + '</th></tr>'
             + (wh.entrenos || []).slice(0, MAX_W).map(w => '<tr><td style="padding:7px 0;border-top:1px solid #eee">' + esc(_fechaLarga(w.fecha)) + '</td>'
+                + '<td style="padding:7px 0;border-top:1px solid #eee">' + esc(tSport(w.deporte)) + '</td>'
+                + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + (w.minutos != null ? (w.minutos + ' min') : '—') + '</td>'
                 + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right">' + esc(_num(w.esfuerzo)) + '</td>'
                 + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;font-weight:600">' + (w.calorias != null ? miles(w.calorias) + ' kcal' : '—') + '</td></tr>').join('')
             + '</table>'

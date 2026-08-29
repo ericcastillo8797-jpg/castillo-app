@@ -723,6 +723,32 @@
     return WEEKD1[k] != null && String(letter).trim().length === 1 ? WEEKD1[k] : letter;
   }
 
+  // Nombre de la actividad que devuelve WHOOP ("weightlifting", "functional_fitness"…)
+  var DEPORTE = {
+    weightlifting: {es:'Pesas', en:'Weightlifting'}, running: {es:'Correr', en:'Running'},
+    walking: {es:'Caminar', en:'Walking'}, cycling: {es:'Bici', en:'Cycling'},
+    functional_fitness: {es:'Funcional', en:'Functional fitness'}, hiit: {es:'HIIT', en:'HIIT'},
+    boxing: {es:'Boxeo', en:'Boxing'}, swimming: {es:'Natación', en:'Swimming'},
+    yoga: {es:'Yoga', en:'Yoga'}, pilates: {es:'Pilates', en:'Pilates'},
+    activity: {es:'Actividad', en:'Activity'}, hiking: {es:'Senderismo', en:'Hiking'},
+    elliptical: {es:'Elíptica', en:'Elliptical'}, rowing: {es:'Remo', en:'Rowing'},
+    stairmaster: {es:'Escaladora', en:'Stairmaster'}, jump_rope: {es:'Comba', en:'Jump rope'},
+    tennis: {es:'Tenis', en:'Tennis'}, paddle_tennis: {es:'Pádel', en:'Padel'},
+    basketball: {es:'Baloncesto', en:'Basketball'}, soccer: {es:'Fútbol', en:'Football'},
+    golf: {es:'Golf', en:'Golf'}, dance: {es:'Baile', en:'Dance'}, skiing: {es:'Esquí', en:'Skiing'},
+    surfing: {es:'Surf', en:'Surfing'}, meditation: {es:'Meditación', en:'Meditation'},
+    sauna: {es:'Sauna', en:'Sauna'}, stretching: {es:'Estiramientos', en:'Stretching'},
+    strength_trainer: {es:'Fuerza', en:'Strength training'}, spinning: {es:'Spinning', en:'Spinning'},
+    padel: {es:'Pádel', en:'Padel'}, crossfit: {es:'CrossFit', en:'CrossFit'}
+  };
+  function deporte(name, lang) {
+    if (!name) return '';
+    var k = String(name).trim().toLowerCase().replace(/\s+/g, '_');
+    var e = DEPORTE[k];
+    if (e) return e[lang] || e.es;
+    return String(name).replace(/_/g, ' ').replace(/^./, function (c) { return c.toUpperCase(); });
+  }
+
   function pick(map, key, lang) {
     var e = map[key];
     if (!e) return key;
@@ -816,6 +842,7 @@
     },
     t: function (str, lang) { if (lang !== 'en') return str; return UI[str] != null ? UI[str] : str; },
     date: tdate,
-    weekd1: weekd1
+    weekd1: weekd1,
+    sport: deporte
   };
 })(typeof window !== 'undefined' ? window : globalThis);
