@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=157"></script>
-<script src="./castillo-transform.js?v=157"></script>
-<script src="./castillo-equiv.js?v=157"></script>
-<script src="./castillo-data.js?v=157"></script>
+<script src="./castillo-i18n.js?v=158"></script>
+<script src="./castillo-transform.js?v=158"></script>
+<script src="./castillo-equiv.js?v=158"></script>
+<script src="./castillo-data.js?v=158"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 157;
+  var VERSION_ACTUAL = 158;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -609,11 +609,20 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
         <sc-if value="{{ e.hasProg }}" hint-placeholder-val="{{ true }}">
         <div style="margin-top:12px;padding-top:8px;border-top:.5px solid rgba(var(--fgc,255,255,255),.06)">
-          <svg viewBox="0 0 300 44" preserveAspectRatio="none" style="width:100%;height:48px;overflow:visible">
+          <svg viewBox="0 0 300 96" style="width:100%;height:118px;overflow:visible">
             <defs><linearGradient id="cgex" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".16"></stop><stop offset="1" stop-color="currentColor" stop-opacity="0"></stop></linearGradient></defs>
+            <sc-for list="{{ e.kgEje }}" as="k" hint-placeholder-count="3">
+            <line x1="{{ e.gx0 }}" y1="{{ k.y }}" x2="{{ e.gx1 }}" y2="{{ k.y }}" stroke="currentColor" stroke-opacity=".07" stroke-width="1"></line>
+            <text x="{{ e.gx0 }}" y="{{ k.y }}" dx="-5" dy="3" text-anchor="end" font-size="7.5" fill="currentColor" fill-opacity=".42">{{ k.t }}</text>
+            </sc-for>
             <polygon points="{{ e.area }}" fill="url(#cgex)"></polygon>
-            <polyline points="{{ e.line }}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
-            <circle cx="{{ e.lx }}" cy="{{ e.ly }}" r="2.8" fill="currentColor" vector-effect="non-scaling-stroke"></circle>
+            <polyline points="{{ e.line }}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            <sc-for list="{{ e.puntos }}" as="p" hint-placeholder-count="4">
+            <circle cx="{{ p.x }}" cy="{{ p.y }}" r="2.6" fill="currentColor"></circle>
+            </sc-for>
+            <sc-for list="{{ e.fechasEje }}" as="fx" hint-placeholder-count="3">
+            <text x="{{ fx.x }}" y="{{ e.gy1 }}" dy="11" text-anchor="{{ fx.anchor }}" font-size="7.5" fill="currentColor" fill-opacity=".42">{{ fx.t }}</text>
+            </sc-for>
           </svg>
         </div>
         </sc-if>
@@ -1924,7 +1933,7 @@ class Component extends DCLogic {
     logs: {}, wLock: false, regMenuOpen: false, pad: null, padIn: false,
     rest: 0, restMax: 90,
     borrarOpen: false, borrarTxt: '', borrarErr: '', borrando: false,
-    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: false, playEx: null, dietMealIdx: 0,
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
@@ -3330,18 +3339,29 @@ class Component extends DCLogic {
         deltaFg: up ? '#7fd6a3' : (down ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.4)'),
         hasProg: vals.length >= 1,
         ...(function () {
-          // gráfico LINEAL de la progresión (mismo estilo que el peso corporal), no barras
+          // Gráfico con EJES REALES: a la izquierda los kilos, abajo las fechas, y un punto por
+          // cada sesión registrada. Antes era una línea suelta sin referencias y parecía inventada.
           const lp = e.points.filter(p => p.top != null);
-          const W = 300, H = 44, pad = 6, flat = (mx === mn) || lp.length < 2;
-          const yOf = v => flat ? H / 2 : (H - pad) - ((v - mn) / (mx - mn)) * (H - 2 * pad);
-          let xs, ys;
-          if (lp.length <= 1) { const y = lp.length ? yOf(lp[0].top) : H / 2; xs = [pad, W - pad]; ys = [y, y]; }
-          else { xs = lp.map((_, i) => pad + (i / (lp.length - 1)) * (W - 2 * pad)); ys = lp.map(p => yOf(p.top)); }
-          const pairs = xs.map((x, i) => x.toFixed(1) + ',' + ys[i].toFixed(1));
+          const W = 300, H = 96, padL = 30, padR = 8, padT = 8, padB = 18;
+          const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
+          let lo = mn, hi = mx;
+          if (hi - lo < 1) { const m2 = (hi + lo) / 2; lo = m2 - 1; hi = m2 + 1; }   // valores planos: no aplastar
+          const yOf = v => y1 - ((v - lo) / (hi - lo)) * (y1 - y0);
+          const xOf = i => lp.length <= 1 ? (x0 + x1) / 2 : x0 + (i / (lp.length - 1)) * (x1 - x0);
+          const dia = d => { try { const t = String(d).slice(0, 10).split('-'); const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+            return parseInt(t[2], 10) + ' ' + MES[parseInt(t[1], 10) - 1]; } catch (err) { return ''; } };
+          const pts = lp.map((p, i) => ({ x: xOf(i).toFixed(1), y: yOf(p.top).toFixed(1), kg: String(p.top).replace('.', ','), f: dia(p.date) }));
+          const pairs = pts.map(p => p.x + ',' + p.y);
+          // etiquetas de fecha: todas si son pocas, si no la primera, la de en medio y la última
+          const idxs = lp.length <= 4 ? lp.map((_, i) => i) : [0, Math.floor((lp.length - 1) / 2), lp.length - 1];
+          const fechas = idxs.map(i => ({ x: xOf(i).toFixed(1), t: dia(lp[i].date), anchor: i === 0 ? 'start' : (i === lp.length - 1 ? 'end' : 'middle') }));
+          const kgs = [hi, (hi + lo) / 2, lo].map(v => ({ y: yOf(v).toFixed(1), t: String(Math.round(v * 10) / 10).replace('.', ',') }));
           return {
             line: pairs.join(' '),
-            area: pairs.join(' ') + ' ' + xs[xs.length - 1].toFixed(1) + ',' + H + ' ' + xs[0].toFixed(1) + ',' + H,
-            lx: xs[xs.length - 1].toFixed(1), ly: ys[ys.length - 1].toFixed(1)
+            area: pairs.length ? (pairs.join(' ') + ' ' + pts[pts.length - 1].x + ',' + y1 + ' ' + pts[0].x + ',' + y1) : '',
+            puntos: pts, fechasEje: fechas, kgEje: kgs,
+            gx0: x0, gx1: x1, gy0: y0, gy1: y1,
+            lx: pts.length ? pts[pts.length - 1].x : 0, ly: pts.length ? pts[pts.length - 1].y : 0
           };
         })()
       };
