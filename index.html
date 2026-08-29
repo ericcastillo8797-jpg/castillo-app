@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=201"></script>
-<script src="./castillo-transform.js?v=201"></script>
-<script src="./castillo-equiv.js?v=201"></script>
-<script src="./castillo-data.js?v=201"></script>
+<script src="./castillo-i18n.js?v=202"></script>
+<script src="./castillo-transform.js?v=202"></script>
+<script src="./castillo-equiv.js?v=202"></script>
+<script src="./castillo-data.js?v=202"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 201;
+  var VERSION_ACTUAL = 202;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2375,6 +2375,8 @@ class Component extends DCLogic {
     const tCom  = n => { try { return (window.I18N && window.I18N.meal) ? window.I18N.meal(n, this.state.lang) : n; } catch (er) { return n; } };
     const tFood = n => { try { return (window.I18N && window.I18N.food) ? window.I18N.food(n, this.state.lang) : n; } catch (er) { return n; } };
     const tSport = n => { try { return (window.I18N && window.I18N.sport) ? window.I18N.sport(n, this.state.lang) : (n || ''); } catch (er) { return n || ''; } };
+    // "Lun 3 ago", "03 ago", "Semana 12"… llegan en español desde la capa de datos
+    const tF = (x => { const l = this.state.lang; return v => { try { return window.I18N ? window.I18N.date(String(v == null ? '' : v), l) : v; } catch (er) { return v; } }; })();
     // El nombre del periodo viene en español desde la capa de datos ("Agosto 2026", "sep 2025 – ago 2026").
     // En el informe hay que traducirlo igual que en pantalla, si no salía "Summary · Agosto 2026".
     const etiqueta = (function () { try { return window.I18N ? window.I18N.date(m.label, this.state.lang) : m.label; } catch (er) { return m.label; } }).call(this);
@@ -2441,7 +2443,7 @@ class Component extends DCLogic {
 
     // ── PÁGINA 2 · entrenamientos ──
     const ses = (m.entrenos.sesiones || []);
-    const filasSes = ses.map(x => FILA(esc(x.lbl), '<span style="color:' + (x.done ? '#141414' : '#c0392b') + '">' + esc(tEjer(x.titulo)) + (x.done ? '' : ' · ' + (en ? 'missed' : 'sin hacer')) + '</span>'));
+    const filasSes = ses.map(x => FILA(esc(tF(x.lbl)), '<span style="color:' + (x.done ? '#141414' : '#c0392b') + '">' + esc(tEjer(x.titulo)) + (x.done ? '' : ' · ' + (en ? 'missed' : 'sin hacer')) + '</span>'));
     const POR_HOJA_SES = 28;   // 30 se pasaba del folio por unos pocos píxeles
     const trozosSes = [];
     for (let i = 0; i < filasSes.length; i += POR_HOJA_SES) trozosSes.push(filasSes.slice(i, i + POR_HOJA_SES));
@@ -2468,7 +2470,7 @@ class Component extends DCLogic {
     if (!trozos.length) trozos.push([]);
     const tablaEj = (lista) => '<table style="width:100%;border-collapse:collapse;font-size:12px">'
       + '<tr><td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px">' + (en ? 'Exercise' : 'Ejercicio') + '</td>'
-      + sl.map(l => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:54px">' + l + '</td>').join('')
+      + sl.map(l => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:54px">' + esc(tF(l)) + '</td>').join('')
       + '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:64px">' + (en ? 'Change' : 'Cambio') + '</td></tr>'
       + lista.map(e => '<tr><td style="padding:7px 0;border-top:1px solid #eee"><div style="display:flex;align-items:center;gap:10px">'
           + (e.y ? '<img src="https://img.youtube.com/vi/' + esc(e.y) + '/mqdefault.jpg" alt="" style="width:52px;height:32px;object-fit:cover;border-radius:5px;flex:none;background:#eee"/>'
@@ -2484,7 +2486,7 @@ class Component extends DCLogic {
     // ── PÁGINA 4 · cardio ──
     const cd = (m.cardio.dias || []);
     // días sin lectura de Apple Salud y sin marcar: no se inventa un 0, se deja "—"
-    const filasCar = cd.map(d => FILA(esc(d.lbl),
+    const filasCar = cd.map(d => FILA(esc(tF(d.lbl)),
       d.pasos == null ? '<span style="color:#c9c9c9">—</span>'
                       : (miles(d.pasos) + (d.real ? '' : '<span style="font-size:9px;color:#9a9a9a"> ·' + (en ? ' marked' : ' marcado') + '</span>')),
       (m.cardio.objetivo && d.pasos != null) ? (d.pasos < m.cardio.objetivo) : false));
@@ -2499,7 +2501,7 @@ class Component extends DCLogic {
     const nd = (m.nutricion.dias || []).slice().reverse();
     const _ndCon = nd.filter(d => (d.kcal || 0) > 0);   // meses/días sin comida registrada no promedian
     const kcalMedia = _ndCon.length ? Math.round(_ndCon.reduce((a, d) => a + (d.kcal || 0), 0) / _ndCon.length) : 0;
-    const filasKcal = nd.map(d => FILA(esc(d.lbl), miles(d.kcal) + ' kcal'));
+    const filasKcal = nd.map(d => FILA(esc(tF(d.lbl)), miles(d.kcal) + ' kcal'));
     const p5 = CAB(4, en ? 'Nutrition · calories per day' : 'Nutrición · calorías por día')
       + '<div style="height:4px"></div>'
       + (filasKcal.length ? ROT(en ? 'Calories day by day' : 'Calorías día a día') + DOSCOL(filasKcal, [en ? 'Day' : 'Día', en ? 'Calories' : 'Calorías'])
@@ -2585,7 +2587,7 @@ class Component extends DCLogic {
       + (claves.length ? ROT(_multi ? (en ? 'Monthly average of each measurement' : 'Media mensual de cada medida') : (en ? 'All measurements, day by day' : 'Todas las medidas, día a día'))
           + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
           + '<tr><td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px">' + (en ? 'Measurement' : 'Medida') + '</td>'
-          + cks.map(c => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right">' + esc(c.lbl) + '</td>').join('')
+          + cks.map(c => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right">' + esc(tF(c.lbl)) + '</td>').join('')
           + '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:64px">' + (en ? 'Change' : 'Cambio') + '</td></tr>'
           + claves.map(k => { const d = cambio(k); const u = unidad(k);
               return '<tr><td style="padding:8px 0;border-top:1px solid #eee">' + esc(bonito(k)) + ' <span style="color:#9a9a9a">(' + u + ')</span></td>'
