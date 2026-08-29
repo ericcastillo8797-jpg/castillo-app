@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=183"></script>
-<script src="./castillo-transform.js?v=183"></script>
-<script src="./castillo-equiv.js?v=183"></script>
-<script src="./castillo-data.js?v=183"></script>
+<script src="./castillo-i18n.js?v=184"></script>
+<script src="./castillo-transform.js?v=184"></script>
+<script src="./castillo-equiv.js?v=184"></script>
+<script src="./castillo-data.js?v=184"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 183;
+  var VERSION_ACTUAL = 184;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -832,7 +832,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
   </div>
 
-  <div style="position:absolute;bottom:0;left:0;right:0;z-index:6;padding:9px 12px 30px;background:rgba(var(--bgc,0,0,0),.9);border-top:.5px solid rgba(var(--fgc,255,255,255),.09);display:flex;color:rgba(var(--fgc,255,255,255),.36)">
+  <div style="position:absolute;bottom:0;left:0;right:0;z-index:6;padding:9px 12px 30px;background:rgb(var(--bgc,0,0,0));border-top:.5px solid rgba(var(--fgc,255,255,255),.09);display:flex;color:rgba(var(--fgc,255,255,255),.36)">
     <div onClick="{{ goHome }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .24s cubic-bezier(.2,.8,.2,1);color:{{ cHome }}" style-active="transform:scale(.9)">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.2 12 3.6l8.5 6.6V19a1.4 1.4 0 0 1-1.4 1.4H4.9A1.4 1.4 0 0 1 3.5 19Z"></path><path d="M9.4 20.4v-6.2h5.2v6.2"></path></svg>
       <span style="font-size:9.5px;font-weight:500">{{ L.hoy }}</span>
@@ -3209,7 +3209,7 @@ class Component extends DCLogic {
     // el entreno abierto es el del día que se tocó (st.wWk), no el de la semana de hoy
     const _wk = st.wWk || _wkDay.wk;
     const workoutEx = (WK[_wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
-    const woTitle = st.wTitle || _wkDay.t || T('Entrenamiento');
+    const woTitle = T(st.wTitle || _wkDay.t || 'Entrenamiento');
     // Una serie cuenta como hecha si el cliente la ha rellenado (reps + peso) o si pulsó el tic.
     // Antes solo contaba el tic, así que el contador y el porcentaje se quedaban en cero.
     const _serieHecha = x => !!(x && (x.done || (String(x.r == null ? '' : x.r).trim() && String(x.w == null ? '' : x.w).trim())));
@@ -3448,12 +3448,12 @@ class Component extends DCLogic {
         openVar: this.openVar(e),
         varLabel: st.swaps[e.id] ? T('Variante en uso · ver otras') : T('Variantes de este ejercicio'),
         nS: String(e.s), reps: e.p.split('×').pop().trim(),
-        prevDate: SESS[0], prevSets: e.l.map(x => x[1]).join('  ·  ') + (e.l[0][1].charAt(0) === '+' ? ' kg de lastre' : ' kg'),
+        prevDate: tD(SESS[0]), prevSets: e.l.map(x => x[1]).join('  ·  ') + (e.l[0][1].charAt(0) === '+' ? (' ' + T('kg de lastre')) : ' kg'),
         openHist: this.openHist(e),
         num: dn === e.s ? '✓' : String(ix + 1),
         numBg: dn === e.s ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.07)',
         numFg: dn === e.s ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.7)',
-        meta: dn + ' de ' + e.s + ' series' + (dn === e.s ? ' · completado' : ''),
+        meta: dn + ' ' + T('de') + ' ' + e.s + ' ' + T('series') + (dn === e.s ? (' · ' + T('completado')) : ''),
         chev: isOpen ? 'rotate(180deg)' : 'none',
         toggle: this.toggleEx(e.id),
         play: () => this.setState({ playEx: st.playEx === e.id ? null : e.id }),
@@ -3832,7 +3832,7 @@ class Component extends DCLogic {
       goHome: this.go('home'), goDiet: this.go('diet'), goTrain: this.go('train'), goEvo: this.go('evo'),
       cHome: tabColor('home'), cDiet: tabColor('diet'), cTrain: tabColor('train'), cEvo: tabColor('evo'),
 
-      setsDoneLabel: setsDone + ' de ' + totalSets,
+      setsDoneLabel: setsDone + ' ' + T('de') + ' ' + totalSets,
       mealRows, trainPct, trainPctLabel: trainPct + '%',
       headLine, headDay, headMonth, heroRom, heroTitle, heroMeta, entHeader, agendaHdr, agendaSub, dietSub, evoCounts, woTitle,
       prevWeek, nextWeek, prevWeekOpacity, nextWeekOpacity,
@@ -3882,7 +3882,7 @@ class Component extends DCLogic {
 
       weekDays, daySel, appts: APPTS,
       progresoFotos: (() => { const pf = _dd.progresoFotos; if (!pf) return null;
-        const col = set => ({ w: tD(set.w), date: set.date, shots: SHOTS.map(n => ({ n, img: (set.fotos && set.fotos[n]) || '', open: this.openCompare(n) })) });
+        const col = set => ({ w: tD(set.w), date: tD(set.date), shots: SHOTS.map(n => ({ n, img: (set.fotos && set.fotos[n]) || '', open: this.openCompare(n) })) });
         return { dos: pf.dos, primeras: col(pf.primeras), ultimas: col(pf.ultimas) }; })(),
       vidCats, vidList,
       toggleRegMenu: this.toggleRegMenu, regMedidas: this.regMedidas, regFotos: this.regFotos,
@@ -3942,7 +3942,7 @@ class Component extends DCLogic {
       openCheckin: this.openCheckin,
       pesoAnim: dec(String(_wLast).replace('.', ',')), pesoInicial: dec(String(_wFirst).replace('.', ',')), pesoDelta,
       chartArea: chart.area, chartLine: chart.line, chartLx: chart.lx, chartLy: chart.ly, chartRows,
-      chartL0: chartLabels[0] || '', chartL1: chartLabels[1] || '', chartL2: chartLabels[2] || '',
+      chartL0: tD(chartLabels[0] || ''), chartL1: tD(chartLabels[1] || ''), chartL2: tD(chartLabels[2] || ''),
       chartDash: st.drawn ? 0 : 900, chartFill: st.drawn ? 1 : 0,
       isMetSheet: sh.k === 'met', metSheet,
       isVarSheet: sh.k === 'var', varSheet,

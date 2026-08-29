@@ -604,6 +604,7 @@
     'Ver toda mi dieta': 'See my full diet', 'Desayuno, comida, cena y todas tus opciones': 'Breakfast, lunch, dinner and all your options',
     'Tu dieta completa': 'Your full diet', 'Toca para ocultar': 'Tap to hide', 'Toca para ver todas tus medidas': 'Tap to see all your measurements',
     'series registradas': 'sets logged', 'pasos': 'steps', 'faltan': 'to go', 'objetivo cumplido': 'goal reached',
+    'de': 'of', 'series': 'sets', 'completado': 'completed', 'kg de lastre': 'kg added', 'Semana': 'Week',
     // Agenda
     'Pauta alimenticia': 'Nutrition plan', 'Nutrición': 'Nutrition', 'Marca lo que has comido': 'Mark what you ate', 'Registrar evolución': 'Record progress', 'Día de descanso — sin actividades asignadas.': 'Rest day — no activities assigned.',
     'Descanso': 'Rest', 'Sin sesión': 'No session',
