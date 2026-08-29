@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=165"></script>
-<script src="./castillo-transform.js?v=165"></script>
-<script src="./castillo-equiv.js?v=165"></script>
-<script src="./castillo-data.js?v=165"></script>
+<script src="./castillo-i18n.js?v=166"></script>
+<script src="./castillo-transform.js?v=166"></script>
+<script src="./castillo-equiv.js?v=166"></script>
+<script src="./castillo-data.js?v=166"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 165;
+  var VERSION_ACTUAL = 166;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -917,7 +917,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <circle cx="13" cy="13" r="10.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="65.97" transform="rotate(-90 13 13)" style="transition:stroke-dashoffset 1s linear;stroke-dashoffset:{{ restOffset }}"></circle>
       </svg>
       <div style="font-size:13.5px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums">{{ restLabel }}</div>
-      <div onClick="{{ skipRest }}" style="padding:4px 10px;border-radius:100px;background:rgba(var(--bgc,0,0,0),.09);font-size:10.5px;font-weight:600;cursor:pointer" style-active="transform:scale(.94)">Saltar</div>
+      <div onClick="{{ skipRest }}" style="padding:4px 10px;border-radius:100px;background:rgba(var(--bgc,0,0,0),.09);font-size:10.5px;font-weight:600;cursor:pointer" style-active="transform:scale(.94)">{{ L.saltar }}</div>
     </div>
   </div>
   </sc-if>
@@ -928,13 +928,13 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 <div data-screen-label="Salir del entrenamiento" style="position:absolute;inset:0;z-index:14;display:flex;align-items:flex-end;justify-content:center;padding:0 14px calc(22px + env(safe-area-inset-bottom))">
   <div onClick="{{ cancelExitWorkout }}" style="position:absolute;inset:0;background:rgba(0,0,0,.55);animation:cFade .3s both"></div>
   <div style="position:relative;width:100%;max-width:460px;background:var(--s4,#141418);border:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:26px;padding:22px 20px 18px;animation:cRise .42s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 20px 60px rgba(0,0,0,.5)">
-    <div style="font-family:'Instrument Serif',serif;font-size:23px;line-height:1.18">Estás en mitad del entrenamiento</div>
-    <div style="font-size:13px;line-height:1.5;color:rgba(var(--fgc,255,255,255),.55);margin-top:8px">Llevas <b style="color:var(--fg,#fff)">{{ setsDoneLabel }} series</b> registradas. Si sales sin guardar, se pierden y tendrás que volver a ponerlas.</div>
+    <div style="font-family:'Instrument Serif',serif;font-size:23px;line-height:1.18">{{ L.wExitTitulo }}</div>
+    <div style="font-size:13px;line-height:1.5;color:rgba(var(--fgc,255,255,255),.55);margin-top:8px">{{ L.wExitTexto }}</div>
     <div onClick="{{ saveAndExitWorkout }}" style="margin-top:18px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14.5px;font-weight:700;cursor:pointer" style-active="transform:scale(.97)">
-      <span style="text-decoration:underline;text-underline-offset:3px">Guardar y salir</span>
+      <span style="text-decoration:underline;text-underline-offset:3px">{{ L.wExitGuardar }}</span>
     </div>
-    <div onClick="{{ cancelExitWorkout }}" style="margin-top:9px;border:.5px solid rgba(var(--fgc,255,255,255),.18);border-radius:100px;padding:14px;text-align:center;font-size:14px;font-weight:600;cursor:pointer" style-active="transform:scale(.97)">Seguir entrenando</div>
-    <div onClick="{{ discardWorkout }}" style="margin-top:14px;text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.42);cursor:pointer" style-active="opacity:.6">Salir sin guardar</div>
+    <div onClick="{{ cancelExitWorkout }}" style="margin-top:9px;border:.5px solid rgba(var(--fgc,255,255,255),.18);border-radius:100px;padding:14px;text-align:center;font-size:14px;font-weight:600;cursor:pointer" style-active="transform:scale(.97)">{{ L.wExitSeguir }}</div>
+    <div onClick="{{ discardWorkout }}" style="margin-top:14px;text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.42);cursor:pointer" style-active="opacity:.6">{{ L.wExitSalir }}</div>
   </div>
 </div>
 </sc-if>
@@ -1362,7 +1362,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </div>
       <div style="overflow-y:auto;padding:16px 20px 30px">
         <sc-if value="{{ ckShowFotos }}">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:0 2px 10px">Fotografías</div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:0 2px 10px">{{ L.fotografias }}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
           <sc-for list="{{ ckShots }}" as="s" hint-placeholder-count="3">
           <div onClick="{{ s.tap }}" style="aspect-ratio:3/4;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ s.bg }};border:1px solid {{ s.bd }}" style-active="transform:scale(.95)">
@@ -1752,7 +1752,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </div>
     </sc-if>
   </div>
-  <div style="position:relative;text-align:center;font-size:12px;color:rgba(var(--fgc,255,255,255),.32);padding-bottom:44px">¿Ha olvidado su contraseña?</div>
+  <div style="position:relative;text-align:center;font-size:12px;color:rgba(var(--fgc,255,255,255),.32);padding-bottom:44px">{{ L.olvidoPass }}</div>
 </div>
 </sc-if>
 
@@ -2425,11 +2425,11 @@ class Component extends DCLogic {
     const cks = (m.metricas.checkins || []).slice().reverse();
     const ETIQ = { 'peso-corporal': 'Peso', 'peso': 'Peso', 'cintura': 'Cintura', 'pecho': 'Pecho', 'cadera': 'Cadera',
       'cuello': 'Cuello', 'hombros': 'Hombros', 'rollitos': 'Rollitos',
-      'b-ceps-derecho': 'Bíceps dcho', 'b-ceps-izquierdo': 'Bíceps izdo',
-      'muslo-derecho': 'Muslo dcho', 'muslo-izquierdo': 'Muslo izdo',
-      'gemelo-derecho': 'Gemelo dcho', 'gemelo-izquierdo': 'Gemelo izdo',
-      'antebrazo-derecho': 'Antebrazo dcho', 'antebrazo-izquierdo': 'Antebrazo izdo' };
-    const bonito = k => ETIQ[k] || String(k).replace(/-/g, ' ').replace(/^./, c => c.toUpperCase());
+      'b-ceps-derecho': 'Bíceps derecho', 'b-ceps-izquierdo': 'Bíceps izquierdo',
+      'muslo-derecho': 'Muslo derecho', 'muslo-izquierdo': 'Muslo izquierdo',
+      'gemelo-derecho': 'Gemelo derecho', 'gemelo-izquierdo': 'Gemelo izquierdo',
+      'antebrazo-derecho': 'Antebrazo derecho', 'antebrazo-izquierdo': 'Antebrazo izquierdo' };
+    const bonito = k => T(ETIQ[k] || String(k).replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()));
     // filas = medidas, columnas = días medidos; el peso siempre primero
     const claves = (() => {
       const set = [];
@@ -3587,7 +3587,7 @@ class Component extends DCLogic {
     let metSheet = {};
     if (mf) {
       const H = (mf.hist && mf.hist.length) ? mf.hist : [{ weekLabel: '', range: DATES[0] || '', raw: num(mf.v), v: mf.v }];
-      const rows = H.map((h, i) => ({ w: h.weekLabel, date: h.range, dia: h.dia || '', raw: h.raw, v: h.v,
+      const rows = H.map((h, i) => ({ w: tD(h.weekLabel), date: tD(h.range), dia: h.dia || '', raw: h.raw, v: h.v,
         fg: i === 0 ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.75)' }));
       rows.forEach((r, i) => {
         const d = i < rows.length - 1 ? r.raw - rows[i + 1].raw : 0;
@@ -3613,7 +3613,7 @@ class Component extends DCLogic {
         verFecha: (i % salto === 0) || i === orden.length - 1, f: r.dia || ''
       }));
       const pares = orden.map((r, i) => pctX(i).toFixed(2) + ',' + pctY(r.raw).toFixed(2));
-      metSheet = { l: mf.l, u: mf.u, v: mf.v, rows,
+      metSheet = { l: T(mf.l), u: mf.u, v: mf.v, rows,
         gH: '120px', ejeY,
         puntos, fechasEje: puntos.filter(p => p.verFecha).map(p => ({ left: p.left, t: p.f })),
         line: pares.join(' '),
@@ -3680,6 +3680,12 @@ class Component extends DCLogic {
         resumen: T('Resumen'), perMes: T('Mes'), perTri: T('Trimestre'), perSem: T('Semestre'), perAnio: T('Año'),
         comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'), recientes: T('Recientes'), favoritos: T('Favoritos'), resumenMes: T('Resumen del mes'), sinDatosMes: T('Sin datos este mes'), recuentoMes: T('Recuento del mes'), diaADia: T('Día a día'), mediaDiaria: T('Media diaria'),
         cuenta: T('Cuenta'), cerrarSesion: T('Cerrar sesión'), aplicacion: T('Aplicación'),
+        wExitTitulo: T('Estás en mitad del entrenamiento'),
+        wExitTexto: (lang === 'en'
+          ? ('You have logged ' + setsDone + ' of ' + totalSets + ' sets. If you exit without saving, they are lost and you will have to enter them again.')
+          : ('Llevas ' + setsDone + ' de ' + totalSets + ' series registradas. Si sales sin guardar, se pierden y tendrás que volver a ponerlas.')),
+        wExitGuardar: T('Guardar y salir'), wExitSeguir: T('Seguir entrenando'), wExitSalir: T('Salir sin guardar'),
+        fotografias: T('Fotografías'), olvidoPass: T('¿Ha olvidado su contraseña?'), saltar: T('Saltar'),
         borrarCuenta: T('Borrar mi cuenta'), cancelar: T('Cancelar'),
         borrarAviso: T('Esto borra tu cuenta y todo lo que has registrado. No se puede deshacer ni recuperar.'),
         borrarP1: T('Tus entrenos, dietas, medidas y fotos de progreso'),
