@@ -21,6 +21,7 @@
     return m ? m[1] : '';
   }
   function comma(v) { if (v == null || v === '') return '—'; return String(v).replace('.', ','); }
+  function ddmm(dt) { try { var d = (dt instanceof Date) ? dt : new Date(dt); if (isNaN(d)) return ''; return String(d.getDate()).padStart(2, '0') + '-' + String(d.getMonth() + 1).padStart(2, '0'); } catch (e) { return ''; } }
   function startOfDay(dt) { return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()); }
   function mondayOf(dt) { var d = startOfDay(dt); var g = (d.getDay() + 6) % 7; d.setDate(d.getDate() - g); return d; }
   function slug(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'w'; }
@@ -338,7 +339,7 @@
       pts.push({ t: now.getTime(), y: metVal(m) });
       pts.sort(function (a, b) { return b.t - a.t; });
       var seen = {}, hist = [];
-      pts.forEach(function (p) { var dt = new Date(p.t); var wk = isoWeek(dt); if (seen[wk]) return; seen[wk] = 1; hist.push({ v: comma(p.y), raw: parseFloat(String(p.y).replace(',', '.')), weekLabel: 'Semana ' + wk, range: weekRange(dt) }); });
+      pts.forEach(function (p) { var dt = new Date(p.t); var wk = isoWeek(dt); if (seen[wk]) return; seen[wk] = 1; hist.push({ v: comma(p.y), raw: parseFloat(String(p.y).replace(',', '.')), weekLabel: 'Semana ' + wk, range: weekRange(dt), dia: ddmm(dt) }); });
       hist = hist.slice(0, 12);
       return { k: slug(m.name), l: m.name, u: m.unit || '', v: comma(metVal(m)), p: comma(metPrev(m)), hist: hist };
     });
@@ -373,7 +374,7 @@
         if (prev) f.p = comma(prev.val);
         arr.slice().reverse().forEach(function (pt) {
           var raw = parseFloat(String(pt.val).replace(',', '.')); if (isNaN(raw)) return;
-          f.hist.unshift({ v: comma(pt.val), raw: raw, weekLabel: 'Semana ' + isoWeek(dtOf(pt.fecha)), range: weekRange(dtOf(pt.fecha)) });
+          f.hist.unshift({ v: comma(pt.val), raw: raw, weekLabel: 'Semana ' + isoWeek(dtOf(pt.fecha)), range: weekRange(dtOf(pt.fecha)), dia: ddmm(dtOf(pt.fecha)) });
         });
         f.hist = f.hist.slice(0, 12);
       });
@@ -400,7 +401,7 @@
       Object.keys(chkByKey).forEach(function (k) {
         if (_have[k] || /peso|weight|grasa|fat|body/i.test(k)) return;   // el peso va al gráfico; la grasa se excluye
         var arr = chkByKey[k]; if (!arr || !arr.length) return;
-        var hist = arr.slice().reverse().map(function (pt) { var raw = parseFloat(String(pt.val).replace(',', '.')); return isNaN(raw) ? null : { v: comma(pt.val), raw: raw, weekLabel: 'Semana ' + isoWeek(_dtOf(pt.fecha)), range: weekRange(_dtOf(pt.fecha)) }; }).filter(Boolean).slice(0, 12);
+        var hist = arr.slice().reverse().map(function (pt) { var raw = parseFloat(String(pt.val).replace(',', '.')); return isNaN(raw) ? null : { v: comma(pt.val), raw: raw, weekLabel: 'Semana ' + isoWeek(_dtOf(pt.fecha)), range: weekRange(_dtOf(pt.fecha)), dia: ddmm(_dtOf(pt.fecha)) }; }).filter(Boolean).slice(0, 12);
         if (!hist.length) return;
         var last = arr[arr.length - 1], prev = arr.length >= 2 ? arr[arr.length - 2] : null;
         fields.push({ k: k, l: unslug(k), u: 'cm', v: comma(last.val), p: comma(prev ? prev.val : last.val), hist: hist });

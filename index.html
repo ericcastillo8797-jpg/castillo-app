@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=164"></script>
-<script src="./castillo-transform.js?v=164"></script>
-<script src="./castillo-equiv.js?v=164"></script>
-<script src="./castillo-data.js?v=164"></script>
+<script src="./castillo-i18n.js?v=165"></script>
+<script src="./castillo-transform.js?v=165"></script>
+<script src="./castillo-equiv.js?v=165"></script>
+<script src="./castillo-data.js?v=165"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 164;
+  var VERSION_ACTUAL = 165;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -3587,7 +3587,7 @@ class Component extends DCLogic {
     let metSheet = {};
     if (mf) {
       const H = (mf.hist && mf.hist.length) ? mf.hist : [{ weekLabel: '', range: DATES[0] || '', raw: num(mf.v), v: mf.v }];
-      const rows = H.map((h, i) => ({ w: h.weekLabel, date: h.range, raw: h.raw, v: h.v,
+      const rows = H.map((h, i) => ({ w: h.weekLabel, date: h.range, dia: h.dia || '', raw: h.raw, v: h.v,
         fg: i === 0 ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.75)' }));
       rows.forEach((r, i) => {
         const d = i < rows.length - 1 ? r.raw - rows[i + 1].raw : 0;
@@ -3607,11 +3607,10 @@ class Component extends DCLogic {
       }
       const pctX = i => orden.length <= 1 ? 50 : (i / (orden.length - 1)) * 100;
       const pctY = v => 100 - ((v - lo) / (hi - lo)) * 100;
-      const corto = (t) => String(t || '').replace(/\s*\d{4}$/, '').trim();     // "12 jul 2026" → "12 jul"
       const salto = orden.length > 9 ? 3 : (orden.length > 6 ? 2 : 1);
       const puntos = orden.map((r, i) => ({
         left: pctX(i).toFixed(2) + '%', top: pctY(r.raw).toFixed(2) + '%',
-        verFecha: (i % salto === 0) || i === orden.length - 1, f: corto(r.date)
+        verFecha: (i % salto === 0) || i === orden.length - 1, f: r.dia || ''
       }));
       const pares = orden.map((r, i) => pctX(i).toFixed(2) + ',' + pctY(r.raw).toFixed(2));
       metSheet = { l: mf.l, u: mf.u, v: mf.v, rows,
