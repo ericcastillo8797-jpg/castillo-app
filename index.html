@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=158"></script>
-<script src="./castillo-transform.js?v=158"></script>
-<script src="./castillo-equiv.js?v=158"></script>
-<script src="./castillo-data.js?v=158"></script>
+<script src="./castillo-i18n.js?v=159"></script>
+<script src="./castillo-transform.js?v=159"></script>
+<script src="./castillo-equiv.js?v=159"></script>
+<script src="./castillo-data.js?v=159"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 158;
+  var VERSION_ACTUAL = 159;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -1469,12 +1469,40 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div onClick="{{ saveCheat }}" style="margin-top:12px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ L.registrarComida }}</div>
       </sc-if>
 
+      <sc-if value="{{ cheatHasFavs }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 8px">{{ L.favoritos }}</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <sc-for list="{{ cheatFavs }}" as="r" hint-placeholder-count="3">
+<div onClick="{{ r.add }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.1);border-radius:12px;padding:12px 12px 12px 14px;cursor:pointer" style-active="transform:scale(.99)">
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.nombre }}</div><div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.45);margin-top:1px">{{ r.detail }}</div></div>
+          <div onClick="{{ r.star }}" style="flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.85)">
+            <sc-if value="{{ r.fav }}" hint-placeholder-val="{{ false }}">
+            <svg width="17" height="17" viewBox="0 0 20 20" fill="#f5c518"><path d="M10 1.6l2.5 5.1 5.6.8-4 3.9.9 5.6L10 14.4 4.9 17l1-5.6-4-3.9 5.6-.8z"></path></svg>
+            </sc-if>
+            <sc-if value="{{ r.noFav }}" hint-placeholder-val="{{ true }}">
+            <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-opacity=".38" stroke-width="1.4" stroke-linejoin="round"><path d="M10 1.6l2.5 5.1 5.6.8-4 3.9.9 5.6L10 14.4 4.9 17l1-5.6-4-3.9 5.6-.8z"></path></svg>
+            </sc-if>
+          </div>
+          <div style="flex:none;font-size:12px;font-weight:600;color:var(--fg,#fff)">+ {{ L.anadir }}</div>
+        </div>
+        </sc-for>
+      </div>
+      </sc-if>
+
       <sc-if value="{{ cheatHasRecientes }}" hint-placeholder-val="{{ false }}">
       <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 8px">{{ L.recientes }}</div>
       <div style="display:flex;flex-direction:column;gap:7px">
         <sc-for list="{{ cheatRecientes }}" as="r" hint-placeholder-count="4">
-        <div onClick="{{ r.add }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.1);border-radius:12px;padding:12px 14px;cursor:pointer" style-active="transform:scale(.99)">
+        <div onClick="{{ r.add }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.1);border-radius:12px;padding:12px 12px 12px 14px;cursor:pointer" style-active="transform:scale(.99)">
           <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.nombre }}</div><div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.45);margin-top:1px">{{ r.detail }}</div></div>
+          <div onClick="{{ r.star }}" style="flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.85)">
+            <sc-if value="{{ r.fav }}" hint-placeholder-val="{{ false }}">
+            <svg width="17" height="17" viewBox="0 0 20 20" fill="#f5c518"><path d="M10 1.6l2.5 5.1 5.6.8-4 3.9.9 5.6L10 14.4 4.9 17l1-5.6-4-3.9 5.6-.8z"></path></svg>
+            </sc-if>
+            <sc-if value="{{ r.noFav }}" hint-placeholder-val="{{ true }}">
+            <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-opacity=".38" stroke-width="1.4" stroke-linejoin="round"><path d="M10 1.6l2.5 5.1 5.6.8-4 3.9.9 5.6L10 14.4 4.9 17l1-5.6-4-3.9 5.6-.8z"></path></svg>
+            </sc-if>
+          </div>
           <div style="flex:none;font-size:12px;font-weight:600;color:var(--fg,#fff)">+ {{ L.anadir }}</div>
         </div>
         </sc-for>
@@ -1487,8 +1515,16 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 8px">{{ L.resultados }}</div>
       <div style="display:flex;flex-direction:column;gap:7px">
         <sc-for list="{{ cheatRes }}" as="r" hint-placeholder-count="4">
-        <div onClick="{{ r.add }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.1);border-radius:12px;padding:12px 14px;cursor:pointer" style-active="transform:scale(.99)">
+        <div onClick="{{ r.add }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.1);border-radius:12px;padding:12px 12px 12px 14px;cursor:pointer" style-active="transform:scale(.99)">
           <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.nombre }}</div><div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.45);margin-top:1px">{{ r.detail }}</div></div>
+          <div onClick="{{ r.star }}" style="flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.85)">
+            <sc-if value="{{ r.fav }}" hint-placeholder-val="{{ false }}">
+            <svg width="17" height="17" viewBox="0 0 20 20" fill="#f5c518"><path d="M10 1.6l2.5 5.1 5.6.8-4 3.9.9 5.6L10 14.4 4.9 17l1-5.6-4-3.9 5.6-.8z"></path></svg>
+            </sc-if>
+            <sc-if value="{{ r.noFav }}" hint-placeholder-val="{{ true }}">
+            <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-opacity=".38" stroke-width="1.4" stroke-linejoin="round"><path d="M10 1.6l2.5 5.1 5.6.8-4 3.9.9 5.6L10 14.4 4.9 17l1-5.6-4-3.9 5.6-.8z"></path></svg>
+            </sc-if>
+          </div>
           <div style="flex:none;font-size:12px;font-weight:600;color:var(--fg,#fff)">+ {{ L.anadir }}</div>
         </div>
         </sc-for>
@@ -1927,7 +1963,7 @@ class Component extends DCLogic {
     email: '', pass: '', scan: 0,
     meals: { m1: 2, m2: 0, m3: 3 },
     sheet: null, sheetIn: false, swap: null, swapIn: false, pwOpen: false, pwIn: false, pwNew: '', pwNew2: '',
-    cheat: null, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false, cheatRecientes: [],
+    cheat: null, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false, cheatRecientes: [], cheatFavs: [],
     mesIdx: 0, mesDetail: null, mesDetailIn: false, resumenOpen: true,
     wOpen: false, wIn: false, exClosed: {},
     logs: {}, wLock: false, regMenuOpen: false, pad: null, padIn: false,
@@ -2176,6 +2212,7 @@ class Component extends DCLogic {
     this.setState({ cheat: { mealId: mealId, comida: comida }, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false });
     requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ cheatIn: true })));
     const cd = window.CastilloData; if (cd && cd.alimentosRecientes) cd.alimentosRecientes().then(list => this.setState({ cheatRecientes: list || [] }), () => {});
+    if (cd && cd.alimentosFavoritos) cd.alimentosFavoritos().then(list => this.setState({ cheatFavs: list || [] }), () => {});
   };
   closeCheat = () => { this.setState({ cheatIn: false }); this.later(() => this.setState({ cheat: null }), 420); };
   // ---- RESUMEN MENSUAL (desglose por mes, cuadros pulsables) ----
@@ -2505,6 +2542,18 @@ class Component extends DCLogic {
     } catch (e) { this.flash('No se pudo imprimir el PDF'); }
   };
   // buscador EN VIVO: busca solo mientras escribes (con pequeña espera para no saturar), sin escribir la palabra entera
+  // Favoritos: los alimentos que el cliente repite. Se guardan en su cuenta, no en el móvil,
+  // así los tiene también si cambia de teléfono.
+  esFav = (nombre) => (this.state.cheatFavs || []).some(f => String(f.nombre||'').toLowerCase() === String(nombre||'').toLowerCase());
+  toggleFav = (r) => (ev) => {
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    const cd = window.CastilloData; if (!cd || !cd.marcarFavorito) return;
+    const on = !this.esFav(r.nombre);
+    // se pinta al momento y luego se guarda: si falla, se deshace
+    this.setState(st => ({ cheatFavs: on ? [{ nombre: r.nombre, kcal: r.kcal, fav: true }, ...(st.cheatFavs||[])]
+      : (st.cheatFavs||[]).filter(f => String(f.nombre||'').toLowerCase() !== String(r.nombre||'').toLowerCase()) }));
+    cd.marcarFavorito(r.nombre, r.kcal, on).then(ok => { if (!ok) this.flash('No se pudo guardar el favorito'); }, () => {});
+  };
   setCheatQ = e => { const v = (e && e.target) ? e.target.value : e; this.setState({ cheatQ: v }); clearTimeout(this._cheatT); const q = (v || '').trim(); if (q.length < 3) { this.setState({ cheatRes: null, cheatBusy: false }); return; } this._cheatT = setTimeout(() => this.runCheat(), 420); };
   runCheat = () => { const q = (this.state.cheatQ || '').trim(); if (q.length < 3) return; const cd = window.CastilloData; if (!cd || !cd.buscarAlimentos) return; const my = q; this.setState({ cheatBusy: true }); cd.buscarAlimentos(q).then(res => { if ((this.state.cheatQ || '').trim() === my) this.setState({ cheatRes: res || [], cheatBusy: false }); }, () => this.setState({ cheatRes: [], cheatBusy: false })); };
   _cheatKcal = it => { const g = it.modo === 'ud' ? (it.cantidad * (it.gpu || 100)) : it.cantidad; return Math.round((it.kcal100 || 0) * g / 100); };
@@ -3549,7 +3598,7 @@ class Component extends DCLogic {
         series: T('Series'), repeticiones: T('Repeticiones'), peso: T('Peso'),
         apariencia: T('Apariencia'), idioma: T('Idioma'), espanol: T('Español'), ingles: T('Inglés'),
         datosPersonales: T('Datos personales'), tocaCambiarFoto: T('Toca para cambiar la foto'), emailPassNota: T('Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.'), telefonoLbl: T('Teléfono'), emailLbl: T('Email'), passLbl: T('Contraseña'), cambiar: T('Cambiar'), cambiarPass: T('Cambiar contraseña'), nuevaPass: T('Nueva contraseña'), repitePass: T('Repite la contraseña'), guardar: T('Guardar'),
-        comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'), recientes: T('Recientes'), resumenMes: T('Resumen del mes'), sinDatosMes: T('Sin datos este mes'), recuentoMes: T('Recuento del mes'), diaADia: T('Día a día'), mediaDiaria: T('Media diaria'),
+        comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'), recientes: T('Recientes'), favoritos: T('Favoritos'), resumenMes: T('Resumen del mes'), sinDatosMes: T('Sin datos este mes'), recuentoMes: T('Recuento del mes'), diaADia: T('Día a día'), mediaDiaria: T('Media diaria'),
         cuenta: T('Cuenta'), cerrarSesion: T('Cerrar sesión'), aplicacion: T('Aplicación'),
         borrarCuenta: T('Borrar mi cuenta'), cancelar: T('Cancelar'),
         borrarAviso: T('Esto borra tu cuenta y todo lo que has registrado. No se puede deshacer ni recuperar.'),
@@ -3747,9 +3796,11 @@ class Component extends DCLogic {
       isCheat: !!st.cheat, closeCheat: this.closeCheat, cheatY: st.cheatIn ? 'none' : 'translateY(100%)', cheatDim: st.cheatIn ? 1 : 0,
       cheatComida: st.cheat ? tMeal(st.cheat.comida) : '', cheatQ: st.cheatQ, setCheatQ: this.setCheatQ, runCheat: this.runCheat, saveCheat: this.saveCheat, cheatBusy: st.cheatBusy,
       cheatHasRes: Array.isArray(st.cheatRes) && st.cheatRes.length > 0, cheatNoRes: Array.isArray(st.cheatRes) && st.cheatRes.length === 0,
-      cheatRes: (st.cheatRes || []).map(r => ({ nombre: r.nombre, detail: Math.round(r.kcal) + ' kcal / 100 g', add: this.addCheatFood(r) })),
+      cheatRes: (st.cheatRes || []).map(r => ({ nombre: r.nombre, detail: Math.round(r.kcal) + ' kcal / 100 g', add: this.addCheatFood(r), fav: this.esFav(r.nombre), noFav: !this.esFav(r.nombre), star: this.toggleFav(r) })),
       cheatHasRecientes: (st.cheatRecientes || []).length > 0 && (st.cheatQ || '').trim().length < 3,
-      cheatRecientes: (st.cheatRecientes || []).map(r => ({ nombre: r.nombre, detail: Math.round(r.kcal) + ' kcal / 100 g', add: this.addCheatFood(r) })),
+      cheatRecientes: (st.cheatRecientes || []).map(r => ({ nombre: r.nombre, detail: Math.round(r.kcal) + ' kcal / 100 g', add: this.addCheatFood(r), fav: this.esFav(r.nombre), noFav: !this.esFav(r.nombre), star: this.toggleFav(r) })),
+      cheatHasFavs: (st.cheatFavs || []).length > 0 && (st.cheatQ || '').trim().length < 3,
+      cheatFavs: (st.cheatFavs || []).map(r => ({ nombre: r.nombre, detail: Math.round(r.kcal) + ' kcal / 100 g', add: this.addCheatFood(r), fav: true, noFav: false, star: this.toggleFav(r) })),
       cheatSel: (st.cheatSel || []).map((x, i) => {
         const isU = x.modo === 'ud';
         return { nombre: x.nombre, cantidad: String(x.cantidad), kcal: x.kcal + ' kcal', isG: !isU, isU: isU,

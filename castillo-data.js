@@ -423,6 +423,26 @@
     miEmail: function () { return _ctx.email || ''; },
     buscarAlimentos: buscarAlimentos,
     alimentosRecientes: alimentosRecientes,
+    // Favoritos del cliente: los alimentos que repite siempre, para no buscarlos cada vez.
+    alimentosFavoritos: function () {
+      if (!_ctx.token || !_ctx.email) return Promise.resolve([]);
+      var e = encodeURIComponent(_ctx.email);
+      return api('/rest/v1/alimentos_favoritos?select=nombre,kcal&cliente_email=ilike.' + e + '&order=created_at.desc', {}, _ctx.token)
+        .then(function (r) { return (r || []).map(function (x) { return { nombre: x.nombre, kcal: Number(x.kcal) || 0, fav: true }; }); })
+        .catch(function () { return []; });
+    },
+    marcarFavorito: function (nombre, kcal, activar) {
+      if (!_ctx.token || !_ctx.email || !nombre) return Promise.resolve(false);
+      if (activar) {
+        return api('/rest/v1/alimentos_favoritos?on_conflict=cliente_email,nombre', {
+          method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({ cliente_email: _ctx.email, nombre: nombre, kcal: Number(kcal) || 0 })
+        }, _ctx.token).then(function () { return true; }).catch(function () { return false; });
+      }
+      var e = encodeURIComponent(_ctx.email), n = encodeURIComponent(nombre);
+      return api('/rest/v1/alimentos_favoritos?cliente_email=ilike.' + e + '&nombre=eq.' + n, { method: 'DELETE', headers: { 'Prefer': 'return=minimal' } }, _ctx.token)
+        .then(function () { return true; }).catch(function () { return false; });
+    },
     guardarComidaLibre: guardarComidaLibre,
     conectarSalud: conectarSalud,
     saludConectado: saludConectado,
