@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=151"></script>
-<script src="./castillo-transform.js?v=151"></script>
-<script src="./castillo-equiv.js?v=151"></script>
-<script src="./castillo-data.js?v=151"></script>
+<script src="./castillo-i18n.js?v=152"></script>
+<script src="./castillo-transform.js?v=152"></script>
+<script src="./castillo-equiv.js?v=152"></script>
+<script src="./castillo-data.js?v=152"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2184,7 +2184,9 @@ class Component extends DCLogic {
       + '<div style="font-family:Georgia,serif;font-size:27px;margin-top:9px">' + (n ? (n + ' · ') : '') + titulo + '</div></div>'
       + '<div style="font-size:11px;color:#6b6b6b">' + esc(nombre) + ' · ' + m.label + '</div></div>'
       + '<div style="height:1px;background:#e6e6e6;margin:15px 0 16px"></div>';
-    const PAG = (contenido) => '<div class="pg" style="width:794px;height:1123px;padding:40px 44px;background:#fff;overflow:hidden">' + contenido + '</div>';
+    // min-height en vez de height: si un mes trae más filas de lo previsto, la hoja CRECE y el PDF
+    // la encaja algo más pequeña. Antes tenía altura fija y lo que sobraba se cortaba a la mitad.
+    const PAG = (contenido) => '<div class="pg" style="width:794px;min-height:1123px;padding:40px 44px;background:#fff">' + contenido + '</div>';
     const ROT = t => '<div style="font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a9a9a;margin-bottom:7px">' + t + '</div>';
     // tabla a dos columnas: reparte las filas en dos bloques para que quepan de largo
     const DOSCOL = (filas, cabs) => {
@@ -2242,24 +2244,30 @@ class Component extends DCLogic {
                         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No sessions planned this month.' : 'Este mes no había sesiones planificadas.') + '</div>');
 
     // ── PÁGINA 3 · progreso por ejercicio, semana a semana ──
+    // Se parte en varias hojas: con 26 ejercicios la tabla se salía del folio y la última
+    // fila quedaba cortada por la mitad.
     const ejs = (m.ejercicios || []);
     const sl = (m.semanasLbl || []);
     const colorDelta = e => e.delta > 0 ? '#1e7e34' : e.delta < 0 ? '#c0392b' : '#b8860b';   // amarillo = se mantuvo
-    const p3 = CAB(2, en ? 'Progress by exercise' : 'Progreso por ejercicio')
-      + '<div style="font-size:12.5px;margin-bottom:13px">' + (en ? 'Heaviest weight lifted each week. ' : 'Peso máximo levantado cada semana. ')
-      + '<span style="color:#6b6b6b">' + (en ? 'Green = went up · yellow = stayed the same · red = went down.' : 'Verde = subió · amarillo = se mantuvo · rojo = bajó.') + '</span></div>'
-      + (ejs.length ? '<table style="width:100%;border-collapse:collapse;font-size:12px">'
-          + '<tr><td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px">' + (en ? 'Exercise' : 'Ejercicio') + '</td>'
-          + sl.map(l => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:56px">' + l + '</td>').join('')
-          + '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:66px">' + (en ? 'Change' : 'Cambio') + '</td></tr>'
-          + ejs.map(e => '<tr><td style="padding:7px 0;border-top:1px solid #eee"><div style="display:flex;align-items:center;gap:10px">'
-              + (e.y ? '<img src="https://img.youtube.com/vi/' + esc(e.y) + '/mqdefault.jpg" alt="" style="width:52px;height:32px;object-fit:cover;border-radius:5px;flex:none;background:#eee"/>'
-                     : '<div style="width:52px;height:32px;border-radius:5px;background:#f0f0f0;flex:none"></div>')
-              + '<span>' + esc(e.nombre) + '</span></div></td>'
-              + (e.semanas || []).map(v => '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? (v + ' kg') : '—') + '</td>').join('')
-              + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + colorDelta(e) + '">' + (e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + ' kg</td></tr>').join('')
-          + '</table>'
-        : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No weights logged this month.' : 'Este mes no se registraron pesos.') + '</div>');
+    const POR_HOJA = 15;
+    const trozos = [];
+    for (let i = 0; i < ejs.length; i += POR_HOJA) trozos.push(ejs.slice(i, i + POR_HOJA));
+    if (!trozos.length) trozos.push([]);
+    const tablaEj = (lista) => '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      + '<tr><td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px">' + (en ? 'Exercise' : 'Ejercicio') + '</td>'
+      + sl.map(l => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:54px">' + l + '</td>').join('')
+      + '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:64px">' + (en ? 'Change' : 'Cambio') + '</td></tr>'
+      + lista.map(e => '<tr><td style="padding:7px 0;border-top:1px solid #eee"><div style="display:flex;align-items:center;gap:10px">'
+          + (e.y ? '<img src="https://img.youtube.com/vi/' + esc(e.y) + '/mqdefault.jpg" alt="" style="width:52px;height:32px;object-fit:cover;border-radius:5px;flex:none;background:#eee"/>'
+                 : '<div style="width:52px;height:32px;border-radius:5px;background:#f0f0f0;flex:none"></div>')
+          + '<span>' + esc(e.nombre) + '</span></div></td>'
+          + (e.semanas || []).map(v => '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? (v + ' kg') : '—') + '</td>').join('')
+          + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + colorDelta(e) + '">' + (e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + ' kg</td></tr>').join('')
+      + '</table>';
+    const hojasEj = trozos.map((lista, i) => CAB(2, (en ? 'Progress by exercise' : 'Progreso por ejercicio') + (trozos.length > 1 ? (' · ' + (i + 1) + '/' + trozos.length) : ''))
+      + (i === 0 ? '<div style="font-size:12.5px;margin-bottom:13px">' + (en ? 'Heaviest weight lifted each week. ' : 'Peso máximo levantado cada semana. ')
+          + '<span style="color:#6b6b6b">' + (en ? 'Green = went up · yellow = stayed the same · red = went down.' : 'Verde = subió · amarillo = se mantuvo · rojo = bajó.') + '</span></div>' : '<div style="height:6px"></div>')
+      + (lista.length ? tablaEj(lista) : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No weights logged this month.' : 'Este mes no se registraron pesos.') + '</div>'));
 
     // ── PÁGINA 4 · cardio ──
     const cd = (m.cardio.dias || []);
@@ -2333,7 +2341,7 @@ class Component extends DCLogic {
       + '<div style="font-size:10px;font-weight:600;letter-spacing:.24em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">· ' + (en ? 'Monthly summary' : 'Resumen mensual') + ' · ' + m.label + '</span></div>';
 
     const doc = '<!doctype html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#141414;background:#fff;width:794px}</style></head><body>'
-      + PAG(p1) + PAG(p2) + PAG(p3) + PAG(p4) + PAG(p5) + PAG(p6) + PAG(p7)
+      + PAG(p1) + PAG(p2) + hojasEj.map(PAG).join('') + PAG(p4) + PAG(p5) + PAG(p6) + PAG(p7)
       + '</body></html>';
     return { doc: doc, nombre: 'Resumen-' + m.label.replace(/\s+/g, '-') + '.pdf' };
   };

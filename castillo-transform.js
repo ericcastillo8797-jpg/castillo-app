@@ -740,9 +740,19 @@
         var conDato = sem.filter(function (x) { return x != null; });
         var ini = conDato[0], fin = conDato[conDato.length - 1];
         var delta = Math.round((fin - ini) * 10) / 10;
-        // id del vídeo, para poder poner la miniatura del ejercicio en el informe
+        // id del vídeo para la miniatura del informe. Se busca en el plan y, si el ejercicio no está
+        // ahí (nombre distinto o venido de otro programa), en la biblioteca del CRM.
+        var _nk = String(nombre || '').toLowerCase().trim();
         var _rec = exByName[nombre] || exByName[String(nombre).trim()] || null;
-        return { nombre: nombre, y: (_rec && _rec.y) || '', semanas: sem.map(function (x) { return x == null ? '' : comma(x); }),
+        var _y = (_rec && _rec.y) || '';
+        if (!_y) { var _lib = libByName[_nk]; if (_lib) _y = ytId(_lib.video_url || '') || ''; }
+        if (!_y) {   // último intento: mismo nombre ignorando acentos y signos
+          var _norm = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); };
+          var _bus = _norm(nombre);
+          Object.keys(libByName).some(function (k) { if (_norm(k) === _bus) { _y = ytId((libByName[k].video_url) || '') || ''; return !!_y; } return false; });
+          if (!_y) Object.keys(exByName).some(function (k) { if (_norm(k) === _bus && exByName[k].y) { _y = exByName[k].y; return true; } return false; });
+        }
+        return { nombre: nombre, y: _y, semanas: sem.map(function (x) { return x == null ? '' : comma(x); }),
                  ini: comma(ini), fin: comma(fin), delta: delta, subio: delta > 0, igual: delta === 0, sesiones: pts.length };
       }).filter(Boolean).sort(function (a, b) { return b.delta - a.delta; });
       var semanasLbl = []; for (var _w = 0; _w < _nSem; _w++) semanasLbl.push('Sem ' + (_w + 1));
