@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=187"></script>
-<script src="./castillo-transform.js?v=187"></script>
-<script src="./castillo-equiv.js?v=187"></script>
-<script src="./castillo-data.js?v=187"></script>
+<script src="./castillo-i18n.js?v=188"></script>
+<script src="./castillo-transform.js?v=188"></script>
+<script src="./castillo-equiv.js?v=188"></script>
+<script src="./castillo-data.js?v=188"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 187;
+  var VERSION_ACTUAL = 188;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2361,7 +2361,7 @@ class Component extends DCLogic {
   // Informe COMPLETO de 7 páginas (el diseño largo que validó Alex), no la hoja suelta de antes:
   // portada · entrenamientos · progreso por ejercicio · cardio · calorías por día ·
   // opciones y comidas libres · métricas. Cada página lleva su cabecera.
-  _resumenDocHtml = (m) => {
+  _resumenDocHtml = (m, wh) => {
     const en = this.state.lang === 'en', T = s => (window.I18N ? window.I18N.t(s, this.state.lang) : s);
     const hdr = (window.__DATA && window.__DATA.header) || {};
     const nombre = hdr.nombre || '';
@@ -2535,8 +2535,51 @@ class Component extends DCLogic {
       + '<div style="height:1px;background:#e6e6e6;margin:26px 0 10px"></div>'
       + '<div style="font-size:10px;font-weight:600;letter-spacing:.24em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">· ' + (en ? 'Monthly summary' : 'Resumen mensual') + ' · ' + m.label + '</span></div>';
 
+    // ── Página de WHOOP ──────────────────────────────────────────────────────────
+    // Solo aparece si el cliente tiene WHOOP conectado Y hay días con datos dentro del periodo.
+    // Si conectó a mitad de mes, sale desde el día que conectó: no se inventa nada hacia atrás.
+    const _MES3rep = en ? ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'] : ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const _fechaLarga = f => { try { const q = String(f).split('-'); return parseInt(q[2], 10) + ' ' + _MES3rep[parseInt(q[1], 10) - 1]; } catch (er) { return f; } };
+    const _num = v => v == null ? '—' : String(v).replace('.', ',');
+    let pWhoop = '';
+    if (wh && wh.ok && wh.conectado && wh.diasConDatos > 0) {
+      const md = wh.medias || {}, er2 = wh.entrenosResumen || {};
+      const CAJA = (rot, val, uni) => '<div style="flex:1;border:1px solid #e6e6e6;border-radius:12px;padding:14px 14px 13px">'
+        + '<div style="font-size:8.5px;font-weight:700;letter-spacing:.18em;color:#9a9a9a;text-transform:uppercase">' + esc(rot) + '</div>'
+        + '<div style="font-size:26px;font-weight:300;margin-top:6px">' + esc(val) + '<span style="font-size:12px;color:#9a9a9a"> ' + esc(uni || '') + '</span></div></div>';
+      pWhoop = ROT('WHOOP')
+        + '<div style="font-size:11.5px;color:#6b6b6b;margin:-6px 0 16px">'
+        + esc(en ? 'Average of the ' + wh.diasConDatos + ' day(s) with WHOOP data in this period'
+                 : 'Media de los ' + wh.diasConDatos + ' día(s) con datos de WHOOP en este periodo')
+        + (wh.primerDato ? (' · ' + esc(_fechaLarga(wh.primerDato)) + ' → ' + esc(_fechaLarga(wh.ultimoDato))) : '') + '</div>'
+        + '<div style="display:flex;gap:10px">'
+          + CAJA(en ? 'Recovery' : 'Recuperación', _num(md.recuperacion), '%')
+          + CAJA(en ? 'Sleep' : 'Sueño', _num(md.suenoH), 'h')
+          + CAJA(en ? 'Sleep quality' : 'Calidad del sueño', _num(md.suenoPct), '%')
+          + CAJA(en ? 'Day strain' : 'Esfuerzo del día', _num(md.esfuerzo), '/ 21')
+        + '</div>'
+        + ((wh.entrenos || []).length
+          ? ROT(en ? 'Workouts recorded by WHOOP' : 'Entrenamientos registrados por WHOOP')
+            + '<div style="font-size:11.5px;color:#6b6b6b;margin:-6px 0 12px">'
+            + esc(en ? er2.n + ' session(s) · ' + miles(er2.kcalTotal || 0) + ' kcal in total'
+                     : er2.n + ' sesión(es) · ' + miles(er2.kcalTotal || 0) + ' kcal en total')
+            + (er2.kcalMedia != null ? esc(en ? ' · ' + miles(er2.kcalMedia) + ' kcal on average' : ' · ' + miles(er2.kcalMedia) + ' kcal de media') : '') + '</div>'
+            + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+            + '<tr><th style="text-align:left;padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + (en ? 'Day' : 'Día') + '</th>'
+            + '<th style="text-align:right;padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + (en ? 'Strain' : 'Esfuerzo') + '</th>'
+            + '<th style="text-align:right;padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + (en ? 'Calories' : 'Calorías') + '</th></tr>'
+            + (wh.entrenos || []).slice(0, 26).map(w => '<tr><td style="padding:8px 0;border-top:1px solid #eee">' + esc(_fechaLarga(w.fecha)) + '</td>'
+                + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right">' + esc(_num(w.esfuerzo)) + '</td>'
+                + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;font-weight:600">' + (w.calorias != null ? miles(w.calorias) + ' kcal' : '—') + '</td></tr>').join('')
+            + '</table>'
+          : '')
+        + '<div style="height:1px;background:#e6e6e6;margin:26px 0 10px"></div>'
+        + '<div style="font-size:10px;font-weight:600;letter-spacing:.24em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">· WHOOP · ' + esc(m.label) + '</span></div>';
+    }
+
     const doc = '<!doctype html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#141414;background:#fff;width:794px}</style></head><body>'
       + PAG(p1) + PAG(p2) + hojasEj.map(PAG).join('') + PAG(p4) + PAG(p5) + PAG(p6) + PAG(p7)
+      + (pWhoop ? PAG(pWhoop) : '')
       + '</body></html>';
     return { doc: doc, nombre: 'Resumen-' + m.label.replace(/\s+/g, '-') + '.pdf' };
   };
@@ -2589,11 +2632,22 @@ class Component extends DCLogic {
     var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   };
 
+  // Pide a WHOOP los días del periodo que el cliente está mirando (mes, trimestre, semestre o año).
+  // Si no lo tiene conectado, o si conectó a mitad, devuelve lo que haya: nunca inventa días.
+  _whoopDelPeriodo = async (m) => {
+    try {
+      if (!m || !m.desde) return null;
+      const cd = window.CastilloData;
+      if (!cd || !cd.whoopDatos) return null;
+      const r = await cd.whoopDatos(m.desde, m.hasta || m.desde);
+      return (r && r.ok && r.conectado) ? r : null;
+    } catch (e) { return null; }
+  };
   _resumenPdfBlob = async () => {
     const rm = (window.__DATA && window.__DATA.resumenMeses) || [];
     const m = this._mesEn(Math.max(0, this.state.mesIdx || 0)); if (!m) return null;
     if (!(await this._ensurePdfLibs())) return null;
-    const built = this._resumenDocHtml(m);
+    const built = this._resumenDocHtml(m, await this._whoopDelPeriodo(m));
     var old = document.getElementById('resumenGenFrame'); if (old) old.remove();
     var f = document.createElement('iframe'); f.id = 'resumenGenFrame';
     f.setAttribute('style', 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;background:#fff');
@@ -2660,8 +2714,8 @@ class Component extends DCLogic {
   resumenPrint = async () => {
     if (this._bloqueaMesAbierto()) return;
     try {
-      const m = this._mesEn(Math.max(0, this.state.mesIdx || 0)); if (!m) { this.flash('Sin datos este mes'); return; }
-      const built = this._resumenDocHtml(m);
+      const m = this._mesEn(Math.max(0, this.state.mesIdx || 0)); if (!m) { this.flash(window.I18N ? window.I18N.t('Sin datos este mes', this.state.lang) : 'Sin datos este mes'); return; }
+      const built = this._resumenDocHtml(m, await this._whoopDelPeriodo(m));
       this._printDoc(built.doc, 'resumenPrintFrame');
     } catch (e) { this.flash('No se pudo imprimir el PDF'); }
   };
@@ -3916,9 +3970,8 @@ class Component extends DCLogic {
       regMenuOpen: !!st.regMenuOpen, regMenuRot: st.regMenuOpen ? 'rotate(45deg)' : 'none',
       whoop: (() => {
         const w = st.whoop;
-        // OCULTA a propósito (Alex, 29 ago): ocupaba demasiado en Progreso. Se decidirá dónde ponerla.
-        // Para volver a mostrarla: cambiar MOSTRAR_WHOOP a true.
-        const MOSTRAR_WHOOP = false;
+        // Se ocultó un rato para las capturas de la App Store; vuelve a estar (Eric, 29 ago).
+        const MOSTRAR_WHOOP = true;
         if (!w || !w.conectado || !MOSTRAR_WHOOP) return { hay: false, visible: false };
         const rec = w.recuperacion;
         return { hay: true, visible: true,

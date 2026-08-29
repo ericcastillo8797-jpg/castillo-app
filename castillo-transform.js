@@ -803,6 +803,8 @@
       var _gp = []; if (mEnt.total) _gp.push(mEnt.pct); if (mCar.total) _gp.push(mCar.pct); if (mMet.total) _gp.push(mMet.pct); if (nutPlanMeals) _gp.push(nutPct);
       return {
         key: mk, label: MO[mo].charAt(0).toUpperCase() + MO[mo].slice(1) + ' ' + yr,
+        // rango del mes, para pedirle a WHOOP solo esos días en el informe
+        desde: mk + '-01', hasta: mk + '-' + d2(new Date(yr, mo + 1, 0).getDate()),
         cerrado: !isCurrent,   // el mes ya terminó (se puede compartir/imprimir/guardar); el mes en curso, NO
         entrenos: mEnt, cardio: { done: mCar.done, total: mCar.total, pct: mCar.pct, objetivo: _pasosObj, media: cardioMedia, totalPasos: cardioTotal, dias: cardioDias },
         nutricion: { done: nutDoneMeals, total: nutPlanMeals, pct: nutPct, dias: nutDias, conteoGrupos: conteoGrupos },
@@ -895,8 +897,13 @@
       var pD = (!isNaN(_a) && !isNaN(_b)) ? Math.round((_b - _a) * 10) / 10 : 0;
 
       var gp = []; if (ent.total) gp.push(ent.pct); if (car.total) gp.push(car.pct); if (met.total) gp.push(met.pct); if (nut.total) gp.push(nut.pct);
+      // rango de fechas real del periodo, para poder pedir a WHOOP solo esos días en el informe
+      var _ks = meses.map(function (m) { return m.key; }).filter(Boolean).sort();
+      var _d1 = _ks.length ? _ks[0] : key, _d2 = _ks.length ? _ks[_ks.length - 1] : key;
+      var _finMes = (function (k) { var y = +k.slice(0, 4), mo = +k.slice(5, 7); var d = new Date(y, mo, 0); return k + '-' + d2(d.getDate()); })(_d2);
       return {
         key: key, label: label, cerrado: true, periodo: true,
+        desde: _d1 + '-01', hasta: _finMes,
         entrenos: { done: ent.done, total: ent.total, pct: ent.pct, sesiones: meses.reduce(function (a, m) { return a.concat((m.entrenos && m.entrenos.sesiones) || []); }, []) },
         cardio: { done: car.done, total: car.total, pct: car.pct, objetivo: obj, media: diasCar ? Math.round(pasosTot / diasCar) : 0, totalPasos: pasosTot, dias: dias },
         nutricion: { done: nut.done, total: nut.total, pct: nut.pct, dias: nutDias, conteoGrupos: conteoGrupos },
