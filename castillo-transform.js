@@ -802,7 +802,8 @@
       var checkins = chkList.filter(function (c) { return (c.fecha || '').slice(0, 7) === mk; }).map(function (c) {
         var dt = new Date((c.fecha || '').slice(0, 10) + 'T00:00:00');
         var pw = (c.valores && (c.valores['peso-corporal'] || c.valores['peso'])) || '';
-        return { lbl: (isNaN(dt) ? (c.fecha || '') : (dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3))), peso: pw ? (comma(pw) + ' kg') : '', n: c.valores ? Object.keys(c.valores).length : 0, valores: c.valores || {} };
+        // se guarda la fecha real para poder agrupar por meses en los informes largos
+        return { fecha: (c.fecha || '').slice(0, 10), lbl: (isNaN(dt) ? (c.fecha || '') : (dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3))), peso: pw ? (comma(pw) + ' kg') : '', n: c.valores ? Object.keys(c.valores).length : 0, valores: c.valores || {} };
       }).reverse();
       // peso inicio/fin del mes
       var _firstT = new Date(yr, mo, 1).getTime(), _lastT = new Date(yr, mo, lastDay).getTime();
