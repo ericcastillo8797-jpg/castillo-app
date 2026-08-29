@@ -214,7 +214,18 @@
     'Guardar y salir': 'Save and exit', 'Seguir entrenando': 'Keep training', 'Salir sin guardar': 'Exit without saving',
     'series': 'sets', 'registradas': 'logged',
     'Fotografías': 'Photos', '¿Ha olvidado su contraseña?': 'Forgot your password?', '¿Primera vez?': 'First time?',
-    'Date de alta': 'Sign up', 'Resumen': 'Summary', 'Mes': 'Month', 'Trimestre': 'Quarter', 'Semestre': 'Half-year', 'Año': 'Year',
+    'Date de alta': 'Sign up',
+    'Marca tus series y pesos': 'Log your sets and weights',
+    'Métricas personales · medidas': 'Personal metrics · measurements',
+    'Métricas personales · fotos': 'Personal metrics · photos',
+    'Peso y medidas': 'Weight and measurements',
+    'Entreno': 'Workout', 'Sesión de entrenamiento': 'Training session',
+    'Correo electrónico': 'Email', 'Contraseña': 'Password',
+    'Su equipo verá la variante que ha utilizado.': 'Your coach will see the variant you used.',
+    'Frontal, lateral y espalda': 'Front, side and back',
+    'Buscar alimento…': 'Search food…', 'Buscar por nombre…': 'Search by name…',
+    'Revisado por su equipo antes de la sesión del viernes.': 'Reviewed by your coach before Friday\'s session.',
+    'Resumen': 'Summary', 'Mes': 'Month', 'Trimestre': 'Quarter', 'Semestre': 'Half-year', 'Año': 'Year',
     'Resumen del trimestre': 'Quarterly summary', 'Resumen del semestre': 'Half-year summary', 'Resumen del año': 'Yearly summary',
     'Favoritos': 'Favourites',
     'Resumen del mes': 'Monthly summary', 'Sin datos este mes': 'No data this month', 'Recuento del mes': "Month's count", 'Día a día': 'Day by day', 'Media diaria': 'Daily average', 'Objetivo': 'Goal', 'pasos': 'steps', 'días': 'days', 'Hecho': 'Done', 'No': 'No', 'medidas': 'measures', 'sesión': 'session', 'sesiones': 'sessions', 'Progresión de peso por ejercicio este mes': 'Weight progression per exercise this month', 'Qué comió cada día y recuento del mes': "What you ate each day and the month's count", 'Check-ins registrados este mes': 'Check-ins logged this month',
@@ -230,10 +241,15 @@
   // ---- Fechas (traduce meses/días/semana dentro de una cadena) ----
   var MONTHS = { enero: 'January', febrero: 'February', marzo: 'March', abril: 'April', mayo: 'May', junio: 'June', julio: 'July', agosto: 'August', septiembre: 'September', octubre: 'October', noviembre: 'November', diciembre: 'December', ene: 'Jan', feb: 'Feb', mar: 'Mar', abr: 'Apr', may: 'May', jun: 'Jun', jul: 'Jul', ago: 'Aug', sep: 'Sep', oct: 'Oct', nov: 'Nov', dic: 'Dec' };
   var WEEKD = { lunes: 'Monday', martes: 'Tuesday', 'miércoles': 'Wednesday', miercoles: 'Wednesday', jueves: 'Thursday', viernes: 'Friday', 'sábado': 'Saturday', sabado: 'Saturday', domingo: 'Sunday' };
+  // abreviaturas de la tira de días (LUN, MIÉ, SÁB…) y su versión con solo la inicial
+  var WEEKD3 = { dom: 'SUN', lun: 'MON', mar: 'TUE', 'mié': 'WED', mie: 'WED', jue: 'THU', vie: 'FRI', 'sáb': 'SAT', sab: 'SAT' };
   function tdate(s, lang) {
     if (lang !== 'en' || !s) return s;
     var out = String(s);
     Object.keys(WEEKD).forEach(function (k) { out = out.replace(new RegExp('\\b' + k + '\\b', 'gi'), WEEKD[k]); });
+    Object.keys(WEEKD3).forEach(function (k) {
+      out = out.replace(new RegExp('^' + k + '$', 'i'), function (m) { return /[A-ZÁÉÍÓÚ]{2,}/.test(m) ? WEEKD3[k] : (WEEKD3[k][0] + WEEKD3[k].slice(1).toLowerCase()); });
+    });
     Object.keys(MONTHS).forEach(function (k) { out = out.replace(new RegExp('\\b' + k + '\\b', 'gi'), MONTHS[k]); });
     out = out.replace(/ de /g, ' ').replace(/\bSemana\b/g, 'Week').replace(/\bsemana\b/g, 'week').replace(/\bdel\b/g, '').replace(/\bal\b/g, 'to').replace(/\s{2,}/g, ' ').trim();
     return out;

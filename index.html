@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=166"></script>
-<script src="./castillo-transform.js?v=166"></script>
-<script src="./castillo-equiv.js?v=166"></script>
-<script src="./castillo-data.js?v=166"></script>
+<script src="./castillo-i18n.js?v=167"></script>
+<script src="./castillo-transform.js?v=167"></script>
+<script src="./castillo-equiv.js?v=167"></script>
+<script src="./castillo-data.js?v=167"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 166;
+  var VERSION_ACTUAL = 167;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -1230,7 +1230,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <sc-if value="{{ isVarSheet }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Variantes del ejercicio" style="display:flex;flex-direction:column;min-height:0">
       <div style="padding:14px 20px 14px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
-        <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">Si no dispone del material</div>
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.siNoMaterial }}</div>
         <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">Variantes de {{ varSheet.n }}</div>
       </div>
       <div style="overflow-y:auto;padding:14px 20px 30px;display:flex;flex-direction:column;gap:11px">
@@ -1411,7 +1411,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
         <div onClick="{{ submitCheckin }}" style="margin-top:22px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ ckSubmitLabel }}</div>
         <div style="height:{{ ckPadH }};flex:none;transition:height .34s cubic-bezier(.32,.72,0,1)"></div>
-        <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:10px">Revisado por su equipo antes de la sesión del viernes.</div>
+        <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:10px">{{ L.revisadoEquipo }}</div>
       </div>
     </div>
     </sc-if>
@@ -2298,6 +2298,9 @@ class Component extends DCLogic {
     const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const pct = o => (o && o.total) ? (o.pct + '%') : '—';
     const kg = v => { const t = String(v == null ? '' : v).trim(); return /kg$/i.test(t) ? t : (t ? t + ' kg' : '—'); };
+    const tEjer = n => { try { return (window.I18N && window.I18N.exercise) ? window.I18N.exercise(n, this.state.lang) : n; } catch (er) { return n; } };
+    const tOpc  = l => en ? String(l || '').replace(/^Opción/, 'Option').replace(/^Comida libre/, 'Free meal') : l;
+    const tCom  = n => { try { return (window.I18N && window.I18N.meal) ? window.I18N.meal(n, this.state.lang) : n; } catch (er) { return n; } };
 
     // ── piezas de maquetación ──
     const CAB = (n, titulo) => '<div style="display:flex;align-items:baseline;justify-content:space-between">'
@@ -2356,7 +2359,7 @@ class Component extends DCLogic {
 
     // ── PÁGINA 2 · entrenamientos ──
     const ses = (m.entrenos.sesiones || []);
-    const filasSes = ses.map(x => FILA(esc(x.lbl), '<span style="color:' + (x.done ? '#141414' : '#c0392b') + '">' + esc(x.titulo) + (x.done ? '' : ' · ' + (en ? 'missed' : 'sin hacer')) + '</span>'));
+    const filasSes = ses.map(x => FILA(esc(x.lbl), '<span style="color:' + (x.done ? '#141414' : '#c0392b') + '">' + esc(tEjer(x.titulo)) + (x.done ? '' : ' · ' + (en ? 'missed' : 'sin hacer')) + '</span>'));
     const p2 = CAB(1, en ? 'Training' : 'Entrenamientos')
       + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.entrenos.done + ' ' + (en ? 'of' : 'de') + ' ' + m.entrenos.total + '</b> ' + (en ? 'sessions completed' : 'sesiones completadas') + ' · <b>' + m.entrenos.pct + '%</b></div>'
       + (filasSes.length ? ROT(en ? 'Sessions this month' : 'Sesiones del mes') + DOSCOL(filasSes, [en ? 'Day' : 'Día', en ? 'Workout' : 'Entrenamiento'])
@@ -2379,7 +2382,7 @@ class Component extends DCLogic {
       + lista.map(e => '<tr><td style="padding:7px 0;border-top:1px solid #eee"><div style="display:flex;align-items:center;gap:10px">'
           + (e.y ? '<img src="https://img.youtube.com/vi/' + esc(e.y) + '/mqdefault.jpg" alt="" style="width:52px;height:32px;object-fit:cover;border-radius:5px;flex:none;background:#eee"/>'
                  : '<div style="width:52px;height:32px;border-radius:5px;background:#f0f0f0;flex:none"></div>')
-          + '<span>' + esc(e.nombre) + '</span></div></td>'
+          + '<span>' + esc(tEjer(e.nombre)) + '</span></div></td>'
           + (e.semanas || []).map(v => '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? (v + '<span style="font-size:9px;color:#9a9a9a"> kg</span>') : '—') + '</td>').join('')
           + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + colorDelta(e) + '">' + (e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + '<span style="font-size:9px;color:#9a9a9a"> kg</span>' + '</td></tr>').join('')
       + '</table>';
@@ -2412,9 +2415,9 @@ class Component extends DCLogic {
     const p6 = CAB(5, en ? 'Nutrition · options chosen' : 'Nutrición · opciones elegidas')
       + '<div style="height:4px"></div>'
       + (grupos.length ? ROT(en ? 'What was chosen at each meal' : 'Qué eligió en cada comida')
-          + grupos.map(g => '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">' + esc(g.meal) + '</div>'
+          + grupos.map(g => '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">' + esc(tCom(g.meal)) + '</div>'
               + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
-              + g.opciones.map(o => '<tr><td style="padding:7px 0;border-top:1px solid #eee"><b>' + esc(o.lbl) + '</b></td>'
+              + g.opciones.map(o => '<tr><td style="padding:7px 0;border-top:1px solid #eee"><b>' + esc(tOpc(o.lbl)) + '</b></td>'
                   + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + o.veces + ' ' + (en ? (o.veces === 1 ? 'time' : 'times') : (o.veces === 1 ? 'vez' : 'veces')) + '</td></tr>').join('')
               + '</table></div>').join('')
         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'Nothing logged this month.' : 'Este mes no se registró nada.') + '</div>')
@@ -3359,7 +3362,7 @@ class Component extends DCLogic {
           const act = st.pad && st.pad.t === 'set' && st.pad.ex === e.id && st.pad.i === i;
           return {
             i: i + 1, numFg: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.4)',
-            r: l.r || '—', w: l.w || '—',
+            r: l.r || '—', w: tD(l.w || '—'),
             lastR: showLast ? 'ant. ' + e.l[i][0] : '',
             lastW: showLast ? 'ant. ' + e.l[i][1] + ' kg' : '',
             rBg: done ? 'rgba(var(--fgc,255,255,255),.12)' : 'var(--s3,#151519)',
@@ -3411,7 +3414,7 @@ class Component extends DCLogic {
     const weekDays = _agDays.map(d => {
       const sel = d.d === st.day;
       return {
-        w: d.w, d: d.d, pick: () => this.setState({ day: d.d }),
+        w: tD(d.w), d: d.d, pick: () => this.setState({ day: d.d }),
         bg: sel ? 'var(--fg,#fff)' : (d.today ? 'rgba(var(--fgc,255,255,255),.07)' : 'transparent'),
         fg: sel ? 'var(--bg,#000)' : (d.today ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.58)'),
         bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
@@ -3697,7 +3700,8 @@ class Component extends DCLogic {
         acceder: T('Acceder'), accederFace: T('Acceder con Face ID'), saltar: T('Saltar'),
         videoTecnica: T('Vídeo de técnica'), noPuedoEjercicio: T('No puedo hacer este ejercicio'),
         serieLbl: T('Series'), repsLbl: T('Repeticiones'), descansoLbl: T('Descanso'), pesoLbl: T('Peso'), pesoAnterior: T('Peso de la sesión anterior'),
-        volverOriginal: T('Volver al ejercicio original'), siNoMaterial: T('Si no dispone del material')
+        volverOriginal: T('Volver al ejercicio original'), siNoMaterial: T('Si no dispone del material'),
+        revisadoEquipo: T('Revisado por su equipo antes de la sesión del viernes.')
       },
       pickEs: this.setLang('es'), pickEn: this.setLang('en'), printDiet: this.printDiet, shareDiet: this.shareDiet, downloadDiet: this.downloadDiet, goAlta: this.goAlta,
       langEsBg: !isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEsFg: !isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEsBd: !isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
@@ -3760,7 +3764,7 @@ class Component extends DCLogic {
 
       weekDays, daySel, appts: APPTS,
       progresoFotos: (() => { const pf = _dd.progresoFotos; if (!pf) return null;
-        const col = set => ({ w: set.w, date: set.date, shots: SHOTS.map(n => ({ n, img: (set.fotos && set.fotos[n]) || '', open: this.openCompare(n) })) });
+        const col = set => ({ w: tD(set.w), date: set.date, shots: SHOTS.map(n => ({ n, img: (set.fotos && set.fotos[n]) || '', open: this.openCompare(n) })) });
         return { dos: pf.dos, primeras: col(pf.primeras), ultimas: col(pf.ultimas) }; })(),
       vidCats, vidList,
       toggleRegMenu: this.toggleRegMenu, regMedidas: this.regMedidas, regFotos: this.regFotos,
