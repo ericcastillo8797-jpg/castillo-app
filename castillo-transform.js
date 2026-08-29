@@ -98,6 +98,7 @@
 
     // ---------- mapa titulo-workout -> ejercicios (fusionando TODOS los programas) ----------
     var workoutByTitle = {}; // title -> [exercises]
+    var ytPorNombre = {};    // nombre de ejercicio -> id de vídeo (de TODOS los programas)
     var nutriTitleByProg = null; // para elegir plan de nutrición
     var weeks = []; // para localizar el plan de nutrición asignado
     progList.forEach(function (program) {
@@ -109,6 +110,12 @@
           (day.dayTasks || []).forEach(function (t) {
             if (t.type === 'workout' && t.workout && Array.isArray(t.workout.exercises)) {
               if (!workoutByTitle[t.title]) workoutByTitle[t.title] = t.workout.exercises;
+              // índice de vídeos por NOMBRE de ejercicio, sin depender del título del entreno
+              t.workout.exercises.forEach(function (ex) {
+                var _n = String(ex.name_provisional || ex.name || '').toLowerCase().trim();
+                var _y = ytId(ex.url_provisional || ex.thumbnailUrl || '');
+                if (_n && _y && !ytPorNombre[_n]) ytPorNombre[_n] = _y;
+              });
             }
           });
         });
@@ -746,11 +753,13 @@
         var _rec = exByName[nombre] || exByName[String(nombre).trim()] || null;
         var _y = (_rec && _rec.y) || '';
         if (!_y) { var _lib = libByName[_nk]; if (_lib) _y = ytId(_lib.video_url || '') || ''; }
+        if (!_y) _y = ytPorNombre[_nk] || '';
         if (!_y) {   // último intento: mismo nombre ignorando acentos y signos
           var _norm = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); };
           var _bus = _norm(nombre);
           Object.keys(libByName).some(function (k) { if (_norm(k) === _bus) { _y = ytId((libByName[k].video_url) || '') || ''; return !!_y; } return false; });
           if (!_y) Object.keys(exByName).some(function (k) { if (_norm(k) === _bus && exByName[k].y) { _y = exByName[k].y; return true; } return false; });
+          if (!_y) Object.keys(ytPorNombre).some(function (k) { if (_norm(k) === _bus) { _y = ytPorNombre[k]; return true; } return false; });
         }
         return { nombre: nombre, y: _y, semanas: sem.map(function (x) { return x == null ? '' : comma(x); }),
                  ini: comma(ini), fin: comma(fin), delta: delta, subio: delta > 0, igual: delta === 0, sesiones: pts.length };
