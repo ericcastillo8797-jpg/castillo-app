@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=195"></script>
-<script src="./castillo-transform.js?v=195"></script>
-<script src="./castillo-equiv.js?v=195"></script>
-<script src="./castillo-data.js?v=195"></script>
+<script src="./castillo-i18n.js?v=196"></script>
+<script src="./castillo-transform.js?v=196"></script>
+<script src="./castillo-equiv.js?v=196"></script>
+<script src="./castillo-data.js?v=196"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 195;
+  var VERSION_ACTUAL = 196;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2448,7 +2448,7 @@ class Component extends DCLogic {
     // ── PÁGINA 2 · entrenamientos ──
     const ses = (m.entrenos.sesiones || []);
     const filasSes = ses.map(x => FILA(esc(x.lbl), '<span style="color:' + (x.done ? '#141414' : '#c0392b') + '">' + esc(tEjer(x.titulo)) + (x.done ? '' : ' · ' + (en ? 'missed' : 'sin hacer')) + '</span>'));
-    const POR_HOJA_SES = 30;
+    const POR_HOJA_SES = 28;   // 30 se pasaba del folio por unos pocos píxeles
     const trozosSes = [];
     for (let i = 0; i < filasSes.length; i += POR_HOJA_SES) trozosSes.push(filasSes.slice(i, i + POR_HOJA_SES));
     if (!trozosSes.length) trozosSes.push([]);
@@ -2468,7 +2468,7 @@ class Component extends DCLogic {
     const ejs = (m.ejercicios || []);
     const sl = (m.semanasLbl || []);
     const colorDelta = e => e.delta == null ? '#9a9a9a' : e.delta > 0 ? '#1e7e34' : e.delta < 0 ? '#c0392b' : '#b8860b';   // amarillo = se mantuvo · gris = sin comparación
-    const POR_HOJA = 15;
+    const POR_HOJA = 13;   // 15 se pasaba del folio
     const trozos = [];
     for (let i = 0; i < ejs.length; i += POR_HOJA) trozos.push(ejs.slice(i, i + POR_HOJA));
     if (!trozos.length) trozos.push([]);
