@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=159"></script>
-<script src="./castillo-transform.js?v=159"></script>
-<script src="./castillo-equiv.js?v=159"></script>
-<script src="./castillo-data.js?v=159"></script>
+<script src="./castillo-i18n.js?v=160"></script>
+<script src="./castillo-transform.js?v=160"></script>
+<script src="./castillo-equiv.js?v=160"></script>
+<script src="./castillo-data.js?v=160"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 159;
+  var VERSION_ACTUAL = 160;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -608,22 +608,32 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </div>
         </div>
         <sc-if value="{{ e.hasProg }}" hint-placeholder-val="{{ true }}">
-        <div style="margin-top:12px;padding-top:8px;border-top:.5px solid rgba(var(--fgc,255,255,255),.06)">
-          <svg viewBox="0 0 300 96" style="width:100%;height:118px;overflow:visible">
-            <defs><linearGradient id="cgex" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".16"></stop><stop offset="1" stop-color="currentColor" stop-opacity="0"></stop></linearGradient></defs>
-            <sc-for list="{{ e.kgEje }}" as="k" hint-placeholder-count="3">
-            <line x1="{{ e.gx0 }}" y1="{{ k.y }}" x2="{{ e.gx1 }}" y2="{{ k.y }}" stroke="currentColor" stroke-opacity=".07" stroke-width="1"></line>
-            <text x="{{ e.gx0 }}" y="{{ k.y }}" dx="-5" dy="3" text-anchor="end" font-size="7.5" fill="currentColor" fill-opacity=".42">{{ k.t }}</text>
+        <div style="margin-top:12px;padding-top:10px;border-top:.5px solid rgba(var(--fgc,255,255,255),.06);display:flex;gap:8px">
+          <div style="position:relative;width:30px;flex:none;height:{{ e.gH }}">
+            <sc-for list="{{ e.kgEje }}" as="k" hint-placeholder-count="5">
+            <div style="position:absolute;right:0;top:{{ k.top }};transform:translateY(-50%);font-size:8.5px;color:rgba(var(--fgc,255,255,255),.42);white-space:nowrap">{{ k.t }}</div>
             </sc-for>
-            <polygon points="{{ e.area }}" fill="url(#cgex)"></polygon>
-            <polyline points="{{ e.line }}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></polyline>
-            <sc-for list="{{ e.puntos }}" as="p" hint-placeholder-count="4">
-            <circle cx="{{ p.x }}" cy="{{ p.y }}" r="2.6" fill="currentColor"></circle>
-            </sc-for>
-            <sc-for list="{{ e.fechasEje }}" as="fx" hint-placeholder-count="3">
-            <text x="{{ fx.x }}" y="{{ e.gy1 }}" dy="11" text-anchor="{{ fx.anchor }}" font-size="7.5" fill="currentColor" fill-opacity=".42">{{ fx.t }}</text>
-            </sc-for>
-          </svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="position:relative;height:{{ e.gH }}">
+              <sc-for list="{{ e.kgEje }}" as="k" hint-placeholder-count="5">
+              <div style="position:absolute;left:0;right:0;top:{{ k.top }};height:1px;background:rgba(var(--fgc,255,255,255),.07)"></div>
+              </sc-for>
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">
+                <defs><linearGradient id="cgex" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".16"></stop><stop offset="1" stop-color="currentColor" stop-opacity="0"></stop></linearGradient></defs>
+                <polygon points="{{ e.area }}" fill="url(#cgex)"></polygon>
+                <polyline points="{{ e.line }}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
+              </svg>
+              <sc-for list="{{ e.puntos }}" as="p" hint-placeholder-count="4">
+              <div style="position:absolute;left:{{ p.left }};top:{{ p.top }};width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:var(--fg,#fff);border:1.5px solid var(--s1,#0C0C0E)"></div>
+              </sc-for>
+            </div>
+            <div style="position:relative;height:14px;margin-top:3px">
+              <sc-for list="{{ e.fechasEje }}" as="fx" hint-placeholder-count="4">
+              <div style="position:absolute;left:{{ fx.left }};transform:translateX(-50%);font-size:8.5px;color:rgba(var(--fgc,255,255,255),.42);white-space:nowrap">{{ fx.t }}</div>
+              </sc-for>
+            </div>
+          </div>
         </div>
         </sc-if>
       </div>
@@ -3388,29 +3398,36 @@ class Component extends DCLogic {
         deltaFg: up ? '#7fd6a3' : (down ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.4)'),
         hasProg: vals.length >= 1,
         ...(function () {
-          // Gráfico con EJES REALES: a la izquierda los kilos, abajo las fechas, y un punto por
-          // cada sesión registrada. Antes era una línea suelta sin referencias y parecía inventada.
+          // Ejes fuera del SVG (como HTML): a la izquierda los kilos de cada línea, abajo la fecha
+          // de cada sesión. Así se ven siempre, sin depender de cómo el navegador dibuje el texto.
           const lp = e.points.filter(p => p.top != null);
-          const W = 300, H = 96, padL = 30, padR = 8, padT = 8, padB = 18;
-          const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
+          const H = 110;                       // alto útil del área del gráfico, en píxeles
           let lo = mn, hi = mx;
-          if (hi - lo < 1) { const m2 = (hi + lo) / 2; lo = m2 - 1; hi = m2 + 1; }   // valores planos: no aplastar
-          const yOf = v => y1 - ((v - lo) / (hi - lo)) * (y1 - y0);
-          const xOf = i => lp.length <= 1 ? (x0 + x1) / 2 : x0 + (i / (lp.length - 1)) * (x1 - x0);
-          const dia = d => { try { const t = String(d).slice(0, 10).split('-'); const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-            return parseInt(t[2], 10) + ' ' + MES[parseInt(t[1], 10) - 1]; } catch (err) { return ''; } };
-          const pts = lp.map((p, i) => ({ x: xOf(i).toFixed(1), y: yOf(p.top).toFixed(1), kg: String(p.top).replace('.', ','), f: dia(p.date) }));
-          const pairs = pts.map(p => p.x + ',' + p.y);
-          // etiquetas de fecha: todas si son pocas, si no la primera, la de en medio y la última
-          const idxs = lp.length <= 4 ? lp.map((_, i) => i) : [0, Math.floor((lp.length - 1) / 2), lp.length - 1];
-          const fechas = idxs.map(i => ({ x: xOf(i).toFixed(1), t: dia(lp[i].date), anchor: i === 0 ? 'start' : (i === lp.length - 1 ? 'end' : 'middle') }));
-          const kgs = [hi, (hi + lo) / 2, lo].map(v => ({ y: yOf(v).toFixed(1), t: String(Math.round(v * 10) / 10).replace('.', ',') }));
+          if (hi - lo < 1) { const m2 = (hi + lo) / 2; lo = m2 - 1; hi = m2 + 1; }
+          const LINEAS = 5;                    // 5 líneas horizontales con su peso
+          const kgEje = [];
+          for (let i = 0; i < LINEAS; i++) {
+            const v = hi - (i / (LINEAS - 1)) * (hi - lo);
+            kgEje.push({ t: (Math.round(v * 10) / 10).toString().replace('.', ','), top: ((i / (LINEAS - 1)) * 100).toFixed(2) + '%' });
+          }
+          const pctX = i => lp.length <= 1 ? 50 : (i / (lp.length - 1)) * 100;
+          const pctY = v => 100 - ((v - lo) / (hi - lo)) * 100;
+          const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+          const dia = d => { try { const t = String(d).slice(0, 10).split('-'); return parseInt(t[2], 10) + ' ' + MES[parseInt(t[1], 10) - 1]; } catch (err) { return ''; } };
+          // si hay muchas sesiones se alterna para que las fechas no se solapen
+          const salto = lp.length > 9 ? 3 : (lp.length > 6 ? 2 : 1);
+          const puntos = lp.map((p, i) => ({
+            left: pctX(i).toFixed(2) + '%', top: pctY(p.top).toFixed(2) + '%',
+            kg: String(p.top).replace('.', ','), f: dia(p.date),
+            verFecha: (i % salto === 0) || i === lp.length - 1
+          }));
+          const fechas = puntos.filter(p => p.verFecha).map(p => ({ left: p.left, t: p.f }));
+          const pairs = lp.map((p, i) => pctX(i).toFixed(2) + ',' + pctY(p.top).toFixed(2));
           return {
+            gH: H + 'px',
             line: pairs.join(' '),
-            area: pairs.length ? (pairs.join(' ') + ' ' + pts[pts.length - 1].x + ',' + y1 + ' ' + pts[0].x + ',' + y1) : '',
-            puntos: pts, fechasEje: fechas, kgEje: kgs,
-            gx0: x0, gx1: x1, gy0: y0, gy1: y1,
-            lx: pts.length ? pts[pts.length - 1].x : 0, ly: pts.length ? pts[pts.length - 1].y : 0
+            area: pairs.length ? (pairs.join(' ') + ' ' + pctX(lp.length - 1).toFixed(2) + ',100 ' + pctX(0).toFixed(2) + ',100') : '',
+            puntos: puntos, fechasEje: fechas, kgEje: kgEje
           };
         })()
       };
