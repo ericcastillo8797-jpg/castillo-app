@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=178"></script>
-<script src="./castillo-transform.js?v=178"></script>
-<script src="./castillo-equiv.js?v=178"></script>
-<script src="./castillo-data.js?v=178"></script>
+<script src="./castillo-i18n.js?v=179"></script>
+<script src="./castillo-transform.js?v=179"></script>
+<script src="./castillo-equiv.js?v=179"></script>
+<script src="./castillo-data.js?v=179"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 178;
+  var VERSION_ACTUAL = 179;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2098,7 +2098,17 @@ class Component extends DCLogic {
     if (this._visH) document.removeEventListener('visibilitychange', this._visH); }
   later(fn, ms) { this._to = this._to || []; this._to.push(setTimeout(fn, ms)); }
 
-  componentDidUpdate() { this._guardaEntreno(); }
+  componentDidUpdate() { this._guardaEntreno(); this._marcaUso(); }
+  _marcaUso = () => { try { if (this.stage === 'app') localStorage.setItem('castillo_ultimo_uso', String(Date.now())); } catch (e) {} };
+  // ¿Salió solo un momento (a un WhatsApp, una llamada) y volvió? Entonces no se le enseña otra vez
+  // la animación de entrada ni el Face ID: se entra directo donde estaba.
+  _vueltaRapida = () => {
+    try {
+      const t = parseInt(localStorage.getItem('castillo_ultimo_uso') || '0', 10);
+      if (!t || Date.now() - t > 10 * 60000) return false;              // más de 10 minutos → bloqueo normal
+      return !!(window.CastilloData && window.CastilloData.hasSession());
+    } catch (e) { return false; }
+  };
   componentDidMount() {
     // Vuelta del login de WHOOP (la Edge Function redirige con ?whoop=ok/err)
     try {
@@ -2160,6 +2170,13 @@ class Component extends DCLogic {
     document.addEventListener('error', this._imgErr, true);   // capture: los eventos 'error' de <img> no burbujean
   }
   runSplash = () => {
+    if (this._vueltaRapida()) {                                        // volvió enseguida: entrada directa
+      this.setState({ stage: 'scan', scan: 1 });
+      window.CastilloData.restoreSession()
+        .then(this._enterWith)
+        .catch(() => { this.setState({ stage: 'lock', scan: 0 }); });
+      return;
+    }
     this.later(() => { if (this.stage === 'splash') this.setState({ stage: 'splashOut' }); }, 2200);
     this.later(() => { if (this.stage === 'splashOut') this.setState({ stage: 'lock' }); }, 3000);
   };
@@ -2167,7 +2184,11 @@ class Component extends DCLogic {
     if (this.stage === 'splash') this.setState({ stage: 'splashOut' });
     this.later(() => this.setState({ stage: 'lock' }), 780);
   };
-  replaySplash = () => { this.setState({ stage: 'splash', tab: 'home' }); this.runSplash(); };
+  replaySplash = () => {
+    this.setState({ stage: 'splash', tab: 'home' });
+    this.later(() => { if (this.stage === 'splash') this.setState({ stage: 'splashOut' }); }, 2200);
+    this.later(() => { if (this.stage === 'splashOut') this.setState({ stage: 'lock' }); }, 3000);
+  };
 
   get stage() {
     const a = this.props.arranque;
