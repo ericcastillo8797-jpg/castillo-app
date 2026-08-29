@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=168"></script>
-<script src="./castillo-transform.js?v=168"></script>
-<script src="./castillo-equiv.js?v=168"></script>
-<script src="./castillo-data.js?v=168"></script>
+<script src="./castillo-i18n.js?v=169"></script>
+<script src="./castillo-transform.js?v=169"></script>
+<script src="./castillo-equiv.js?v=169"></script>
+<script src="./castillo-data.js?v=169"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 168;
+  var VERSION_ACTUAL = 169;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -845,7 +845,17 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <div style="animation:cFade .34s both;padding:0 16px 16px">
           <sc-if value="{{ e.vidPlaying }}" hint-placeholder-val="{{ false }}">
           <div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;border:.5px solid rgba(var(--fgc,255,255,255),.1)">
-            <iframe src="{{ e.src }}" title="{{ e.n }}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="true" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block"></iframe>
+            <iframe id="ytx-{{ e.id }}" src="{{ e.src }}" title="{{ e.n }}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block;pointer-events:none"></iframe>
+            <div onClick="{{ e.togglePlay }}" style="position:absolute;inset:0;cursor:pointer"></div>
+            <div onClick="{{ e.togglePlay }}" style="position:absolute;left:10px;bottom:10px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer" style-active="transform:scale(.9)">
+              <sc-if value="{{ e.reproduciendo }}" hint-placeholder-val="{{ true }}">
+              <svg width="11" height="12" viewBox="0 0 11 12" fill="currentColor"><rect x="0" y="0" width="3.6" height="12" rx="1.2"></rect><rect x="7.4" y="0" width="3.6" height="12" rx="1.2"></rect></svg>
+              </sc-if>
+              <sc-if value="{{ e.pausado }}" hint-placeholder-val="{{ false }}">
+              <svg width="12" height="13" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
+              </sc-if>
+            </div>
+            <div onClick="{{ e.cerrarVideo }}" style="position:absolute;right:10px;bottom:10px;padding:7px 12px;border-radius:100px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);color:#fff;font-size:11px;font-weight:600;cursor:pointer" style-active="transform:scale(.94)">{{ L.cerrar }}</div>
           </div>
           </sc-if>
           <sc-if value="{{ e.vidThumb }}" hint-placeholder-val="{{ true }}">
@@ -1155,7 +1165,16 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <sc-if value="{{ isVideoSheet }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Video" style="padding:14px 20px 30px">
       <div style="position:relative;aspect-ratio:16/9;border-radius:20px;overflow:hidden;background:#000;border:.5px solid rgba(var(--fgc,255,255,255),.11)">
-        <iframe src="{{ videoSheet.src }}" title="{{ videoSheet.t }}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="true" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block"></iframe>
+        <iframe id="ytx-sheet" src="{{ videoSheet.src }}" title="{{ videoSheet.t }}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block;pointer-events:none"></iframe>
+        <div onClick="{{ videoSheet.togglePlay }}" style="position:absolute;inset:0;cursor:pointer"></div>
+        <div onClick="{{ videoSheet.togglePlay }}" style="position:absolute;left:12px;bottom:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer" style-active="transform:scale(.9)">
+          <sc-if value="{{ videoSheet.reproduciendo }}" hint-placeholder-val="{{ true }}">
+          <svg width="12" height="13" viewBox="0 0 11 12" fill="currentColor"><rect x="0" y="0" width="3.6" height="12" rx="1.2"></rect><rect x="7.4" y="0" width="3.6" height="12" rx="1.2"></rect></svg>
+          </sc-if>
+          <sc-if value="{{ videoSheet.pausado }}" hint-placeholder-val="{{ false }}">
+          <svg width="13" height="14" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
+          </sc-if>
+        </div>
       </div>
       <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin-top:18px">{{ videoSheet.g }}</div>
       <div style="font-size:21px;font-weight:600;margin-top:6px;letter-spacing:-.02em">{{ videoSheet.t }}</div>
@@ -1920,7 +1939,14 @@ let VID = [
 ];
 
 const THUMB = y => 'https://i.ytimg.com/vi/' + y + '/mqdefault.jpg';
-const EMBED = y => 'https://www.youtube-nocookie.com/embed/' + y + '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+// Reproductor SIN la interfaz de YouTube: controls=0 quita la barra, el logo y el botón de
+// pantalla completa; el vídeo lo sigue sirviendo Google (rápido y adaptándose a la conexión) pero
+// se ve como parte de la app. Los controles los pinta la propia app encima.
+const EMBED = y => 'https://www.youtube-nocookie.com/embed/' + y
+  + '?autoplay=1&playsinline=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&color=white&enablejsapi=1'
+  + '&loop=1&playlist=' + y;
+// Órdenes al reproductor sin cargar librerías: se le habla por mensajes al propio marco.
+const YT_CMD = (el, func) => { try { el && el.contentWindow && el.contentWindow.postMessage(JSON.stringify({ event: 'command', func: func, args: [] }), '*'); } catch (e) {} };
 
 const PTS = [
   'Rango completo, sin comprometer la postura.',
@@ -2011,7 +2037,7 @@ class Component extends DCLogic {
     logs: {}, wLock: false, regMenuOpen: false, pad: null, padIn: false,
     rest: 0, restMax: 90,
     borrarOpen: false, borrarTxt: '', borrarErr: '', borrando: false,
-    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, dietMealIdx: 0,
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, vidPause: false, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
@@ -3332,7 +3358,10 @@ class Component extends DCLogic {
     };
 
     const vs = sh.k === 'vid' ? sh.v : null;
-    const videoSheet = vs ? { t: vs.t, g: vs.g, src: EMBED(vs.y), pts: PTS.map((t, i) => ({ rom: ROM[i], t })) } : {};
+    const videoSheet = vs ? { t: vs.t, g: vs.g, src: EMBED(vs.y), pts: PTS.map((t, i) => ({ rom: ROM[i], t })),
+      reproduciendo: !st.vidPause, pausado: !!st.vidPause,
+      togglePlay: () => { const el = document.getElementById('ytx-sheet');
+        const pausar = !this.state.vidPause; YT_CMD(el, pausar ? 'pauseVideo' : 'playVideo'); this.setState({ vidPause: pausar }); } } : {};
 
     const showLast = this.props.mostrarUltimaSemana !== false;
     const exercises = workoutEx.map((e, ix) => {
@@ -3356,7 +3385,13 @@ class Component extends DCLogic {
         meta: dn + ' de ' + e.s + ' series' + (dn === e.s ? ' · completado' : ''),
         chev: isOpen ? 'rotate(180deg)' : 'none',
         toggle: this.toggleEx(e.id),
-        play: () => this.setState({ playEx: st.playEx === e.id ? null : e.id }),
+        play: () => this.setState({ playEx: st.playEx === e.id ? null : e.id, vidPause: false }),
+        togglePlay: () => { const el = document.getElementById('ytx-' + e.id);
+          const pausar = !this.state.vidPause;
+          YT_CMD(el, pausar ? 'pauseVideo' : 'playVideo');
+          this.setState({ vidPause: pausar }); },
+        cerrarVideo: () => this.setState({ playEx: null, vidPause: false }),
+        reproduciendo: !st.vidPause, pausado: !!st.vidPause,
         vidPlaying: st.playEx === e.id, vidThumb: st.playEx !== e.id, src: EMBED(_vy),
         sets: Array.from({ length: e.s }, (_, i) => {
           const l = arr[i] || {}, done = !!l.done;
@@ -3428,7 +3463,7 @@ class Component extends DCLogic {
       return { n, pick: () => this.setState({ vidCat: n }), bg: sel ? 'var(--fg,#fff)' : 'var(--s2,#121215)', fg: sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.08)' };
     });
     const vidList = VID.filter(v => st.vidCat === 'Todos' || v.g === st.vidCat)
-      .map(v => ({ t: tEx(v.t), g: v.g, thumb: THUMB(v.y), open: () => this.openSheet({ k: 'vid', v: { t: tEx(v.t), g: v.g, y: v.y } }) }));
+      .map(v => ({ t: tEx(v.t), g: v.g, thumb: THUMB(v.y), open: () => { this.setState({ vidPause: false }); this.openSheet({ k: 'vid', v: { t: tEx(v.t), g: v.g, y: v.y } }); } }));
 
     const evoTabs = [['comp','Composición y medidas'],['ejercicio','Progreso en el ejercicio']].map(([k, n]) => {
       const sel = st.evoTab === k;
@@ -3526,7 +3561,7 @@ class Component extends DCLogic {
           const parts = x.split('|'), on = cur === parts[0];
           return { n: tEx(parts[0]), thumb: THUMB(parts[1]), delay: (0.03 + i * 0.05) + 's', series: _serTxt,
             note: on ? 'Es la que se registrará' : 'Misma serie y repeticiones · toca elegir',
-            play: () => this.openSheet({ k: 'vid', v: { t: tEx(parts[0]), g: 'Variante', y: parts[1] }, back: this.state.sheet }),
+            play: () => { this.setState({ vidPause: false }); this.openSheet({ k: 'vid', v: { t: tEx(parts[0]), g: 'Variante', y: parts[1] }, back: this.state.sheet }); },
             use: this.useVar(ve.id, parts[0]),
             btn: on ? '✓ Variante elegida' : 'Elegir esta variante',
             bd: on ? A + '.45)' : A + '.07)',
@@ -3690,7 +3725,7 @@ class Component extends DCLogic {
           : ('Llevas ' + setsDone + ' de ' + totalSets + ' series registradas. Si sales sin guardar, se pierden y tendrás que volver a ponerlas.')),
         wExitGuardar: T('Guardar y salir'), wExitSeguir: T('Seguir entrenando'), wExitSalir: T('Salir sin guardar'),
         fotografias: T('Fotografías'), olvidoPass: T('¿Ha olvidado su contraseña?'), saltar: T('Saltar'),
-        borrarCuenta: T('Borrar mi cuenta'), cancelar: T('Cancelar'),
+        borrarCuenta: T('Borrar mi cuenta'), cancelar: T('Cancelar'), cerrar: T('Cerrar'),
         borrarAviso: T('Esto borra tu cuenta y todo lo que has registrado. No se puede deshacer ni recuperar.'),
         borrarP1: T('Tus entrenos, dietas, medidas y fotos de progreso'),
         borrarP2: T('Tu acceso a la app: no podrás volver a entrar con este correo'),

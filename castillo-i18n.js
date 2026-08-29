@@ -225,7 +225,7 @@
     'Frontal, lateral y espalda': 'Front, side and back',
     'Buscar alimento…': 'Search food…', 'Buscar por nombre…': 'Search by name…',
     'Revisado por su equipo antes de la sesión del viernes.': 'Reviewed by your coach before Friday\'s session.',
-    'Resumen': 'Summary', 'Mes': 'Month', 'Trimestre': 'Quarter', 'Semestre': 'Half-year', 'Año': 'Year',
+    'Cerrar': 'Close', 'Resumen': 'Summary', 'Mes': 'Month', 'Trimestre': 'Quarter', 'Semestre': 'Half-year', 'Año': 'Year',
     'Resumen del trimestre': 'Quarterly summary', 'Resumen del semestre': 'Half-year summary', 'Resumen del año': 'Yearly summary',
     'Favoritos': 'Favourites',
     'Resumen del mes': 'Monthly summary', 'Sin datos este mes': 'No data this month', 'Recuento del mes': "Month's count", 'Día a día': 'Day by day', 'Media diaria': 'Daily average', 'Objetivo': 'Goal', 'pasos': 'steps', 'días': 'days', 'Hecho': 'Done', 'No': 'No', 'medidas': 'measures', 'sesión': 'session', 'sesiones': 'sessions', 'Progresión de peso por ejercicio este mes': 'Weight progression per exercise this month', 'Qué comió cada día y recuento del mes': "What you ate each day and the month's count", 'Check-ins registrados este mes': 'Check-ins logged this month',
