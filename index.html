@@ -10,11 +10,35 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=152"></script>
-<script src="./castillo-transform.js?v=152"></script>
-<script src="./castillo-equiv.js?v=152"></script>
-<script src="./castillo-data.js?v=152"></script>
+<script src="./castillo-i18n.js?v=153"></script>
+<script src="./castillo-transform.js?v=153"></script>
+<script src="./castillo-equiv.js?v=153"></script>
+<script src="./castillo-data.js?v=153"></script>
 <script src="./support.js"></script>
+<script>
+// ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
+// El móvil se quedaba con una copia vieja de la app: los ficheros llevan ?v= pero esta misma
+// página no, así que los cambios tardaban en llegar o no llegaban. Al arrancar (y al volver a
+// primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
+// con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
+(function () {
+  var VERSION_ACTUAL = 153;
+  function mirar() {
+    try {
+      fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j || !j.version || j.version <= VERSION_ACTUAL) return;
+          var u = location.pathname + '?b=' + j.version;
+          if (location.search.indexOf('b=' + j.version) >= 0) return;   // ya estamos en esa
+          location.replace(u);
+        }).catch(function () {});
+    } catch (e) {}
+  }
+  mirar();
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) mirar(); });
+})();
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Castillo">
@@ -1893,7 +1917,7 @@ class Component extends DCLogic {
     meals: { m1: 2, m2: 0, m3: 3 },
     sheet: null, sheetIn: false, swap: null, swapIn: false, pwOpen: false, pwIn: false, pwNew: '', pwNew2: '',
     cheat: null, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false, cheatRecientes: [],
-    mesIdx: 0, mesDetail: null, mesDetailIn: false, resumenOpen: false,
+    mesIdx: 0, mesDetail: null, mesDetailIn: false, resumenOpen: true,
     wOpen: false, wIn: false, exClosed: {},
     logs: {}, wLock: false, regMenuOpen: false, pad: null, padIn: false,
     rest: 0, restMax: 90,
@@ -2429,13 +2453,18 @@ class Component extends DCLogic {
     if (!paginas.length) paginas = [fd.body];
     var jsPDF = window.jspdf.jsPDF, pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     var pw = 210, ph = 297;
+    // Escala 1.6 y se libera cada hoja al terminar: a escala 2, con 8 páginas, el móvil se quedaba
+    // sin memoria y salía "No se pudo generar el PDF". A 1.6 se lee perfecto y no revienta.
     for (var i = 0; i < paginas.length; i++) {
-      var canvas = await window.html2canvas(paginas[i], { scale: 2, backgroundColor: '#ffffff', windowWidth: 794, width: 794, useCORS: true, allowTaint: false });
-      var img = canvas.toDataURL('image/jpeg', 0.92);
+      var canvas = await window.html2canvas(paginas[i], { scale: 1.6, backgroundColor: '#ffffff', windowWidth: 794, width: 794, useCORS: true, allowTaint: false, logging: false });
+      var img = canvas.toDataURL('image/jpeg', 0.86);
       var iw = pw, ih = canvas.height * pw / canvas.width;
       if (ih > ph) { ih = ph; iw = canvas.width * ph / canvas.height; }
       if (i > 0) pdf.addPage();
       pdf.addImage(img, 'JPEG', (pw - iw) / 2, (ph - ih) / 2, iw, ih);
+      try { canvas.width = 0; canvas.height = 0; } catch (e) {}   // libera memoria antes de la siguiente
+      img = null;
+      await new Promise(r => setTimeout(r, 0));                    // deja respirar al navegador
     }
     f.remove();
     return { blob: pdf.output('blob'), nombre: built.nombre };
@@ -2448,14 +2477,14 @@ class Component extends DCLogic {
     try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando… inténtalo de nuevo'); return; }
       if (await this._sharePdf(b.blob, b.nombre, b.nombre)) return;
       await this._savePdf(b.blob, b.nombre);
-    } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar el PDF'); }
+    } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar el PDF: ' + ((e && e.message) || 'error desconocido')); }
   };
   resumenDownload = async () => {
     if (this._bloqueaMesAbierto()) return;
     try { const b = await this._resumenPdfBlob(); if (!b) { this.flash('Cargando… inténtalo de nuevo'); return; }
       if (await this._saveNative(b.blob, b.nombre)) return;
       await this._savePdf(b.blob, b.nombre);
-    } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar el PDF'); }
+    } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar el PDF: ' + ((e && e.message) || 'error desconocido')); }
   };
   resumenPrint = async () => {
     if (this._bloqueaMesAbierto()) return;
