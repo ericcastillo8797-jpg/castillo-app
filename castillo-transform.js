@@ -724,17 +724,31 @@
       }).filter(function (g) { return g.opciones.length; });
       var nutPct = nutPlanMeals ? Math.round(nutDoneMeals / nutPlanMeals * 100) : 0;
       // ejercicios: progresión de peso dentro del mes
+      // Semanas del mes (bloques de 7 días desde el día 1): para cada ejercicio se guarda el PESO
+      // MÁXIMO levantado en cada semana. Alex lo quiere así: no la media, el tope de la semana.
+      var _nSem = Math.ceil(daysInMonth / 7);
       var ejercicios = Object.keys(progMap).map(function (nombre) {
         var pts = progMap[nombre].filter(function (p) { return (p.date || '').slice(0, 7) === mk && p.top != null; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
         if (!pts.length) return null;
-        var ini = pts[0].top, fin = pts[pts.length - 1].top, delta = Math.round((fin - ini) * 10) / 10;
-        return { nombre: nombre, ini: comma(ini), fin: comma(fin), delta: delta, subio: delta > 0, sesiones: pts.length };
+        var sem = [];
+        for (var w = 0; w < _nSem; w++) sem.push(null);
+        pts.forEach(function (p) {
+          var dia = parseInt(String(p.date).slice(8, 10), 10) || 1;
+          var w = Math.min(_nSem - 1, Math.floor((dia - 1) / 7));
+          if (sem[w] == null || p.top > sem[w]) sem[w] = p.top;
+        });
+        var conDato = sem.filter(function (x) { return x != null; });
+        var ini = conDato[0], fin = conDato[conDato.length - 1];
+        var delta = Math.round((fin - ini) * 10) / 10;
+        return { nombre: nombre, semanas: sem.map(function (x) { return x == null ? '' : comma(x); }),
+                 ini: comma(ini), fin: comma(fin), delta: delta, subio: delta > 0, igual: delta === 0, sesiones: pts.length };
       }).filter(Boolean).sort(function (a, b) { return b.delta - a.delta; });
+      var semanasLbl = []; for (var _w = 0; _w < _nSem; _w++) semanasLbl.push('Sem ' + (_w + 1));
       // métricas / check-ins del mes
       var checkins = chkList.filter(function (c) { return (c.fecha || '').slice(0, 7) === mk; }).map(function (c) {
         var dt = new Date((c.fecha || '').slice(0, 10) + 'T00:00:00');
         var pw = (c.valores && (c.valores['peso-corporal'] || c.valores['peso'])) || '';
-        return { lbl: (isNaN(dt) ? (c.fecha || '') : (dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3))), peso: pw ? (comma(pw) + ' kg') : '', n: c.valores ? Object.keys(c.valores).length : 0 };
+        return { lbl: (isNaN(dt) ? (c.fecha || '') : (dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3))), peso: pw ? (comma(pw) + ' kg') : '', n: c.valores ? Object.keys(c.valores).length : 0, valores: c.valores || {} };
       }).reverse();
       // peso inicio/fin del mes
       var _firstT = new Date(yr, mo, 1).getTime(), _lastT = new Date(yr, mo, lastDay).getTime();
@@ -752,7 +766,8 @@
         nutricion: { done: nutDoneMeals, total: nutPlanMeals, pct: nutPct, dias: nutDias, conteoGrupos: conteoGrupos },
         metricas: { done: mMet.done, total: mMet.total, pct: mMet.pct, checkins: checkins },
         global: _gp.length ? Math.round(_gp.reduce(function (a, b) { return a + b; }, 0) / _gp.length) : 0,
-        peso: { ini: pIni || '—', fin: pFin || '—', delta: pDelta }, fotos: fotosN, ejercicios: ejercicios
+        peso: { ini: pIni || '—', fin: pFin || '—', delta: pDelta }, fotos: fotosN, ejercicios: ejercicios,
+        semanasLbl: semanasLbl, kcalObjetivo: (macros && macros.kcal) || 0
       };
     });
 

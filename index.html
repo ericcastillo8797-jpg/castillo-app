@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=149"></script>
-<script src="./castillo-transform.js?v=149"></script>
-<script src="./castillo-equiv.js?v=149"></script>
-<script src="./castillo-data.js?v=149"></script>
+<script src="./castillo-i18n.js?v=150"></script>
+<script src="./castillo-transform.js?v=150"></script>
+<script src="./castillo-equiv.js?v=150"></script>
+<script src="./castillo-data.js?v=150"></script>
 <script src="./support.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -698,6 +698,11 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <div onClick="{{ logout }}" style="display:flex;align-items:center;padding:14px 16px;cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
           <div style="flex:1;font-size:13.5px;font-weight:600;color:#ff453a">{{ L.cerrarSesion }}</div>
         </div>
+        <div style="height:.5px;background:rgba(var(--fgc,255,255,255),.08)"></div>
+        <div onClick="{{ abrirBorrar }}" style="display:flex;align-items:center;padding:14px 16px;cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
+          <div style="flex:1;font-size:13.5px;font-weight:500;color:rgba(var(--fgc,255,255,255),.55)">{{ L.borrarCuenta }}</div>
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5 7.5 6 4 9.5"></path></svg>
+        </div>
       </div>
     </div>
     </sc-if>
@@ -878,6 +883,26 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </div>
     <div onClick="{{ cancelExitWorkout }}" style="margin-top:9px;border:.5px solid rgba(var(--fgc,255,255,255),.18);border-radius:100px;padding:14px;text-align:center;font-size:14px;font-weight:600;cursor:pointer" style-active="transform:scale(.97)">Seguir entrenando</div>
     <div onClick="{{ discardWorkout }}" style="margin-top:14px;text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.42);cursor:pointer" style-active="opacity:.6">Salir sin guardar</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ borrarOpen }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Borrar cuenta" style="position:absolute;inset:0;z-index:14;display:flex;align-items:flex-end;justify-content:center;padding:0 14px calc(22px + env(safe-area-inset-bottom))">
+  <div onClick="{{ cerrarBorrar }}" style="position:absolute;inset:0;background:rgba(0,0,0,.6);animation:cFade .3s both"></div>
+  <div style="position:relative;width:100%;max-width:460px;background:var(--s4,#141418);border:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:26px;padding:22px 20px 18px;animation:cRise .42s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <div style="font-family:'Instrument Serif',serif;font-size:23px;line-height:1.18;color:#ff453a">{{ L.borrarCuenta }}</div>
+    <div style="font-size:13px;line-height:1.55;color:rgba(var(--fgc,255,255,255),.6);margin-top:9px">{{ L.borrarAviso }}</div>
+    <ul style="margin:11px 0 0 16px;padding:0;font-size:12.5px;line-height:1.7;color:rgba(var(--fgc,255,255,255),.5)">
+      <li>{{ L.borrarP1 }}</li><li>{{ L.borrarP2 }}</li><li>{{ L.borrarP3 }}</li>
+    </ul>
+    <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.5);margin-top:15px">{{ L.borrarEscribe }}</div>
+    <input type="email" autocapitalize="none" autocorrect="off" spellcheck="false" value="{{ borrarTxt }}" onChange="{{ setBorrarTxt }}" placeholder="{{ borrarMail }}" style="width:100%;margin-top:7px;padding:13px 14px;border-radius:14px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.14);font-size:14px" />
+    <sc-if value="{{ borrarErr }}" hint-placeholder-val="{{ false }}">
+    <div style="font-size:12px;color:#ff453a;margin-top:8px">{{ borrarErr }}</div>
+    </sc-if>
+    <div onClick="{{ confirmarBorrar }}" style="margin-top:15px;background:{{ borrarBtnBg }};color:{{ borrarBtnFg }};border-radius:100px;padding:15px;text-align:center;font-size:14.5px;font-weight:700;cursor:{{ borrarBtnCur }}" style-active="transform:scale(.97)">{{ borrarBtnTxt }}</div>
+    <div onClick="{{ cerrarBorrar }}" style="margin-top:9px;border:.5px solid rgba(var(--fgc,255,255,255),.18);border-radius:100px;padding:14px;text-align:center;font-size:14px;font-weight:600;cursor:pointer" style-active="transform:scale(.97)">{{ L.cancelar }}</div>
   </div>
 </div>
 </sc-if>
@@ -1872,6 +1897,7 @@ class Component extends DCLogic {
     wOpen: false, wIn: false, exClosed: {},
     logs: {}, wLock: false, regMenuOpen: false, pad: null, padIn: false,
     rest: 0, restMax: 90,
+    borrarOpen: false, borrarTxt: '', borrarErr: '', borrando: false,
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: false, playEx: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
@@ -2118,7 +2144,24 @@ class Component extends DCLogic {
   };
   closeCheat = () => { this.setState({ cheatIn: false }); this.later(() => this.setState({ cheat: null }), 420); };
   // ---- RESUMEN MENSUAL (desglose por mes, cuadros pulsables) ----
-  setMes = dir => () => { const rm = (window.__DATA && window.__DATA.resumenMeses) || []; const n = Math.min(Math.max(0, (this.state.mesIdx || 0) + dir), Math.max(0, rm.length - 1)); this.setState({ mesIdx: n }); };
+  // Sin tope hacia atrás: si se pasa del último mes con datos, se sigue retrocediendo y el mes
+  // aparece a cero. Solo se frena hacia delante, que sería el futuro.
+  setMes = dir => () => { const n = Math.max(0, (this.state.mesIdx || 0) + dir); this.setState({ mesIdx: n }); };
+  // Devuelve el mes en la posición i; si no existe, uno vacío con su etiqueta correcta.
+  _mesEn = (i) => {
+    const rm = (window.__DATA && window.__DATA.resumenMeses) || [];
+    if (rm[i]) return rm[i];
+    const base = rm[0] ? rm[0].key : null;
+    const d = base ? new Date(+base.slice(0, 4), +base.slice(5, 7) - 1, 1) : new Date();
+    d.setMonth(d.getMonth() - i);
+    const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const lbl = MESES[d.getMonth()].charAt(0).toUpperCase() + MESES[d.getMonth()].slice(1) + ' ' + d.getFullYear();
+    const cero = { done: 0, total: 0, pct: 0 };
+    return { key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), label: lbl, cerrado: true, vacio: true,
+      entrenos: Object.assign({ sesiones: [] }, cero), cardio: Object.assign({ objetivo: 0, media: 0, totalPasos: 0, dias: [] }, cero),
+      nutricion: Object.assign({ dias: [], conteoGrupos: [] }, cero), metricas: Object.assign({ checkins: [] }, cero),
+      global: 0, peso: { ini: '—', fin: '—', delta: 0 }, fotos: 0, ejercicios: [], semanasLbl: [], kcalObjetivo: 0 };
+  };
   openMesDetail = which => () => { this.setState({ mesDetail: which, mesDetailIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ mesDetailIn: true }))); };
   closeMesDetail = () => { this.setState({ mesDetailIn: false }); this.later(() => this.setState({ mesDetail: null }), 420); };
   toggleResumen = () => this.setState({ resumenOpen: !this.state.resumenOpen });
@@ -2150,6 +2193,18 @@ class Component extends DCLogic {
         + '<tr>' + cabs.map((c, i) => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px' + (i ? ';text-align:right' : '') + '">' + c + '</td>').join('') + '</tr>'
         + arr.join('') + '</table>') : '';
       return '<div style="display:flex;gap:26px"><div style="flex:1">' + bloque(filas.slice(0, mitad)) + '</div><div style="flex:1">' + bloque(filas.slice(mitad)) + '</div></div>';
+    };
+    // Recuadro que compara lo que hace con lo que debería hacer, para que se vea de un vistazo.
+    const OBJETIVO = (etiqueta, media, objetivo, unidad) => {
+      const o = Number(objetivo) || 0, md = Number(media) || 0;
+      const p = o > 0 ? Math.round(md / o * 100) : 0;
+      const col = !o ? '#141414' : p >= 95 ? '#1e7e34' : p >= 80 ? '#b8860b' : '#c0392b';
+      return '<div style="display:flex;gap:14px;margin-top:16px;background:#faf9f6;border-radius:12px;padding:14px 16px">'
+        + '<div style="flex:1">' + ROT(en ? 'Daily average' : 'Media diaria') + '<div style="font-family:Georgia,serif;font-size:26px">' + miles(md) + ' <span style="font-size:13px;color:#6b6b6b">' + unidad + '</span></div></div>'
+        + '<div style="flex:1">' + ROT(en ? 'Goal' : 'Objetivo') + '<div style="font-family:Georgia,serif;font-size:26px">' + (o ? (miles(o) + ' <span style="font-size:13px;color:#6b6b6b">' + unidad + '</span>') : '<span style="font-size:15px;color:#9a9a9a">' + (en ? 'not set' : 'sin definir') + '</span>') + '</div></div>'
+        + '<div style="flex:1">' + ROT(etiqueta) + '<div style="font-family:Georgia,serif;font-size:26px;color:' + col + '">' + (o ? (p + '%') : '—') + '</div>'
+        + (o ? '<div style="font-size:11px;color:#6b6b6b;margin-top:2px">' + (md >= o ? (en ? 'goal reached' : 'objetivo cumplido') : (miles(o - md) + ' ' + unidad + ' ' + (en ? 'short per day' : 'al día por debajo'))) + '</div>' : '')
+        + '</div></div>';
     };
     const FILA = (izq, der, rojo) => '<tr><td style="padding:8px 0;border-top:1px solid #eee">' + izq + '</td>'
       + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right' + (rojo ? ';color:#c0392b' : '') + '">' + der + '</td></tr>';
@@ -2186,16 +2241,20 @@ class Component extends DCLogic {
       + (filasSes.length ? ROT(en ? 'Sessions this month' : 'Sesiones del mes') + DOSCOL(filasSes, [en ? 'Day' : 'Día', en ? 'Workout' : 'Entrenamiento'])
                         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No sessions planned this month.' : 'Este mes no había sesiones planificadas.') + '</div>');
 
-    // ── PÁGINA 3 · progreso por ejercicio ──
+    // ── PÁGINA 3 · progreso por ejercicio, semana a semana ──
     const ejs = (m.ejercicios || []);
+    const sl = (m.semanasLbl || []);
+    const colorDelta = e => e.delta > 0 ? '#1e7e34' : e.delta < 0 ? '#c0392b' : '#b8860b';   // amarillo = se mantuvo
     const p3 = CAB(2, en ? 'Progress by exercise' : 'Progreso por ejercicio')
-      + (ejs.length ? ROT(en ? 'Weight lifted, start vs end of month' : 'Peso levantado, inicio y final del mes')
-          + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
-          + '<tr>' + [en ? 'Exercise' : 'Ejercicio', en ? 'Start' : 'Inicio', en ? 'End' : 'Final', en ? 'Change' : 'Cambio'].map((c, i) => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px' + (i ? ';text-align:right' : '') + '">' + c + '</td>').join('') + '</tr>'
-          + ejs.map(e => '<tr><td style="padding:9px 0;border-top:1px solid #eee">' + esc(e.nombre) + '</td>'
-              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + e.ini + ' kg</td>'
-              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + e.fin + ' kg</td>'
-              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + (e.delta > 0 ? '#1e7e34' : e.delta < 0 ? '#c0392b' : '#6b6b6b') + '">' + (e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + ' kg</td></tr>').join('')
+      + '<div style="font-size:12.5px;margin-bottom:13px">' + (en ? 'Heaviest weight lifted each week. ' : 'Peso máximo levantado cada semana. ')
+      + '<span style="color:#6b6b6b">' + (en ? 'Green = went up · yellow = stayed the same · red = went down.' : 'Verde = subió · amarillo = se mantuvo · rojo = bajó.') + '</span></div>'
+      + (ejs.length ? '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+          + '<tr><td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px">' + (en ? 'Exercise' : 'Ejercicio') + '</td>'
+          + sl.map(l => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:56px">' + l + '</td>').join('')
+          + '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:66px">' + (en ? 'Change' : 'Cambio') + '</td></tr>'
+          + ejs.map(e => '<tr><td style="padding:8px 0;border-top:1px solid #eee">' + esc(e.nombre) + '</td>'
+              + (e.semanas || []).map(v => '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? (v + ' kg') : '—') + '</td>').join('')
+              + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + colorDelta(e) + '">' + (e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + ' kg</td></tr>').join('')
           + '</table>'
         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No weights logged this month.' : 'Este mes no se registraron pesos.') + '</div>');
 
@@ -2204,9 +2263,10 @@ class Component extends DCLogic {
     const filasCar = cd.map(d => FILA(esc(d.lbl), miles(d.pasos) + (m.cardio.objetivo && d.pasos < m.cardio.objetivo ? '' : ''), m.cardio.objetivo ? (d.pasos < m.cardio.objetivo) : false));
     const p4 = CAB(3, 'Cardio')
       + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.cardio.done + ' ' + (en ? 'of' : 'de') + ' ' + m.cardio.total + '</b> ' + (en ? 'days reached the goal of' : 'días con el objetivo de') + ' <b>' + miles(m.cardio.objetivo) + ' ' + T('pasos') + '</b> · <b>' + m.cardio.pct + '%</b>'
-      + '<br><span style="color:#6b6b6b">' + (en ? 'Daily average' : 'Media diaria') + ': <b>' + miles(m.cardio.media) + '</b> · ' + (en ? 'total' : 'total') + ': <b>' + miles(m.cardio.totalPasos) + '</b></span></div>'
+      + '<br><span style="color:#6b6b6b">' + (en ? 'Total steps this month' : 'Pasos totales del mes') + ': <b>' + miles(m.cardio.totalPasos) + '</b></span></div>'
       + (filasCar.length ? ROT(en ? 'Steps day by day' : 'Pasos día a día') + DOSCOL(filasCar, [en ? 'Day' : 'Día', T('pasos')])
-                         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No cardio planned this month.' : 'Este mes no había cardio planificado.') + '</div>');
+                         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No cardio planned this month.' : 'Este mes no había cardio planificado.') + '</div>')
+      + OBJETIVO(en ? 'Of the goal' : 'Del objetivo', m.cardio.media, m.cardio.objetivo, T('pasos'));
 
     // ── PÁGINA 5 · calorías por día ──
     const nd = (m.nutricion.dias || []).slice().reverse();
@@ -2215,7 +2275,8 @@ class Component extends DCLogic {
     const p5 = CAB(4, en ? 'Nutrition · calories per day' : 'Nutrición · calorías por día')
       + '<div style="font-size:12.5px;margin-bottom:14px">' + (en ? 'Calories logged each day. Average' : 'Calorías registradas cada día del mes. Media') + ': <b>' + miles(kcalMedia) + ' kcal/' + (en ? 'day' : 'día') + '</b>.</div>'
       + (filasKcal.length ? ROT(en ? 'Calories day by day' : 'Calorías día a día') + DOSCOL(filasKcal, [en ? 'Day' : 'Día', en ? 'Calories' : 'Calorías'])
-                          : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No meals logged this month.' : 'Este mes no se registró ninguna comida.') + '</div>');
+                          : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No meals logged this month.' : 'Este mes no se registró ninguna comida.') + '</div>')
+      + OBJETIVO(en ? 'Of the goal' : 'Del objetivo', kcalMedia, m.kcalObjetivo, 'kcal');
 
     // ── PÁGINA 6 · opciones elegidas y comidas libres ──
     const grupos = (m.nutricion.conteoGrupos || []);
@@ -2229,17 +2290,41 @@ class Component extends DCLogic {
               + '</table></div>').join('')
         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'Nothing logged this month.' : 'Este mes no se registró nada.') + '</div>');
 
-    // ── PÁGINA 7 · métricas ──
+    // ── PÁGINA 7 · métricas: TODAS las medidas de cada día, en tabla ──
     const cks = (m.metricas.checkins || []).slice().reverse();
+    const ETIQ = { 'peso-corporal': 'Peso', 'peso': 'Peso', 'cintura': 'Cintura', 'pecho': 'Pecho', 'cadera': 'Cadera',
+      'cuello': 'Cuello', 'hombros': 'Hombros', 'rollitos': 'Rollitos',
+      'b-ceps-derecho': 'Bíceps dcho', 'b-ceps-izquierdo': 'Bíceps izdo',
+      'muslo-derecho': 'Muslo dcho', 'muslo-izquierdo': 'Muslo izdo',
+      'gemelo-derecho': 'Gemelo dcho', 'gemelo-izquierdo': 'Gemelo izdo',
+      'antebrazo-derecho': 'Antebrazo dcho', 'antebrazo-izquierdo': 'Antebrazo izdo' };
+    const bonito = k => ETIQ[k] || String(k).replace(/-/g, ' ').replace(/^./, c => c.toUpperCase());
+    // filas = medidas, columnas = días medidos; el peso siempre primero
+    const claves = (() => {
+      const set = [];
+      cks.forEach(c => Object.keys(c.valores || {}).forEach(k => { if (set.indexOf(k) < 0) set.push(k); }));
+      return set.sort((a, b) => (/peso/.test(a) ? -1 : /peso/.test(b) ? 1 : 0));
+    })();
+    const unidad = k => /peso/.test(k) ? 'kg' : 'cm';
+    const cambio = (k) => {
+      const vals = cks.map(c => parseFloat(String((c.valores || {})[k] || '').replace(',', '.'))).filter(v => !isNaN(v));
+      if (vals.length < 2) return null;
+      return Math.round((vals[vals.length - 1] - vals[0]) * 10) / 10;
+    };
     const p7 = CAB(6, en ? 'Metrics' : 'Métricas')
       + '<div style="font-size:12.5px;margin-bottom:14px">' + T('Peso corporal') + ': <b>' + kg(m.peso.ini) + ' → ' + kg(m.peso.fin) + '</b> (' + (m.peso.delta > 0 ? '+' : '') + String(m.peso.delta).replace('.', ',') + ' kg ' + (en ? 'this month' : 'en el mes') + ').</div>'
-      + (cks.length ? ROT(en ? 'Weekly check-ins' : 'Check-ins del mes')
-          + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
-          + '<tr>' + [en ? 'Date' : 'Fecha', en ? 'Weight' : 'Peso', en ? 'Measurements' : 'Medidas'].map((c, i) => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px' + (i ? ';text-align:right' : '') + '">' + c + '</td>').join('') + '</tr>'
-          + cks.map(c => '<tr><td style="padding:9px 0;border-top:1px solid #eee">' + esc(c.lbl) + '</td>'
-              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right">' + (c.peso || '—') + '</td>'
-              + '<td style="padding:9px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + c.n + '</td></tr>').join('')
+      + (claves.length ? ROT(en ? 'All measurements, day by day' : 'Todas las medidas, día a día')
+          + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+          + '<tr><td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px">' + (en ? 'Measurement' : 'Medida') + '</td>'
+          + cks.map(c => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right">' + esc(c.lbl) + '</td>').join('')
+          + '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:64px">' + (en ? 'Change' : 'Cambio') + '</td></tr>'
+          + claves.map(k => { const d = cambio(k); const u = unidad(k);
+              return '<tr><td style="padding:8px 0;border-top:1px solid #eee">' + esc(bonito(k)) + ' <span style="color:#9a9a9a">(' + u + ')</span></td>'
+                + cks.map(c => { const v = (c.valores || {})[k]; return '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? esc(v) : '—') + '</td>'; }).join('')
+                + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + (d == null ? '#9a9a9a' : d > 0 ? '#1e7e34' : d < 0 ? '#c0392b' : '#b8860b') + '">'
+                + (d == null ? '—' : ((d > 0 ? '+' : '') + String(d).replace('.', ','))) + '</td></tr>'; }).join('')
           + '</table>'
+          + '<div style="font-size:10.5px;color:#9a9a9a;margin-top:9px">' + (en ? 'Change compares the first and last measurement of the month.' : 'El cambio compara la primera y la última medición del mes. En amarillo, lo que se mantuvo igual.') + '</div>'
         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No check-ins this month.' : 'Este mes no hubo check-ins.') + '</div>')
       + '<div style="height:1px;background:#e6e6e6;margin:26px 0 10px"></div>'
       + '<div style="font-size:10px;font-weight:600;letter-spacing:.24em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">· ' + (en ? 'Monthly summary' : 'Resumen mensual') + ' · ' + m.label + '</span></div>';
@@ -2300,8 +2385,7 @@ class Component extends DCLogic {
 
   _resumenPdfBlob = async () => {
     const rm = (window.__DATA && window.__DATA.resumenMeses) || [];
-    const mi = Math.min(Math.max(0, this.state.mesIdx || 0), Math.max(0, rm.length - 1));
-    const m = rm[mi]; if (!m) return null;
+    const m = this._mesEn(Math.max(0, this.state.mesIdx || 0)); if (!m) return null;
     if (!(await this._ensurePdfLibs())) return null;
     const built = this._resumenDocHtml(m);
     var old = document.getElementById('resumenGenFrame'); if (old) old.remove();
@@ -2328,7 +2412,7 @@ class Component extends DCLogic {
     return { blob: pdf.output('blob'), nombre: built.nombre };
   };
   // el resumen del mes solo se puede compartir/guardar/imprimir cuando el mes YA HA TERMINADO (no el mes en curso ni un alta reciente)
-  _mesResumenSel = () => { const rm = (window.__DATA && window.__DATA.resumenMeses) || []; const mi = Math.min(Math.max(0, this.state.mesIdx || 0), Math.max(0, rm.length - 1)); return rm[mi] || null; };
+  _mesResumenSel = () => this._mesEn(Math.max(0, this.state.mesIdx || 0));
   _bloqueaMesAbierto = () => false;   /* Alex 2026-08-20: se puede compartir el resumen en cualquier momento (va sumando) */
   resumenShare = async () => {
     if (this._bloqueaMesAbierto()) return;
@@ -2347,9 +2431,7 @@ class Component extends DCLogic {
   resumenPrint = async () => {
     if (this._bloqueaMesAbierto()) return;
     try {
-      const rm = (window.__DATA && window.__DATA.resumenMeses) || [];
-      const mi = Math.min(Math.max(0, this.state.mesIdx || 0), Math.max(0, rm.length - 1));
-      const m = rm[mi]; if (!m) { this.flash('Sin datos este mes'); return; }
+      const m = this._mesEn(Math.max(0, this.state.mesIdx || 0)); if (!m) { this.flash('Sin datos este mes'); return; }
       const built = this._resumenDocHtml(m);
       this._printDoc(built.doc, 'resumenPrintFrame');
     } catch (e) { this.flash('No se pudo imprimir el PDF'); }
@@ -2469,6 +2551,29 @@ class Component extends DCLogic {
   resetVar = id => () => {
     this.setState(s => { const sw = Object.assign({}, s.swaps); delete sw[id]; return { swaps: sw }; });
     this.later(this.closeSheet, 320);
+  };
+  // ─── BORRAR CUENTA ────────────────────────────────────────────────────────
+  // Obligatorio para la App Store. El borrado real lo hace la función 'borrar-cuenta' del servidor,
+  // que saca el email del propio JWT: desde aquí NO se manda a quién borrar, solo la confirmación.
+  abrirBorrar = () => this.setState({ borrarOpen: true, borrarTxt: '', borrarErr: '', borrando: false });
+  cerrarBorrar = () => { if (this.state.borrando) return; this.setState({ borrarOpen: false, borrarTxt: '', borrarErr: '' }); };
+  setBorrarTxt = e => this.setState({ borrarTxt: (e && e.target ? e.target.value : e) || '', borrarErr: '' });
+  confirmarBorrar = async () => {
+    if (this.state.borrando) return;
+    const mio = (window.CastilloData && window.CastilloData.miEmail && window.CastilloData.miEmail() || '').toLowerCase().trim();
+    const txt = String(this.state.borrarTxt || '').toLowerCase().trim();
+    if (!txt) { this.setState({ borrarErr: 'Escribe tu correo para confirmar.' }); return; }
+    if (txt !== mio) { this.setState({ borrarErr: 'El correo no coincide con el de tu cuenta.' }); return; }
+    this.setState({ borrando: true, borrarErr: '' });
+    try {
+      await window.CastilloData.borrarCuenta(txt);
+      try { window.CastilloData.logout(); } catch (e) {}
+      try { localStorage.clear(); } catch (e) {}
+      this.setState({ borrarOpen: false, borrando: false, stage: 'lock', tab: 'home', email: '', pass: '' });
+      this.flash('Tu cuenta se ha borrado. Gracias por estar con nosotros.');
+    } catch (e) {
+      this.setState({ borrando: false, borrarErr: (e && e.message) || 'No se pudo borrar la cuenta. Inténtalo de nuevo.' });
+    }
   };
   logout = () => { if (window.CastilloData) window.CastilloData.logout(); this.setState({ stage: 'lock', tab: 'home', email: '', pass: '' }); };
   flash = m => { this.setState({ toast: m }); this.later(() => this.setState({ toast: null }), 2600); };
@@ -2890,15 +2995,15 @@ class Component extends DCLogic {
     const planPct = planTasks.length ? Math.round(planTasks.filter(t => t.done).length / planTasks.length * 100) : 0;
     // ---- RESUMEN MENSUAL (desglose por mes, cuadros pulsables) ----
     const _rmeses = _dd.resumenMeses || [];
-    const _mi = Math.min(Math.max(0, st.mesIdx || 0), Math.max(0, _rmeses.length - 1));
-    const _rm = _rmeses[_mi] || null;
+    const _mi = Math.max(0, st.mesIdx || 0);
+    const _rm = this._mesEn(_mi);
     const _milesN = n => String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     const _rmPct = o => (o && o.total) ? (o.pct + '%') : '—';
     const _rmSub = o => o ? (o.done + ' / ' + o.total) : '';
     const resumenMes = _rm ? {
       hay: true, label: _rm.label, global: _rm.global + '%',
       prev: this.setMes(1), next: this.setMes(-1),
-      prevOp: _mi >= _rmeses.length - 1 ? '.2' : '.75', nextOp: _mi <= 0 ? '.2' : '.75',
+      prevOp: '.75', nextOp: _mi <= 0 ? '.2' : '.75',
       cards: [
         { n: T('Entrenos'), pct: _rmPct(_rm.entrenos), sub: _rmSub(_rm.entrenos), c: '#5B8CFF', open: this.openMesDetail('entrenos') },
         { n: T('Cardio'), pct: _rmPct(_rm.cardio), sub: _rmSub(_rm.cardio), c: '#FF6B5C', open: this.openMesDetail('cardio') },
@@ -3367,6 +3472,12 @@ class Component extends DCLogic {
         datosPersonales: T('Datos personales'), tocaCambiarFoto: T('Toca para cambiar la foto'), emailPassNota: T('Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.'), telefonoLbl: T('Teléfono'), emailLbl: T('Email'), passLbl: T('Contraseña'), cambiar: T('Cambiar'), cambiarPass: T('Cambiar contraseña'), nuevaPass: T('Nueva contraseña'), repitePass: T('Repite la contraseña'), guardar: T('Guardar'),
         comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'), recientes: T('Recientes'), resumenMes: T('Resumen del mes'), sinDatosMes: T('Sin datos este mes'), recuentoMes: T('Recuento del mes'), diaADia: T('Día a día'), mediaDiaria: T('Media diaria'),
         cuenta: T('Cuenta'), cerrarSesion: T('Cerrar sesión'), aplicacion: T('Aplicación'),
+        borrarCuenta: T('Borrar mi cuenta'), cancelar: T('Cancelar'),
+        borrarAviso: T('Esto borra tu cuenta y todo lo que has registrado. No se puede deshacer ni recuperar.'),
+        borrarP1: T('Tus entrenos, dietas, medidas y fotos de progreso'),
+        borrarP2: T('Tu acceso a la app: no podrás volver a entrar con este correo'),
+        borrarP3: T('Si vuelves algún día, tendrás que empezar de cero'),
+        borrarEscribe: T('Para confirmar, escribe tu correo:'),
         tocarFoto: T('Toque la imagen para añadir su fotografía'), verAnimacion: T('Ver animación de apertura'),
         checkinSemanal: T('Check-in semanal'), enviarCheckin: T('Enviar check-in'), listo: T('Listo'),
         acceder: T('Acceder'), accederFace: T('Acceder con Face ID'), saltar: T('Saltar'),
@@ -3526,6 +3637,12 @@ class Component extends DCLogic {
         { l: T('Correo'), v: (_hdr && _hdr.email) || '' }
       ],
       logout: this.logout,
+      abrirBorrar: this.abrirBorrar, cerrarBorrar: this.cerrarBorrar, confirmarBorrar: this.confirmarBorrar,
+      setBorrarTxt: this.setBorrarTxt, borrarOpen: !!st.borrarOpen, borrarTxt: st.borrarTxt || '', borrarErr: st.borrarErr || '',
+      borrarMail: (window.CastilloData && window.CastilloData.miEmail && window.CastilloData.miEmail()) || 'tu@correo.com',
+      borrarBtnTxt: st.borrando ? T('Borrando…') : T('Borrar mi cuenta para siempre'),
+      borrarBtnBg: st.borrando ? 'rgba(255,69,58,.35)' : '#ff453a',
+      borrarBtnFg: '#fff', borrarBtnCur: st.borrando ? 'default' : 'pointer',
       ckTitle: ckPhotoCount + ckFilled === 0 ? 'Pendiente de enviar' : 'En curso · ' + ckPhotoCount + '/3 fotos, ' + ckFilled + '/14 métricas',
 
       wMounted: st.wOpen, wTransform: st.wIn ? 'none' : 'translateY(100%)',

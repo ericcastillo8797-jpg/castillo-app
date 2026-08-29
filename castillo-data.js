@@ -409,6 +409,18 @@
     desregistrarComida: desregistrarComida,
     guardarPerfil: guardarPerfil,
     cambiarPassword: cambiarPassword,
+    // Borrado de cuenta (obligatorio para la App Store). El email NO se manda: lo saca la función
+    // del propio JWT. Aquí solo viaja lo que el cliente ha escrito para confirmar.
+    borrarCuenta: function (confirmacion) {
+      if (!_ctx.token) return Promise.reject(new Error('Sin sesión'));
+      return fetch(SUPA + '/functions/v1/borrar-cuenta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + _ctx.token },
+        body: JSON.stringify({ confirmacion: confirmacion || '' })
+      }).then(function (r) { return r.json().catch(function () { return { ok: false, error: 'Respuesta no válida' }; }); })
+        .then(function (j) { if (!j || !j.ok) throw new Error((j && j.error) || 'No se pudo borrar la cuenta'); return j; });
+    },
+    miEmail: function () { return _ctx.email || ''; },
     buscarAlimentos: buscarAlimentos,
     alimentosRecientes: alimentosRecientes,
     guardarComidaLibre: guardarComidaLibre,
