@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=171"></script>
-<script src="./castillo-transform.js?v=171"></script>
-<script src="./castillo-equiv.js?v=171"></script>
-<script src="./castillo-data.js?v=171"></script>
+<script src="./castillo-i18n.js?v=172"></script>
+<script src="./castillo-transform.js?v=172"></script>
+<script src="./castillo-equiv.js?v=172"></script>
+<script src="./castillo-data.js?v=172"></script>
 <script src="./support.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
@@ -23,7 +23,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 171;
+  var VERSION_ACTUAL = 172;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -1953,14 +1953,26 @@ const EMBED = y => 'https://www.youtube-nocookie.com/embed/' + y
   + '&cc_load_policy=0&enablejsapi=1&origin=' + encodeURIComponent(location.origin);
 // Reproductor: se engancha a cada marco por su id. Sirve para pausar y REANUDAR donde se dejó,
 // y para saber cuándo arranca de verdad y retirar la tapa en ese instante (no por tiempo).
-const YTP = { players: {}, listos: {} };
+const YTP = { players: {}, apiLista: false, pendientes: {} };
+// La librería de YouTube tarda en cargar. Si se intenta enganchar antes de que esté, no pasa nada
+// y el vídeo se queda tapado para siempre: por eso se guarda lo pendiente y se reintenta.
+window.onYouTubeIframeAPIReady = function () {
+  YTP.apiLista = true;
+  Object.keys(YTP.pendientes).forEach(function (id) { ytEngancha(id, YTP.pendientes[id]); });
+};
 function ytEngancha(id, alEstado) {
-  if (!window.YT || !window.YT.Player || YTP.players[id]) return;
+  if (YTP.players[id]) return;
+  YTP.pendientes[id] = alEstado;
+  if (!window.YT || !window.YT.Player) return;          // aún no ha cargado: quedará pendiente
   var el = document.getElementById(id); if (!el) return;
   try {
     YTP.players[id] = new window.YT.Player(id, {
       events: {
-        onReady: function (ev) { try { ev.target.unloadModule('captions'); ev.target.unloadModule('cc'); } catch (e) {} },
+        onReady: function (ev) {
+          try { ev.target.unloadModule('captions'); ev.target.unloadModule('cc'); } catch (e) {}
+          try { ev.target.playVideo(); } catch (e) {}
+          if (alEstado) alEstado(1);                     // por si el evento de arranque no llega
+        },
         onStateChange: function (ev) { if (alEstado) alEstado(ev.data); }
       }
     });
@@ -2108,15 +2120,24 @@ class Component extends DCLogic {
     const ids = [];
     if (this.state.playEx) ids.push('ytx-' + this.state.playEx);
     if (this.state.sheet && this.state.sheet.k === 'vid') ids.push('ytx-sheet');
-    ids.forEach(id => ytEngancha(id, (estado) => {
-      // 1 = reproduciendo → ya se puede retirar la tapa que oculta el logo de YouTube
-      if (estado === 1) this.setState(st => (st.vidListo === id ? null : { vidListo: id, vidPause: false }));
-      if (estado === 2) this.setState({ vidPause: true });
-    }));
+    ids.forEach(id => {
+      ytEngancha(id, (estado) => {
+        // 1 = reproduciendo → ya se puede retirar la tapa que oculta el logo de YouTube
+        if (estado === 1) this.setState(st => (st.vidListo === id ? null : { vidListo: id, vidPause: false }));
+        if (estado === 2) this.setState(st => (st.vidPause ? null : { vidPause: true }));
+      });
+      // Seguro: si el reproductor no contesta en 3 segundos, se destapa igual. Antes de esto,
+      // si la librería fallaba el cliente se quedaba oyendo el audio y viendo solo la miniatura.
+      if (!this._tapaTO) this._tapaTO = {};
+      if (!this._tapaTO[id]) this._tapaTO[id] = setTimeout(() => {
+        this.setState(st => (st.vidListo === id ? null : { vidListo: id }));
+      }, 3000);
+    });
     Object.keys(YTP.players).forEach(id => {
       if (ids.indexOf(id) >= 0) return;
       try { YTP.players[id].destroy(); } catch (e) {}
-      delete YTP.players[id];
+      delete YTP.players[id]; delete YTP.pendientes[id];
+      if (this._tapaTO && this._tapaTO[id]) { clearTimeout(this._tapaTO[id]); delete this._tapaTO[id]; }
       if (this.state.vidListo === id) this.setState({ vidListo: null });
     });
   };
@@ -2124,8 +2145,12 @@ class Component extends DCLogic {
   toggleVideo = (id) => () => {
     const pausar = !this.state.vidPause;
     const ok = ytAccion(id, pausar ? 'pauseVideo' : 'playVideo');
-    if (ok) this.setState({ vidPause: pausar });
-    else if (pausar) this.setState({ playEx: null });   // si el reproductor no responde, se cierra
+    if (ok) { this.setState({ vidPause: pausar }); return; }
+    // El reproductor aún no responde: se reintenta un instante después en vez de cerrar el vídeo
+    // (cerrarlo era lo que hacía que al volver empezara desde el principio).
+    setTimeout(() => {
+      if (ytAccion(id, pausar ? 'pauseVideo' : 'playVideo')) this.setState({ vidPause: pausar });
+    }, 350);
   };
   componentDidMount() {
     // Vuelta del login de WHOOP (la Edge Function redirige con ?whoop=ok/err)
