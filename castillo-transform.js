@@ -616,7 +616,14 @@
     // ---------- RESUMEN MENSUAL (desglose por mes: cumplimiento + detalle) ----------
     function _mkey(dt) { return dt.getFullYear() + '-' + d2(dt.getMonth() + 1); }
     var _pasosObj = 0;
-    events.forEach(function (e) { if (!_pasosObj && e.type === 'cardio' && e.config && e.config.pasos) _pasosObj = parseInt(String(e.config.pasos).replace(/[^0-9]/g, ''), 10) || 0; });
+    events.forEach(function (e) {
+      if (_pasosObj || e.type !== 'cardio') return;
+      if (e.config && e.config.pasos) { _pasosObj = parseInt(String(e.config.pasos).replace(/[^0-9]/g, ''), 10) || 0; return; }
+      // los planes importados de Harbiz traen el objetivo como texto ("10k steps/day")
+      var t = String(e.cardioText || '').toLowerCase();
+      var m = t.match(/([\d.,]+)\s*k\b/) || t.match(/([\d.,]+)/);
+      if (m) { var n = parseFloat(m[1].replace(',', '.')); if (/k\b/.test(t) && n < 1000) n *= 1000; _pasosObj = Math.round(n) || 0; }
+    });
     var _monSet = {};
     function _addMon(dt) { if (dt && !isNaN(dt)) _monSet[_mkey(dt)] = 1; }
     events.forEach(function (e) { if (!e.removed) _addMon(new Date(ms(e.date))); });
@@ -625,7 +632,25 @@
     chkList.forEach(function (c) { var f = (c.fecha || '').slice(0, 7); if (f) _monSet[f] = 1; });
     // Nota: NO se añade el mes actual "por defecto"; el Resumen del mes solo existe si hay actividad real ese mes
     // (así un cliente nuevo no ve un resumen vacío en cero — ni puede compartirlo).
-    var _monKeys = Object.keys(_monSet).filter(function (k) { return /^\d{4}-\d{2}$/.test(k); }).sort().reverse().slice(0, 12);
+    // Meses del resumen: una lista CONTINUA desde el mes más antiguo con algo hasta el actual.
+    // Antes solo salían los meses con datos y se cortaba a 12, así que el cliente no podía ir
+    // hacia atrás. Ahora puede llegar a cualquier mes suyo, aunque salga todo a cero.
+    var _monKeys = (function () {
+      var ks = Object.keys(_monSet).filter(function (k) { return /^\d{4}-\d{2}$/.test(k); }).sort();
+      var hoyK = _mkey(now);
+      var desde = ks.length ? ks[0] : hoyK;
+      // como mínimo, dos años hacia atrás: así nunca se queda bloqueado nada más entrar
+      var minK = (now.getFullYear() - 2) + '-' + d2(now.getMonth() + 1);
+      if (minK < desde) desde = minK;
+      var out = [], y = +desde.slice(0, 4), mo = +desde.slice(5, 7) - 1, guard = 0;
+      while (guard++ < 400) {
+        var k = y + '-' + d2(mo + 1);
+        out.push(k);
+        if (k === hoyK) break;
+        mo++; if (mo > 11) { mo = 0; y++; }
+      }
+      return out.reverse();
+    })();
     var resumenMeses = _monKeys.map(function (mk) {
       var yr = +mk.slice(0, 4), mo = +mk.slice(5, 7) - 1;
       var daysInMonth = new Date(yr, mo + 1, 0).getDate();
