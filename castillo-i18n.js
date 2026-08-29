@@ -6,6 +6,57 @@
 
   // ---- Alimentos (clave = nombre original en minúsculas) ----
   var FOOD = {
+    // Alimentos escritos en inglés en las dietas: les faltaba el español (29 ago 2026).
+    'natural yogurt': { es: 'Yogur natural', en: 'Natural Yogurt' },
+    'almond milk': { es: 'Bebida de almendras', en: 'Almond Milk' },
+    'artichoke, canned': { es: 'Alcachofa en conserva', en: 'Artichoke, canned' },
+    'artichokes (globe or french) (without salt, drained, cooked, boiled)': { es: 'Alcachofas (sin sal, escurridas, cocidas, hervidas)', en: 'Artichokes (Globe or French) (Without Salt, Drained, Cooked, Boiled)' },
+    'baby food garden vegetables mixed vegetables': { es: 'Potito de verduras variadas', en: 'Baby Food Garden Vegetables Mixed Vegetables' },
+    'beef': { es: 'Ternera', en: 'Beef' },
+    'beef burger patty': { es: 'Hamburguesa de ternera', en: 'Beef Burger Patty' },
+    'broccoli, raw': { es: 'Brócoli, crudo', en: 'Broccoli, raw' },
+    'burger sauce': { es: 'Salsa para hamburguesa', en: 'Burger Sauce' },
+    'carrot, raw': { es: 'Zanahoria, cruda', en: 'Carrot, raw' },
+    'cheese sauce': { es: 'Salsa de queso', en: 'Cheese Sauce' },
+    'cherry tomato': { es: 'Tomate cherry', en: 'Cherry tomato' },
+    'chia seeds': { es: 'Semillas de chía', en: 'Chia Seeds' },
+    'cocoa powder': { es: 'Cacao en polvo', en: 'Cocoa Powder' },
+    'cooked dry chickpeas': { es: 'Garbanzos secos cocidos', en: 'Cooked Dry Chickpeas' },
+    'cooked green beans and potatoes': { es: 'Judías verdes con patata', en: 'Cooked Green Beans and Potatoes' },
+    'cooked green peppers': { es: 'Pimientos verdes cocidos', en: 'Cooked Green Peppers' },
+    'cooked ham': { es: 'Jamón cocido', en: 'Cooked ham' },
+    'cooked lentils (fat not added in cooking)': { es: 'Lentejas cocidas (sin grasa añadida)', en: 'Cooked Lentils (Fat Not Added in Cooking)' },
+    'cooked vegetables': { es: 'Verduras cocidas', en: 'Cooked Vegetables' },
+    'defatted peanut butter powder': { es: 'Crema de cacahuete desgrasada en polvo', en: 'Defatted Peanut Butter Powder' },
+    'egg (whole)': { es: 'Huevo (entero)', en: 'Egg (Whole)' },
+    'extra virgin olive oil, organic': { es: 'Aceite de oliva virgen extra ecológico', en: 'Extra virgin olive oil, organic' },
+    'french beans (mature seeds)': { es: 'Judías blancas (secas)', en: 'French Beans (Mature Seeds)' },
+    'green string beans': { es: 'Judías verdes', en: 'Green String Beans' },
+    'ground beef': { es: 'Carne picada de ternera', en: 'Ground Beef' },
+    'ground chicken': { es: 'Carne picada de pollo', en: 'Ground Chicken' },
+    'hake, raw': { es: 'Merluza, cruda', en: 'Hake, raw' },
+    'lean ground beef': { es: 'Carne picada de ternera magra', en: 'Lean Ground Beef' },
+    'milk (nonfat)': { es: 'Leche desnatada', en: 'Milk (Nonfat)' },
+    'mixed vegetables': { es: 'Verduras variadas', en: 'Mixed Vegetables' },
+    'parmesan cheese': { es: 'Queso parmesano', en: 'Parmesan cheese' },
+    'pasta, raw': { es: 'Pasta, cruda', en: 'Pasta, raw' },
+    'powdered peanut butter': { es: 'Crema de cacahuete en polvo', en: 'Powdered Peanut Butter' },
+    'raw vegetable': { es: 'Verdura cruda', en: 'Raw Vegetable' },
+    'red pepper, raw': { es: 'Pimiento rojo, crudo', en: 'Red pepper, raw' },
+    'rice flour': { es: 'Harina de arroz', en: 'Rice Flour' },
+    'toasted bread': { es: 'Pan tostado', en: 'Toasted Bread' },
+    'tuna in water (canned)': { es: 'Atún al natural (lata)', en: 'Tuna in Water (Canned)' },
+    'turkey': { es: 'Pavo', en: 'Turkey' },
+    'turkey breast fillets': { es: 'Filetes de pechuga de pavo', en: 'Turkey breast fillets' },
+    'turkey ham': { es: 'Fiambre de pavo', en: 'Turkey Ham' },
+    'turkey, whole, raw': { es: 'pavo, entero, crudo', en: 'turkey, whole, raw' },
+    'vanilla, lemon or coffee flavor yogurt': { es: 'Yogur sabor vainilla, limón o café', en: 'Vanilla, Lemon or Coffee Flavor Yogurt' },
+    'wheat bread': { es: 'Pan de trigo', en: 'Wheat bread' },
+    'whey protein yogurt': { es: 'Yogur con proteína de suero', en: 'Whey Protein Yogurt' },
+    'white bean': { es: 'Judía blanca', en: 'White bean' },
+    'white beans (mature seeds)': { es: 'Judías blancas (secas)', en: 'White Beans (Mature Seeds)' },
+    'white rice (long-grain)': { es: 'Arroz blanco (grano largo)', en: 'White Rice (Long-Grain)' },
+    'white sucker (fish)': { es: 'Matalote (pescado)', en: 'White Sucker (Fish)' },
     // Alimentos de las dietas de Alex que salían sin traducir (revisado contra nutrition_plans, 29 ago 2026).
     '70% chocolate negro - valor': { es: '70% Chocolate Negro - Valor', en: '70% Dark Chocolate - Valor' },
     '70% dark chocolate - valor': { es: '70% Chocolate Negro - Valor', en: '70% Dark Chocolate - Valor' },
@@ -746,7 +797,14 @@
     food: function (name, lang) {
       if (!name) return name;
       var e = FOOD[nk(name)];
-      return e ? (e[lang] || e.es || name) : name;
+      if (e) return e[lang] || e.es || name;
+      // "Yogur Griego - Hacendado": la marca va detrás del guion y NO se traduce; traducimos el alimento.
+      var i = String(name).lastIndexOf(' - ');
+      if (i > 0) {
+        var b = FOOD[nk(String(name).slice(0, i))];
+        if (b) return (b[lang] || b.es || String(name).slice(0, i)) + String(name).slice(i);
+      }
+      return name;
     },
     meal: function (name, lang) {
       if (!name) return name;
