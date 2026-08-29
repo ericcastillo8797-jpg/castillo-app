@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=174"></script>
-<script src="./castillo-transform.js?v=174"></script>
-<script src="./castillo-equiv.js?v=174"></script>
-<script src="./castillo-data.js?v=174"></script>
+<script src="./castillo-i18n.js?v=175"></script>
+<script src="./castillo-transform.js?v=175"></script>
+<script src="./castillo-equiv.js?v=175"></script>
+<script src="./castillo-data.js?v=175"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 174;
+  var VERSION_ACTUAL = 175;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -403,6 +403,46 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <div style="flex:1;font-size:14.5px;font-weight:500">{{ L.registrarFotos }}</div>
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".3" stroke-width="1.7" stroke-linecap="round"><path d="M4 2.5 7.5 6 4 9.5"></path></svg>
       </div>
+    </div>
+    </sc-if>
+
+    <!-- WHOOP: solo aparece si el cliente lo tiene conectado -->
+    <sc-if value="{{ whoop.hay }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:18px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:15px 16px 14px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+        <img src="logos-app/whoop.png" alt="" style="height:15px;width:auto;opacity:.85" onerror="this.style.display='none'" />
+        <div style="flex:1;font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">WHOOP</div>
+        <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3)">{{ whoop.cuando }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 13px">
+          <div style="font-size:9.5px;color:rgba(var(--fgc,255,255,255),.4);text-transform:uppercase;letter-spacing:.06em">{{ L.recuperacion }}</div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-top:3px"><span style="font-family:'Instrument Serif',serif;font-size:27px;color:{{ whoop.recColor }}">{{ whoop.rec }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.4)">%</span></div>
+        </div>
+        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 13px">
+          <div style="font-size:9.5px;color:rgba(var(--fgc,255,255,255),.4);text-transform:uppercase;letter-spacing:.06em">{{ L.sueno }}</div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-top:3px"><span style="font-family:'Instrument Serif',serif;font-size:27px">{{ whoop.sueno }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.4)">h · {{ whoop.suenoPct }}%</span></div>
+        </div>
+        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 13px">
+          <div style="font-size:9.5px;color:rgba(var(--fgc,255,255,255),.4);text-transform:uppercase;letter-spacing:.06em">{{ L.esfuerzo }}</div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-top:3px"><span style="font-family:'Instrument Serif',serif;font-size:27px">{{ whoop.esfuerzo }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.4)">/ 21</span></div>
+        </div>
+        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 13px">
+          <div style="font-size:9.5px;color:rgba(var(--fgc,255,255,255),.4);text-transform:uppercase;letter-spacing:.06em">{{ L.pulsoReposo }}</div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-top:3px"><span style="font-family:'Instrument Serif',serif;font-size:27px">{{ whoop.ppm }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.4)">ppm</span></div>
+        </div>
+      </div>
+      <sc-if value="{{ whoop.hayEntrenos }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.3);margin:14px 2px 7px">{{ L.ultimosEntrenos }}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ whoop.entrenos }}" as="w" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--s2,#17171B);border-radius:11px;padding:10px 12px">
+          <div style="font-size:12.5px;font-family:var(--font-mono,monospace)">{{ w.fecha }}</div>
+          <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.5)">{{ w.detalle }}</div>
+        </div>
+        </sc-for>
+      </div>
+      </sc-if>
     </div>
     </sc-if>
 
@@ -2011,7 +2051,7 @@ class Component extends DCLogic {
     logs: {}, wLock: false, regMenuOpen: false, pad: null, padIn: false,
     rest: 0, restMax: 90,
     borrarOpen: false, borrarTxt: '', borrarErr: '', borrando: false,
-    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, dietMealIdx: 0,
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, whoop: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
@@ -2155,6 +2195,10 @@ class Component extends DCLogic {
     // Antes había 900 ms de espera decorativa aquí. Los datos ya están cargados en este punto,
     // así que se entra en el siguiente frame: se nota mucho más rápido y no se pierde nada.
     requestAnimationFrame(() => { this.setState({ stage: 'app', tab: 'home' }); this.playHome(); });
+    // WHOOP: si el cliente lo tiene conectado, se bajan sus datos en segundo plano
+    try { const cd = window.CastilloData;
+      if (cd && cd.whoopDatos) cd.whoopDatos().then(w => { if (w && w.ok && w.conectado) this.setState({ whoop: w }); }, () => {});
+    } catch (e) {}
   };
   // Alta de cliente nuevo: abre el formulario dentro de la app (misma webview). Al terminar vuelve ya logueado.
   goAlta = () => { try { window.location.href = 'alta.html?v=' + Date.now(); } catch (e) {} };   // rompe-cachés: carga SIEMPRE la última versión del formulario
@@ -3681,6 +3725,7 @@ class Component extends DCLogic {
         series: T('Series'), repeticiones: T('Repeticiones'), peso: T('Peso'),
         apariencia: T('Apariencia'), idioma: T('Idioma'), espanol: T('Español'), ingles: T('Inglés'),
         datosPersonales: T('Datos personales'), tocaCambiarFoto: T('Toca para cambiar la foto'), emailPassNota: T('Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.'), telefonoLbl: T('Teléfono'), emailLbl: T('Email'), passLbl: T('Contraseña'), cambiar: T('Cambiar'), cambiarPass: T('Cambiar contraseña'), nuevaPass: T('Nueva contraseña'), repitePass: T('Repite la contraseña'), guardar: T('Guardar'),
+        recuperacion: T('Recuperación'), sueno: T('Sueño'), esfuerzo: T('Esfuerzo'), pulsoReposo: T('Pulso en reposo'), ultimosEntrenos: T('Últimos entrenos'),
         resumen: T('Resumen'), perMes: T('Mes'), perTri: T('Trimestre'), perSem: T('Semestre'), perAnio: T('Año'),
         comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'), recientes: T('Recientes'), favoritos: T('Favoritos'), resumenMes: T('Resumen del mes'), sinDatosMes: T('Sin datos este mes'), recuentoMes: T('Recuento del mes'), diaADia: T('Día a día'), mediaDiaria: T('Media diaria'),
         cuenta: T('Cuenta'), cerrarSesion: T('Cerrar sesión'), aplicacion: T('Aplicación'),
@@ -3770,6 +3815,26 @@ class Component extends DCLogic {
       vidCats, vidList,
       toggleRegMenu: this.toggleRegMenu, regMedidas: this.regMedidas, regFotos: this.regFotos,
       regMenuOpen: !!st.regMenuOpen, regMenuRot: st.regMenuOpen ? 'rotate(45deg)' : 'none',
+      whoop: (() => {
+        const w = st.whoop;
+        if (!w || !w.conectado) return { hay: false };
+        const rec = w.recuperacion;
+        return { hay: true,
+          rec: rec == null ? '—' : rec,
+          recColor: rec == null ? 'var(--fg,#fff)' : (rec >= 67 ? '#7fd6a3' : rec >= 34 ? '#f5c518' : '#ff6b5e'),
+          sueno: w.sueno == null ? '—' : String(w.sueno).replace('.', ','),
+          suenoPct: w.suenoPct == null ? '—' : w.suenoPct,
+          esfuerzo: w.esfuerzo == null ? '—' : String(w.esfuerzo).replace('.', ','),
+          ppm: w.pulsaciones == null ? '—' : w.pulsaciones,
+          cuando: T('últimos 7 días'),
+          hayEntrenos: (w.entrenos || []).length > 0,
+          entrenos: (w.entrenos || []).map(x => ({
+            fecha: (x.fecha || '').slice(8, 10) + '-' + (x.fecha || '').slice(5, 7),
+            detalle: [x.esfuerzo != null ? (T('esfuerzo') + ' ' + String(x.esfuerzo).replace('.', ',')) : null,
+                      x.calorias != null ? (x.calorias + ' kcal') : null,
+                      x.pulsoMedio != null ? (x.pulsoMedio + ' ppm') : null].filter(Boolean).join(' · ')
+          })) };
+      })(),
       evoTabs, evoMetrics: st.evoTab === 'comp', evoPhotos: st.evoTab === 'comp', evoEjercicio: st.evoTab === 'ejercicio',
       evoCompOpen: st.evoCompOpen, evoCompChevron: st.evoCompOpen ? 'rotate(180deg)' : 'rotate(0deg)', toggleEvoComp: () => this.setState({ evoCompOpen: !st.evoCompOpen }),
       evoCompHint: st.evoCompOpen ? T('Toca para ocultar') : T('Toca para ver todas tus medidas'),

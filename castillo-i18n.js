@@ -225,6 +225,8 @@
     'Frontal, lateral y espalda': 'Front, side and back',
     'Buscar alimento…': 'Search food…', 'Buscar por nombre…': 'Search by name…',
     'Revisado por su equipo antes de la sesión del viernes.': 'Reviewed by your coach before Friday\'s session.',
+    'Recuperación': 'Recovery', 'Sueño': 'Sleep', 'Esfuerzo': 'Strain', 'Pulso en reposo': 'Resting HR',
+    'Últimos entrenos': 'Latest workouts', 'últimos 7 días': 'last 7 days', 'esfuerzo': 'strain',
     'Cerrar': 'Close', 'Resumen': 'Summary', 'Mes': 'Month', 'Trimestre': 'Quarter', 'Semestre': 'Half-year', 'Año': 'Year',
     'Resumen del trimestre': 'Quarterly summary', 'Resumen del semestre': 'Half-year summary', 'Resumen del año': 'Yearly summary',
     'Favoritos': 'Favourites',

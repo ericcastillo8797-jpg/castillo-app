@@ -448,6 +448,14 @@
     saludConectado: saludConectado,
     desconectarSalud: desconectarSalud,
     appConectado: appConectado,
+    // Datos reales de WHOOP (recuperación, sueño, esfuerzo y entrenos). El servidor renueva
+    // el permiso solo, así que desde aquí no hay que gestionar nada.
+    whoopDatos: function () {
+      if (!_ctx.token) return Promise.resolve(null);
+      return fetch(SUPA + '/functions/v1/whoop-datos', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + _ctx.token }, body: '{}'
+      }).then(function (r) { return r.json(); }).catch(function () { return null; });
+    },
     conectarApp: conectarApp,
     desconectarApp: desconectarApp,
     conectarWhoop: conectarWhoop,
