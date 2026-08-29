@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=179"></script>
-<script src="./castillo-transform.js?v=179"></script>
-<script src="./castillo-equiv.js?v=179"></script>
-<script src="./castillo-data.js?v=179"></script>
+<script src="./castillo-i18n.js?v=180"></script>
+<script src="./castillo-transform.js?v=180"></script>
+<script src="./castillo-equiv.js?v=180"></script>
+<script src="./castillo-data.js?v=180"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 179;
+  var VERSION_ACTUAL = 180;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -409,7 +409,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </sc-if>
 
     <!-- WHOOP: solo aparece si el cliente lo tiene conectado -->
-    <sc-if value="{{ whoop.hay }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ whoop.visible }}" hint-placeholder-val="{{ false }}">
     <div style="margin-top:18px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:15px 16px 14px">
       <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
         <img src="logos-app/whoop.png" alt="" style="height:15px;width:auto;opacity:.85" onerror="this.style.display='none'" />
@@ -3887,9 +3887,12 @@ class Component extends DCLogic {
       regMenuOpen: !!st.regMenuOpen, regMenuRot: st.regMenuOpen ? 'rotate(45deg)' : 'none',
       whoop: (() => {
         const w = st.whoop;
-        if (!w || !w.conectado) return { hay: false };
+        // OCULTA a propósito (Alex, 29 ago): ocupaba demasiado en Progreso. Se decidirá dónde ponerla.
+        // Para volver a mostrarla: cambiar MOSTRAR_WHOOP a true.
+        const MOSTRAR_WHOOP = false;
+        if (!w || !w.conectado || !MOSTRAR_WHOOP) return { hay: false, visible: false };
         const rec = w.recuperacion;
-        return { hay: true,
+        return { hay: true, visible: true,
           rec: rec == null ? '—' : rec,
           recColor: rec == null ? 'var(--fg,#fff)' : (rec >= 67 ? '#7fd6a3' : rec >= 34 ? '#f5c518' : '#ff6b5e'),
           sueno: w.sueno == null ? '—' : String(w.sueno).replace('.', ','),
