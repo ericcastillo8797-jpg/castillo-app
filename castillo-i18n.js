@@ -709,6 +709,11 @@
     Object.keys(WEEKD).forEach(function (k) { out = out.replace(new RegExp('\\b' + k + '\\b', 'gi'), WEEKD[k]); });
     Object.keys(WEEKD3).forEach(function (k) {
       out = out.replace(new RegExp('^' + k + '$', 'i'), function (m) { return /[A-ZÁÉÍÓÚ]{2,}/.test(m) ? WEEKD3[k] : (WEEKD3[k][0] + WEEKD3[k].slice(1).toLowerCase()); });
+      // "Lun 3 ago" → "Mon 3 Aug": la abreviatura del día también dentro de una fecha larga.
+      // Solo si va seguida de un número, para no pisar los meses ("mar" = martes vs marzo).
+      out = out.replace(new RegExp('\\b' + k + '\\b(?=\\s+\\d)', 'gi'), function (m) {
+        return /^[A-ZÁÉÍÓÚ]{2,}$/.test(m) ? WEEKD3[k] : (WEEKD3[k][0] + WEEKD3[k].slice(1).toLowerCase());
+      });
     });
     Object.keys(MONTHS).forEach(function (k) { out = out.replace(new RegExp('\\b' + k + '\\b', 'gi'), MONTHS[k]); });
     out = out.replace(/ de /g, ' ').replace(/\bSemana\b/g, 'Week').replace(/\bsemana\b/g, 'week').replace(/\bdel\b/g, '').replace(/\bal\b/g, 'to').replace(/\s{2,}/g, ' ').trim();
