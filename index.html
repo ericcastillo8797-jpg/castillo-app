@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=190"></script>
-<script src="./castillo-transform.js?v=190"></script>
-<script src="./castillo-equiv.js?v=190"></script>
-<script src="./castillo-data.js?v=190"></script>
+<script src="./castillo-i18n.js?v=191"></script>
+<script src="./castillo-transform.js?v=191"></script>
+<script src="./castillo-equiv.js?v=191"></script>
+<script src="./castillo-data.js?v=191"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 190;
+  var VERSION_ACTUAL = 191;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2351,7 +2351,10 @@ class Component extends DCLogic {
     const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
     const lbl = MESES[d.getMonth()].charAt(0).toUpperCase() + MESES[d.getMonth()].slice(1) + ' ' + d.getFullYear();
     const cero = { done: 0, total: 0, pct: 0 };
-    return { key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), label: lbl, cerrado: true, vacio: true,
+    const _k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    // aunque el mes no tenga entrenos ni comidas, puede tener datos de WHOOP: le damos su rango igual
+    const _ult = String(new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()).padStart(2, '0');
+    return { key: _k, desde: _k + '-01', hasta: _k + '-' + _ult, label: lbl, cerrado: true, vacio: true,
       entrenos: Object.assign({ sesiones: [] }, cero), cardio: Object.assign({ objetivo: 0, media: 0, totalPasos: 0, dias: [] }, cero),
       nutricion: Object.assign({ dias: [], conteoGrupos: [] }, cero), metricas: Object.assign({ checkins: [] }, cero),
       global: 0, peso: { ini: '—', fin: '—', delta: 0 }, fotos: 0, ejercicios: [], semanasLbl: [], kcalObjetivo: 0 };
