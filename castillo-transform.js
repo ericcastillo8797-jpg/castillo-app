@@ -720,7 +720,9 @@
       var _nutDaySet = {}, _hasNutEv = false;
       events.forEach(function (e) { if (e.removed) return; if (e.type !== 'nutritionPlan' && e.type !== 'nutrition') return; var ed = new Date(ms(e.date)); if (!isNaN(ed) && _mkey(ed) === mk) { _nutDaySet[ed.getDate()] = 1; _hasNutEv = true; } });
       var nutDoneMeals = 0, nutPlanMeals = 0;
-      if (DIET.length) {
+      var _mesConComidas = Object.keys(comByDate).some(function (k) { return k.slice(0, 7) === mk; });
+      var _mesCuenta = _hasNutEv || _mesConComidas;   // meses vacíos del pasado: fuera del cálculo
+      if (DIET.length && _mesCuenta) {
         DIET.forEach(function (m) { _cont[m.id] = {}; });
         for (var dn2 = 1; dn2 <= daysInMonth; dn2++) {   // TODO el mes (igual que entrenos/cardio), no solo hasta hoy
           var kn = dk(dn2), com = comByDate[kn] || {};
@@ -835,12 +837,12 @@
         var d2 = (m.cardio && m.cardio.dias) || [];
         var media = d2.length ? Math.round(((m.cardio && m.cardio.totalPasos) || 0) / d2.length) : 0;
         return { lbl: m.label.split(' ')[0], done: (m.cardio && m.cardio.pct) >= 50, pasos: media };
-      });
+      }).filter(function (x) { return x.pasos > 0; }).reverse();
       var nutDias = meses.map(function (m) {
-        var nd = (m.nutricion && m.nutricion.dias) || [];
+        var nd = ((m.nutricion && m.nutricion.dias) || []).filter(function (x) { return (x.kcal || 0) > 0; });
         var kc = nd.reduce(function (a, x) { return a + (x.kcal || 0); }, 0);
         return { lbl: m.label.split(' ')[0], kcal: nd.length ? Math.round(kc / nd.length) : 0, items: [] };
-      });
+      }).filter(function (x) { return x.kcal > 0; });   // meses sin comidas no salen en la tabla
 
       // opciones de comida: se suman las veces de todos los meses
       var gm = {};
@@ -854,26 +856,31 @@
         return { meal: k, opciones: Object.keys(gm[k]).map(function (l) { return { lbl: l, veces: gm[k][l] }; }).sort(function (a, b) { return b.veces - a.veces; }) };
       });
 
-      // ejercicios: una columna por MES del periodo, con el máximo de cada mes
+      // ejercicios: una columna por MES del periodo (o por TRIMESTRE si el periodo es largo),
+      // con el máximo levantado en cada bloque. Se recorre del más antiguo al más nuevo.
+      var cron = meses.slice().reverse();
+      var porBloque = cron.length > 6 ? 3 : 1;                    // más de 6 meses → columnas trimestrales
+      var nCols = Math.ceil(cron.length / porBloque);
       var porEj = {};
-      meses.forEach(function (m, idx) {
+      cron.forEach(function (m, i) {
+        var idx = Math.floor(i / porBloque);
         (m.ejercicios || []).forEach(function (e) {
           var r = porEj[e.nombre] || (porEj[e.nombre] = { nombre: e.nombre, y: e.y, cols: [] });
           if (!r.y && e.y) r.y = e.y;
           var top = null;
           (e.semanas || []).forEach(function (v) { var n = parseFloat(String(v).replace(',', '.')); if (!isNaN(n) && (top == null || n > top)) top = n; });
-          r.cols[idx] = top;
+          if (top != null && (r.cols[idx] == null || top > r.cols[idx])) r.cols[idx] = top;
         });
       });
       var ejercicios = Object.keys(porEj).map(function (k) {
         var r = porEj[k];
         var vals = [];
-        for (var i = 0; i < meses.length; i++) vals.push(r.cols[i] == null ? '' : comma(r.cols[i]));
+        for (var i = 0; i < nCols; i++) vals.push(r.cols[i] == null ? '' : comma(r.cols[i]));
         var con = r.cols.filter(function (x) { return x != null; });
         var ini2 = con[0], fin2 = con[con.length - 1];
-        var delta = (con.length >= 1) ? Math.round((fin2 - ini2) * 10) / 10 : 0;
+        var delta = (con.length >= 2) ? Math.round((fin2 - ini2) * 10) / 10 : null;
         return { nombre: r.nombre, y: r.y, semanas: vals, ini: comma(ini2), fin: comma(fin2), delta: delta, subio: delta > 0, igual: delta === 0, sesiones: con.length };
-      }).filter(function (e) { return e.sesiones; }).sort(function (a, b) { return b.delta - a.delta; });
+      }).filter(function (e) { return e.sesiones; }).sort(function (a, b) { return (b.delta == null ? -1e9 : b.delta) - (a.delta == null ? -1e9 : a.delta); });
 
       var checkins = [];
       meses.forEach(function (m) { checkins = checkins.concat((m.metricas && m.metricas.checkins) || []); });
@@ -894,7 +901,15 @@
         global: gp.length ? Math.round(gp.reduce(function (a, b) { return a + b; }, 0) / gp.length) : 0,
         peso: { ini: pIni2, fin: pFin2, delta: pD },
         fotos: meses.reduce(function (a, m) { return a + (m.fotos || 0); }, 0),
-        ejercicios: ejercicios, semanasLbl: meses.slice().reverse().map(function (m) { return m.label.split(' ')[0].slice(0, 3); }),
+        ejercicios: ejercicios, semanasLbl: (function () {
+          var out = [];
+          for (var i = 0; i < cron.length; i += porBloque) {
+            var a = cron[i], b = cron[Math.min(i + porBloque - 1, cron.length - 1)];
+            var la = a.label.split(' ')[0].slice(0, 3), lb = b.label.split(' ')[0].slice(0, 3);
+            out.push(porBloque === 1 ? la : (la + '–' + lb));
+          }
+          return out;
+        })(),
         kcalObjetivo: (macros && macros.kcal) || 0
       };
     }
