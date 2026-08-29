@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=200"></script>
-<script src="./castillo-transform.js?v=200"></script>
-<script src="./castillo-equiv.js?v=200"></script>
-<script src="./castillo-data.js?v=200"></script>
+<script src="./castillo-i18n.js?v=201"></script>
+<script src="./castillo-transform.js?v=201"></script>
+<script src="./castillo-equiv.js?v=201"></script>
+<script src="./castillo-data.js?v=201"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 200;
+  var VERSION_ACTUAL = 201;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2369,7 +2369,7 @@ class Component extends DCLogic {
     const dec = v => { const t = String(v == null ? '' : v); return en ? t.replace(',', '.') : t.replace('.', ','); };
     const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const pct = o => (o && o.total) ? (o.pct + '%') : '—';
-    const kg = v => { const t = String(v == null ? '' : v).trim(); return /kg$/i.test(t) ? t : (t ? t + ' kg' : '—'); };
+    const kg = v => { const t = dec(String(v == null ? '' : v).trim()); return /kg$/i.test(t) ? t : (t ? t + ' kg' : '—'); };
     const tEjer = n => { try { return (window.I18N && window.I18N.exercise) ? window.I18N.exercise(n, this.state.lang) : n; } catch (er) { return n; } };
     const tOpc  = l => en ? String(l || '').replace(/^Opción/, 'Option').replace(/^Comida libre/, 'Free meal') : l;
     const tCom  = n => { try { return (window.I18N && window.I18N.meal) ? window.I18N.meal(n, this.state.lang) : n; } catch (er) { return n; } };
@@ -2474,7 +2474,7 @@ class Component extends DCLogic {
           + (e.y ? '<img src="https://img.youtube.com/vi/' + esc(e.y) + '/mqdefault.jpg" alt="" style="width:52px;height:32px;object-fit:cover;border-radius:5px;flex:none;background:#eee"/>'
                  : '<div style="width:52px;height:32px;border-radius:5px;background:#f0f0f0;flex:none"></div>')
           + '<span>' + esc(tEjer(e.nombre)) + '</span></div></td>'
-          + (e.semanas || []).map(v => '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? (v + '<span style="font-size:9px;color:#9a9a9a"> kg</span>') : '—') + '</td>').join('')
+          + (e.semanas || []).map(v => '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? (dec(v) + '<span style="font-size:9px;color:#9a9a9a"> kg</span>') : '—') + '</td>').join('')
           + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + colorDelta(e) + '">' + (e.delta == null ? '—' : ((e.delta > 0 ? '+' : '') + dec(e.delta) + '<span style="font-size:9px;color:#9a9a9a"> kg</span>')) + '</td></tr>').join('')
       + '</table>';
     const hojasEj = trozos.map((lista, i) => CAB(2, (en ? 'Progress by exercise' : 'Progreso por ejercicio') + (trozos.length > 1 ? (' · ' + (i + 1) + '/' + trozos.length) : ''))
@@ -2589,7 +2589,7 @@ class Component extends DCLogic {
           + '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px;text-align:right;width:64px">' + (en ? 'Change' : 'Cambio') + '</td></tr>'
           + claves.map(k => { const d = cambio(k); const u = unidad(k);
               return '<tr><td style="padding:8px 0;border-top:1px solid #eee">' + esc(bonito(k)) + ' <span style="color:#9a9a9a">(' + u + ')</span></td>'
-                + cks.map(c => { const v = (c.valores || {})[k]; return '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? esc(v) : '—') + '</td>'; }).join('')
+                + cks.map(c => { const v = (c.valores || {})[k]; return '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? esc(dec(v)) : '—') + '</td>'; }).join('')
                 + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + (d == null ? '#9a9a9a' : d > 0 ? '#1e7e34' : d < 0 ? '#c0392b' : '#141414') + '">'
                 + (d == null ? '—' : ((d > 0 ? '+' : '') + dec(d))) + '</td></tr>'; }).join('')
           + '</table>'
