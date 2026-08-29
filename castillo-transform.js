@@ -740,7 +740,9 @@
         var conDato = sem.filter(function (x) { return x != null; });
         var ini = conDato[0], fin = conDato[conDato.length - 1];
         var delta = Math.round((fin - ini) * 10) / 10;
-        return { nombre: nombre, semanas: sem.map(function (x) { return x == null ? '' : comma(x); }),
+        // id del vídeo, para poder poner la miniatura del ejercicio en el informe
+        var _rec = exByName[nombre] || exByName[String(nombre).trim()] || null;
+        return { nombre: nombre, y: (_rec && _rec.y) || '', semanas: sem.map(function (x) { return x == null ? '' : comma(x); }),
                  ini: comma(ini), fin: comma(fin), delta: delta, subio: delta > 0, igual: delta === 0, sesiones: pts.length };
       }).filter(Boolean).sort(function (a, b) { return b.delta - a.delta; });
       var semanasLbl = []; for (var _w = 0; _w < _nSem; _w++) semanasLbl.push('Sem ' + (_w + 1));
