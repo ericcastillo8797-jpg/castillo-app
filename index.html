@@ -10,11 +10,12 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=170"></script>
-<script src="./castillo-transform.js?v=170"></script>
-<script src="./castillo-equiv.js?v=170"></script>
-<script src="./castillo-data.js?v=170"></script>
+<script src="./castillo-i18n.js?v=171"></script>
+<script src="./castillo-transform.js?v=171"></script>
+<script src="./castillo-equiv.js?v=171"></script>
+<script src="./castillo-data.js?v=171"></script>
 <script src="./support.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
 // El móvil se quedaba con una copia vieja de la app: los ficheros llevan ?v= pero esta misma
@@ -22,7 +23,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 170;
+  var VERSION_ACTUAL = 171;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -68,8 +69,8 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 /* Tapa del vídeo: durante el segundo que YouTube tarda en arrancar enseña su logo, el avatar del
    canal y el título. Se cubre con la miniatura del ejercicio y se desvanece sola. */
 .vid-tapa { position:absolute; inset:0; z-index:2; background-size:cover; background-position:center;
-  pointer-events:none; animation: vidTapa 1.9s cubic-bezier(.4,0,.2,1) forwards; }
-@keyframes vidTapa { 0%,55% { opacity:1; } 100% { opacity:0; } }
+  pointer-events:none; opacity:1; transition: opacity .45s ease; }
+.vid-tapa.fuera { opacity:0; }
 @keyframes cFade{from{opacity:0}to{opacity:1}}
 @keyframes cRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes cSheen{0%{transform:translateX(-140%)}100%{transform:translateX(240%)}}
@@ -851,10 +852,15 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           <sc-if value="{{ e.vidPlaying }}" hint-placeholder-val="{{ false }}">
           <div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;border:.5px solid rgba(var(--fgc,255,255,255),.1)">
             <iframe id="ytx-{{ e.id }}" src="{{ e.src }}" title="{{ e.n }}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block;pointer-events:none"></iframe>
-            <div class="vid-tapa" style="background-image:url('{{ e.thumb }}')"></div>
-            <div onClick="{{ e.cerrarVideo }}" style="position:absolute;inset:0;cursor:pointer"></div>
-            <div onClick="{{ e.cerrarVideo }}" style="position:absolute;left:10px;bottom:10px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:3" style-active="transform:scale(.9)">
+            <div class="vid-tapa {{ e.tapaFuera }}" style="background-image:url('{{ e.thumb }}')"></div>
+            <div onClick="{{ e.toggleVideo }}" style="position:absolute;inset:0;cursor:pointer"></div>
+            <div onClick="{{ e.toggleVideo }}" style="position:absolute;left:10px;bottom:10px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:3" style-active="transform:scale(.9)">
+              <sc-if value="{{ e.enMarcha }}" hint-placeholder-val="{{ true }}">
               <svg width="11" height="12" viewBox="0 0 11 12" fill="currentColor"><rect x="0" y="0" width="3.6" height="12" rx="1.2"></rect><rect x="7.4" y="0" width="3.6" height="12" rx="1.2"></rect></svg>
+              </sc-if>
+              <sc-if value="{{ e.enPausa }}" hint-placeholder-val="{{ false }}">
+              <svg width="12" height="13" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
+              </sc-if>
             </div>
           </div>
           </sc-if>
@@ -864,7 +870,6 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="position:relative;width:46px;height:46px;border-radius:50%;border:.5px solid rgba(255,255,255,.4);background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff">
               <svg width="13" height="15" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
             </div>
-            <div style="position:absolute;bottom:9px;left:12px;font-size:8.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72)">{{ L.videoTecnica }}</div>
           </div>
           </sc-if>
           <div onClick="{{ e.openVar }}" style="margin-top:13px;display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:14px;border:.5px dashed rgba(var(--fgc,255,255,255),.2);cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.05)">
@@ -1166,7 +1171,16 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <div data-screen-label="Video" style="padding:14px 20px 30px">
       <div style="position:relative;aspect-ratio:16/9;border-radius:20px;overflow:hidden;background:#000;border:.5px solid rgba(var(--fgc,255,255,255),.11)">
         <iframe id="ytx-sheet" src="{{ videoSheet.src }}" title="{{ videoSheet.t }}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block;pointer-events:none"></iframe>
-        <div class="vid-tapa" style="background-image:url('{{ videoSheet.thumb }}')"></div>
+        <div class="vid-tapa {{ videoSheet.tapaFuera }}" style="background-image:url('{{ videoSheet.thumb }}')"></div>
+        <div onClick="{{ videoSheet.toggleVideo }}" style="position:absolute;inset:0;cursor:pointer"></div>
+        <div onClick="{{ videoSheet.toggleVideo }}" style="position:absolute;left:12px;bottom:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:3" style-active="transform:scale(.9)">
+          <sc-if value="{{ videoSheet.enMarcha }}" hint-placeholder-val="{{ true }}">
+          <svg width="12" height="13" viewBox="0 0 11 12" fill="currentColor"><rect x="0" y="0" width="3.6" height="12" rx="1.2"></rect><rect x="7.4" y="0" width="3.6" height="12" rx="1.2"></rect></svg>
+          </sc-if>
+          <sc-if value="{{ videoSheet.enPausa }}" hint-placeholder-val="{{ false }}">
+          <svg width="13" height="14" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1.2 11 7 1 12.8Z"></path></svg>
+          </sc-if>
+        </div>
       </div>
       <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin-top:18px">{{ videoSheet.g }}</div>
       <div style="font-size:21px;font-weight:600;margin-top:6px;letter-spacing:-.02em">{{ videoSheet.t }}</div>
@@ -1935,8 +1949,28 @@ const THUMB = y => 'https://i.ytimg.com/vi/' + y + '/mqdefault.jpg';
 // pantalla completa; el vídeo lo sigue sirviendo Google (rápido y adaptándose a la conexión) pero
 // se ve como parte de la app. Los controles los pinta la propia app encima.
 const EMBED = y => 'https://www.youtube-nocookie.com/embed/' + y
-  + '?autoplay=1&playsinline=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0&color=white&enablejsapi=1'
-  + '&loop=1&playlist=' + y;
+  + '?autoplay=1&playsinline=1&controls=0&rel=0&iv_load_policy=3&disablekb=1&fs=0&color=white'
+  + '&cc_load_policy=0&enablejsapi=1&origin=' + encodeURIComponent(location.origin);
+// Reproductor: se engancha a cada marco por su id. Sirve para pausar y REANUDAR donde se dejó,
+// y para saber cuándo arranca de verdad y retirar la tapa en ese instante (no por tiempo).
+const YTP = { players: {}, listos: {} };
+function ytEngancha(id, alEstado) {
+  if (!window.YT || !window.YT.Player || YTP.players[id]) return;
+  var el = document.getElementById(id); if (!el) return;
+  try {
+    YTP.players[id] = new window.YT.Player(id, {
+      events: {
+        onReady: function (ev) { try { ev.target.unloadModule('captions'); ev.target.unloadModule('cc'); } catch (e) {} },
+        onStateChange: function (ev) { if (alEstado) alEstado(ev.data); }
+      }
+    });
+  } catch (e) {}
+}
+function ytAccion(id, accion) {
+  var p = YTP.players[id];
+  try { if (p && p[accion]) { p[accion](); return true; } } catch (e) {}
+  return false;
+}
 
 
 const PTS = [
@@ -2028,7 +2062,7 @@ class Component extends DCLogic {
     logs: {}, wLock: false, regMenuOpen: false, pad: null, padIn: false,
     rest: 0, restMax: 90,
     borrarOpen: false, borrarTxt: '', borrarErr: '', borrando: false,
-    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, dietMealIdx: 0,
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, vidPause: false, vidListo: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
@@ -2068,6 +2102,31 @@ class Component extends DCLogic {
     if (this._visH) document.removeEventListener('visibilitychange', this._visH); }
   later(fn, ms) { this._to = this._to || []; this._to.push(setTimeout(fn, ms)); }
 
+  componentDidUpdate() { this._ytSync(); }
+  // Engancha el reproductor del ejercicio abierto (o del vídeo a pantalla completa) y suelta los demás.
+  _ytSync = () => {
+    const ids = [];
+    if (this.state.playEx) ids.push('ytx-' + this.state.playEx);
+    if (this.state.sheet && this.state.sheet.k === 'vid') ids.push('ytx-sheet');
+    ids.forEach(id => ytEngancha(id, (estado) => {
+      // 1 = reproduciendo → ya se puede retirar la tapa que oculta el logo de YouTube
+      if (estado === 1) this.setState(st => (st.vidListo === id ? null : { vidListo: id, vidPause: false }));
+      if (estado === 2) this.setState({ vidPause: true });
+    }));
+    Object.keys(YTP.players).forEach(id => {
+      if (ids.indexOf(id) >= 0) return;
+      try { YTP.players[id].destroy(); } catch (e) {}
+      delete YTP.players[id];
+      if (this.state.vidListo === id) this.setState({ vidListo: null });
+    });
+  };
+  // Pausa y reanuda DONDE SE DEJÓ (antes se cerraba el vídeo y volvía a empezar).
+  toggleVideo = (id) => () => {
+    const pausar = !this.state.vidPause;
+    const ok = ytAccion(id, pausar ? 'pauseVideo' : 'playVideo');
+    if (ok) this.setState({ vidPause: pausar });
+    else if (pausar) this.setState({ playEx: null });   // si el reproductor no responde, se cierra
+  };
   componentDidMount() {
     // Vuelta del login de WHOOP (la Edge Function redirige con ?whoop=ok/err)
     try {
@@ -3350,7 +3409,9 @@ class Component extends DCLogic {
 
     const vs = sh.k === 'vid' ? sh.v : null;
     const videoSheet = vs ? { t: vs.t, g: vs.g, src: EMBED(vs.y), thumb: THUMB(vs.y), pts: PTS.map((t, i) => ({ rom: ROM[i], t })),
-      } : {};
+      toggleVideo: this.toggleVideo('ytx-sheet'),
+      enMarcha: !st.vidPause, enPausa: !!st.vidPause,
+      tapaFuera: (st.vidListo === 'ytx-sheet') ? 'fuera' : '' } : {};
 
     const showLast = this.props.mostrarUltimaSemana !== false;
     const exercises = workoutEx.map((e, ix) => {
@@ -3374,10 +3435,12 @@ class Component extends DCLogic {
         meta: dn + ' de ' + e.s + ' series' + (dn === e.s ? ' · completado' : ''),
         chev: isOpen ? 'rotate(180deg)' : 'none',
         toggle: this.toggleEx(e.id),
-        play: () => this.setState({ playEx: st.playEx === e.id ? null : e.id }),
+        play: () => this.setState({ playEx: st.playEx === e.id ? null : e.id, vidPause: false, vidListo: null }),
         // El botón para el vídeo cerrándolo: vuelve a la miniatura con el play. Hablarle al
         // reproductor de YouTube desde fuera no responde de forma fiable en iOS.
-        cerrarVideo: () => this.setState({ playEx: null }),
+        toggleVideo: this.toggleVideo('ytx-' + e.id),
+        enMarcha: !st.vidPause, enPausa: !!st.vidPause,
+        tapaFuera: (st.vidListo === ('ytx-' + e.id)) ? 'fuera' : '',
         vidPlaying: st.playEx === e.id, vidThumb: st.playEx !== e.id, src: EMBED(_vy),
         sets: Array.from({ length: e.s }, (_, i) => {
           const l = arr[i] || {}, done = !!l.done;
@@ -3449,7 +3512,7 @@ class Component extends DCLogic {
       return { n, pick: () => this.setState({ vidCat: n }), bg: sel ? 'var(--fg,#fff)' : 'var(--s2,#121215)', fg: sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.08)' };
     });
     const vidList = VID.filter(v => st.vidCat === 'Todos' || v.g === st.vidCat)
-      .map(v => ({ t: tEx(v.t), g: v.g, thumb: THUMB(v.y), open: () => this.openSheet({ k: 'vid', v: { t: tEx(v.t), g: v.g, y: v.y } }) }));
+      .map(v => ({ t: tEx(v.t), g: v.g, thumb: THUMB(v.y), open: () => { this.setState({ vidPause: false, vidListo: null }); this.openSheet({ k: 'vid', v: { t: tEx(v.t), g: v.g, y: v.y } }); } }));
 
     const evoTabs = [['comp','Composición y medidas'],['ejercicio','Progreso en el ejercicio']].map(([k, n]) => {
       const sel = st.evoTab === k;
@@ -3547,7 +3610,7 @@ class Component extends DCLogic {
           const parts = x.split('|'), on = cur === parts[0];
           return { n: tEx(parts[0]), thumb: THUMB(parts[1]), delay: (0.03 + i * 0.05) + 's', series: _serTxt,
             note: on ? 'Es la que se registrará' : 'Misma serie y repeticiones · toca elegir',
-            play: () => this.openSheet({ k: 'vid', v: { t: tEx(parts[0]), g: 'Variante', y: parts[1] }, back: this.state.sheet }),
+            play: () => { this.setState({ vidPause: false, vidListo: null }); this.openSheet({ k: 'vid', v: { t: tEx(parts[0]), g: 'Variante', y: parts[1] }, back: this.state.sheet }); },
             use: this.useVar(ve.id, parts[0]),
             btn: on ? '✓ Variante elegida' : 'Elegir esta variante',
             bd: on ? A + '.45)' : A + '.07)',
