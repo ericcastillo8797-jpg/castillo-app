@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=177"></script>
-<script src="./castillo-transform.js?v=177"></script>
-<script src="./castillo-equiv.js?v=177"></script>
-<script src="./castillo-data.js?v=177"></script>
+<script src="./castillo-i18n.js?v=178"></script>
+<script src="./castillo-transform.js?v=178"></script>
+<script src="./castillo-equiv.js?v=178"></script>
+<script src="./castillo-data.js?v=178"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,13 +22,15 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 177;
+  var VERSION_ACTUAL = 178;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
           if (!j || !j.version || j.version <= VERSION_ACTUAL) return;
+          // nunca recargar con un entreno abierto: se perdería lo que está anotando
+          try { if (localStorage.getItem('castillo_entreno')) return; } catch (e) {}
           var u = location.pathname + '?b=' + j.version;
           if (location.search.indexOf('b=' + j.version) >= 0) return;   // ya estamos en esa
           location.replace(u);
@@ -2096,6 +2098,7 @@ class Component extends DCLogic {
     if (this._visH) document.removeEventListener('visibilitychange', this._visH); }
   later(fn, ms) { this._to = this._to || []; this._to.push(setTimeout(fn, ms)); }
 
+  componentDidUpdate() { this._guardaEntreno(); }
   componentDidMount() {
     // Vuelta del login de WHOOP (la Edge Function redirige con ?whoop=ok/err)
     try {
@@ -2199,7 +2202,7 @@ class Component extends DCLogic {
     this.setState(patch);
     // Antes había 900 ms de espera decorativa aquí. Los datos ya están cargados en este punto,
     // así que se entra en el siguiente frame: se nota mucho más rápido y no se pierde nada.
-    requestAnimationFrame(() => { this.setState({ stage: 'app', tab: 'home' }); this.playHome(); });
+    requestAnimationFrame(() => { this.setState({ stage: 'app', tab: 'home' }); this.playHome(); this._recuperaEntreno(); });
     // WHOOP: si el cliente lo tiene conectado, se bajan sus datos en segundo plano
     try { const cd = window.CastilloData;
       if (cd && cd.whoopDatos) cd.whoopDatos().then(w => { if (w && w.ok && w.conectado) this.setState({ whoop: w }); }, () => {});
@@ -2951,6 +2954,29 @@ class Component extends DCLogic {
     } catch (e) { if (e && e.name === 'AbortError') return; this.flash('No se pudo generar la dieta'); }
   };
 
+  // El entreno en curso se guarda en el MÓVIL a cada cambio. Si el cliente sale a contestar un
+  // WhatsApp y iOS descarta la app, al volver sigue donde estaba en vez de empezar de cero.
+  _guardaEntreno = () => {
+    try {
+      if (!this.state.wOpen) { localStorage.removeItem('castillo_entreno'); return; }
+      localStorage.setItem('castillo_entreno', JSON.stringify({
+        t: Date.now(), fecha: (this._selDay() || {}).fecha || '',
+        wWk: this.state.wWk, wTitle: this.state.wTitle, day: this.state.day, weekIdx: this.state.weekIdx,
+        logs: this.state.logs || {}, swaps: this.state.swaps || {}
+      }));
+    } catch (e) {}
+  };
+  _recuperaEntreno = () => {
+    try {
+      const raw = localStorage.getItem('castillo_entreno'); if (!raw) return;
+      const g = JSON.parse(raw); if (!g || !g.t) return;
+      // solo si es de las últimas 12 horas: un entreno de anteayer no se reabre
+      if (Date.now() - g.t > 12 * 3600000) { localStorage.removeItem('castillo_entreno'); return; }
+      this.setState({ wOpen: true, wIn: true, wWk: g.wWk, wTitle: g.wTitle,
+        day: (g.day != null ? g.day : this.state.day), weekIdx: (g.weekIdx != null ? g.weekIdx : this.state.weekIdx),
+        logs: g.logs || {}, swaps: g.swaps || {} });
+    } catch (e) {}
+  };
   startWorkout = (wk, title) => {
     // Carga lo que YA registró ese día (reps/pesos) y bloquea si el entreno está completado (no se puede rehacer).
     const _d = this._selDay(); const _f = _d.fecha;
@@ -2962,7 +2988,7 @@ class Component extends DCLogic {
       logs: _dayLogs ? JSON.parse(JSON.stringify(_dayLogs)) : {}, wLock: _cerrado });
     requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ wIn: true })));
   };
-  closeWorkout = () => { this.setState({ wIn: false, wExit: false }); this.later(() => this.setState({ wOpen: false }), 540); };
+  closeWorkout = () => { try { localStorage.removeItem('castillo_entreno'); } catch (e) {} this.setState({ wIn: false, wExit: false }); this.later(() => this.setState({ wOpen: false }), 540); };
   // La X ya no tira el entreno a la basura sin avisar. Si hay algo registrado, pregunta.
   // Si no ha tocado nada todavía, sale directo: no tiene sentido preguntar por nada.
   _seriesRegistradas = () => {
