@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=191"></script>
-<script src="./castillo-transform.js?v=191"></script>
-<script src="./castillo-equiv.js?v=191"></script>
-<script src="./castillo-data.js?v=191"></script>
+<script src="./castillo-i18n.js?v=192"></script>
+<script src="./castillo-transform.js?v=192"></script>
+<script src="./castillo-equiv.js?v=192"></script>
+<script src="./castillo-data.js?v=192"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 191;
+  var VERSION_ACTUAL = 192;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2370,19 +2370,25 @@ class Component extends DCLogic {
     const en = this.state.lang === 'en', T = s => (window.I18N ? window.I18N.t(s, this.state.lang) : s);
     const hdr = (window.__DATA && window.__DATA.header) || {};
     const nombre = hdr.nombre || '';
-    const miles = n => String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    // En inglés los miles van con coma y los decimales con punto (55,720 kcal · 6.8 h);
+    // en español al revés. Antes salía siempre a la española y en inglés se leía mal.
+    const miles = n => String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, en ? ',' : '.');
+    const dec = v => { const t = String(v == null ? '' : v); return en ? t.replace(',', '.') : t.replace('.', ','); };
     const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const pct = o => (o && o.total) ? (o.pct + '%') : '—';
     const kg = v => { const t = String(v == null ? '' : v).trim(); return /kg$/i.test(t) ? t : (t ? t + ' kg' : '—'); };
     const tEjer = n => { try { return (window.I18N && window.I18N.exercise) ? window.I18N.exercise(n, this.state.lang) : n; } catch (er) { return n; } };
     const tOpc  = l => en ? String(l || '').replace(/^Opción/, 'Option').replace(/^Comida libre/, 'Free meal') : l;
     const tCom  = n => { try { return (window.I18N && window.I18N.meal) ? window.I18N.meal(n, this.state.lang) : n; } catch (er) { return n; } };
+    // El nombre del periodo viene en español desde la capa de datos ("Agosto 2026", "sep 2025 – ago 2026").
+    // En el informe hay que traducirlo igual que en pantalla, si no salía "Summary · Agosto 2026".
+    const etiqueta = (function () { try { return window.I18N ? window.I18N.date(m.label, this.state.lang) : m.label; } catch (er) { return m.label; } }).call(this);
 
     // ── piezas de maquetación ──
     const CAB = (n, titulo) => '<div style="display:flex;align-items:baseline;justify-content:space-between">'
       + '<div><div style="font-size:10px;font-weight:600;letter-spacing:.26em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">— ' + (en ? 'Monthly summary' : 'Resumen mensual') + '</span></div>'
       + '<div style="font-family:Georgia,serif;font-size:27px;margin-top:9px">' + (n ? (n + ' · ') : '') + titulo + '</div></div>'
-      + '<div style="font-size:11px;color:#6b6b6b">' + esc(nombre) + ' · ' + m.label + '</div></div>'
+      + '<div style="font-size:11px;color:#6b6b6b">' + esc(nombre) + ' · ' + esc(etiqueta) + '</div></div>'
       + '<div style="height:1px;background:#e6e6e6;margin:15px 0 16px"></div>';
     // min-height en vez de height: si un mes trae más filas de lo previsto, la hoja CRECE y el PDF
     // la encaja algo más pequeña. Antes tenía altura fija y lo que sobraba se cortaba a la mitad.
@@ -2401,7 +2407,7 @@ class Component extends DCLogic {
       const o = Number(objetivo) || 0, md = Number(media) || 0;
       const p = o > 0 ? Math.round(md / o * 100) : 0;
       const col = !o ? '#141414' : p >= 95 ? '#1e7e34' : p >= 80 ? '#b8860b' : '#c0392b';
-      return '<div style="display:flex;gap:14px;margin-top:16px;background:#faf9f6;border-radius:12px;padding:14px 16px">'
+      return '<div style="display:flex;gap:14px;margin-top:16px;background:#f2f3f4;border-radius:12px;padding:14px 16px">'
         + '<div style="flex:1">' + ROT(en ? 'Daily average' : 'Media diaria') + '<div style="font-family:Georgia,serif;font-size:26px">' + miles(md) + ' <span style="font-size:13px;color:#6b6b6b">' + unidad + '</span></div></div>'
         + '<div style="flex:1">' + ROT(en ? 'Goal' : 'Objetivo') + '<div style="font-family:Georgia,serif;font-size:26px">' + (o ? (miles(o) + ' <span style="font-size:13px;color:#6b6b6b">' + unidad + '</span>') : '<span style="font-size:15px;color:#9a9a9a">' + (en ? 'not set' : 'sin definir') + '</span>') + '</div></div>'
         + '<div style="flex:1">' + ROT(etiqueta) + '<div style="font-family:Georgia,serif;font-size:26px;color:' + col + '">' + (o ? (p + '%') : '—') + '</div>'
@@ -2413,12 +2419,12 @@ class Component extends DCLogic {
 
     // ── PÁGINA 1 · portada ──
     const barra = (p, oscura) => '<div style="height:5px;border-radius:3px;background:' + (oscura ? 'rgba(255,255,255,.25)' : '#e6e6e6') + ';margin-top:11px;overflow:hidden"><div style="height:100%;width:' + Math.max(0, Math.min(100, p || 0)) + '%;background:' + (oscura ? '#fff' : '#141414') + ';border-radius:3px"></div></div>';
-    const tarjeta = (t, o, extra) => '<div style="flex:1;background:#faf9f6;border-radius:14px;padding:15px 17px">'
+    const tarjeta = (t, o, extra) => '<div style="flex:1;background:#f2f3f4;border-radius:14px;padding:15px 17px">'
       + ROT(t) + '<div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-family:Georgia,serif;font-size:33px">' + pct(o) + '</div>'
       + '<div style="font-size:11px;color:#6b6b6b">' + (extra || ((o ? o.done : 0) + ' / ' + (o ? o.total : 0))) + '</div></div>' + barra(o ? o.pct : 0) + '</div>';
     const p1 = '<div style="font-size:10px;font-weight:600;letter-spacing:.26em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">— ' + (en ? 'Monthly summary' : 'Resumen mensual') + '</span></div>'
-      + '<div style="font-family:Georgia,serif;font-size:42px;margin-top:12px">' + (en ? 'Summary · ' : 'Resumen · ') + m.label + '</div>'
-      + '<div style="font-size:12.5px;color:#6b6b6b;margin-top:5px">' + esc(nombre) + ' · ' + m.label + '</div>'
+      + '<div style="font-family:Georgia,serif;font-size:42px;margin-top:12px">' + (en ? 'Summary · ' : 'Resumen · ') + esc(etiqueta) + '</div>'
+      + '<div style="font-size:12.5px;color:#6b6b6b;margin-top:5px">' + esc(nombre) + ' · ' + esc(etiqueta) + '</div>'
       + '<div style="height:1px;background:#e6e6e6;margin:20px 0"></div>'
       + '<div style="display:flex;gap:14px">' + tarjeta(T('Entrenos'), m.entrenos) + tarjeta(T('Cardio') + ' · ' + T('pasos'), m.cardio, (m.cardio.done + ' / ' + m.cardio.total + ' ' + (en ? 'days' : 'días'))) + '</div>'
       + '<div style="display:flex;gap:14px;margin-top:14px">' + tarjeta(T('Nutrición'), m.nutricion, (m.nutricion.done + ' / ' + m.nutricion.total + ' ' + (en ? 'meals' : 'comidas'))) + tarjeta(T('Métricas'), m.metricas) + '</div>'
@@ -2427,9 +2433,9 @@ class Component extends DCLogic {
       + '<div style="font-family:Georgia,serif;font-size:38px;margin-top:6px">' + m.global + '%</div>'
       + '<div style="font-size:11px;color:#9a9a9a">' + (en ? 'average of training, cardio, nutrition and metrics' : 'media de entrenos, cardio, nutrición y métricas') + '</div>' + barra(m.global, true) + '</div>'
       + '<div style="display:flex;gap:14px;margin-top:14px">'
-      + '<div style="flex:1;background:#faf9f6;border-radius:14px;padding:15px 17px">' + ROT(T('Peso corporal')) + '<div style="font-family:Georgia,serif;font-size:27px">' + kg(m.peso.ini) + ' → ' + kg(m.peso.fin) + '</div>'
-      + '<div style="font-size:11.5px;font-weight:600;margin-top:3px;color:' + (m.peso.delta < 0 ? '#1e7e34' : m.peso.delta > 0 ? '#c0392b' : '#6b6b6b') + '">' + (m.peso.delta > 0 ? '+' : '') + String(m.peso.delta).replace('.', ',') + ' kg ' + (en ? 'this month' : 'este mes') + '</div></div>'
-      + '<div style="flex:1;background:#faf9f6;border-radius:14px;padding:15px 17px">' + ROT(en ? 'Progress photos' : 'Fotos de progreso') + '<div style="font-family:Georgia,serif;font-size:27px">' + m.fotos + '</div>'
+      + '<div style="flex:1;background:#f2f3f4;border-radius:14px;padding:15px 17px">' + ROT(T('Peso corporal')) + '<div style="font-family:Georgia,serif;font-size:27px">' + kg(m.peso.ini) + ' → ' + kg(m.peso.fin) + '</div>'
+      + '<div style="font-size:11.5px;font-weight:600;margin-top:3px;color:' + (m.peso.delta < 0 ? '#1e7e34' : m.peso.delta > 0 ? '#c0392b' : '#6b6b6b') + '">' + (m.peso.delta > 0 ? '+' : '') + dec(m.peso.delta) + ' kg ' + (en ? 'this month' : 'este mes') + '</div></div>'
+      + '<div style="flex:1;background:#f2f3f4;border-radius:14px;padding:15px 17px">' + ROT(en ? 'Progress photos' : 'Fotos de progreso') + '<div style="font-family:Georgia,serif;font-size:27px">' + m.fotos + '</div>'
       + '<div style="font-size:11px;color:#6b6b6b;margin-top:3px">' + (en ? 'front, side and back' : 'frontal, lateral y espalda') + '</div></div></div>'
       ;
 
@@ -2460,7 +2466,7 @@ class Component extends DCLogic {
                  : '<div style="width:52px;height:32px;border-radius:5px;background:#f0f0f0;flex:none"></div>')
           + '<span>' + esc(tEjer(e.nombre)) + '</span></div></td>'
           + (e.semanas || []).map(v => '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? (v + '<span style="font-size:9px;color:#9a9a9a"> kg</span>') : '—') + '</td>').join('')
-          + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + colorDelta(e) + '">' + (e.delta == null ? '—' : ((e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + '<span style="font-size:9px;color:#9a9a9a"> kg</span>')) + '</td></tr>').join('')
+          + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + colorDelta(e) + '">' + (e.delta == null ? '—' : ((e.delta > 0 ? '+' : '') + dec(e.delta) + '<span style="font-size:9px;color:#9a9a9a"> kg</span>')) + '</td></tr>').join('')
       + '</table>';
     const hojasEj = trozos.map((lista, i) => CAB(2, (en ? 'Progress by exercise' : 'Progreso por ejercicio') + (trozos.length > 1 ? (' · ' + (i + 1) + '/' + trozos.length) : ''))
       + '<div style="height:4px"></div>'
@@ -2498,7 +2504,7 @@ class Component extends DCLogic {
                   + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + o.veces + ' ' + (en ? (o.veces === 1 ? 'time' : 'times') : (o.veces === 1 ? 'vez' : 'veces')) + '</td></tr>').join('')
               + '</table></div>').join('')
         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'Nothing logged this month.' : 'Este mes no se registró nada.') + '</div>')
-      + '<div style="margin-top:16px;background:#faf9f6;border-radius:12px;padding:13px 16px;font-size:12.5px">'
+      + '<div style="margin-top:16px;background:#f2f3f4;border-radius:12px;padding:13px 16px;font-size:12.5px">'
       + (en ? 'Month compliance' : 'Cumplimiento del mes') + ': <b>' + m.nutricion.pct + '%</b> — <b>' + m.nutricion.done + '</b> ' + (en ? 'meals logged out of' : 'comidas registradas de') + ' <b>' + m.nutricion.total + '</b> ' + (en ? 'possible' : 'posibles') + '.</div>';
 
     // ── PÁGINA 7 · métricas: TODAS las medidas de cada día, en tabla ──
@@ -2523,7 +2529,7 @@ class Component extends DCLogic {
       return Math.round((vals[vals.length - 1] - vals[0]) * 10) / 10;
     };
     const p7 = CAB(6, en ? 'Metrics' : 'Métricas')
-      + '<div style="font-size:12.5px;margin-bottom:14px">' + T('Peso corporal') + ': <b>' + kg(m.peso.ini) + ' → ' + kg(m.peso.fin) + '</b> (' + (m.peso.delta > 0 ? '+' : '') + String(m.peso.delta).replace('.', ',') + ' kg ' + (en ? 'this month' : 'en el mes') + ').</div>'
+      + '<div style="font-size:12.5px;margin-bottom:14px">' + T('Peso corporal') + ': <b>' + kg(m.peso.ini) + ' → ' + kg(m.peso.fin) + '</b> (' + (m.peso.delta > 0 ? '+' : '') + dec(m.peso.delta) + ' kg ' + (en ? 'this month' : 'en el mes') + ').</div>'
       + (claves.length ? ROT(en ? 'All measurements, day by day' : 'Todas las medidas, día a día')
           + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
           + '<tr><td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px">' + (en ? 'Measurement' : 'Medida') + '</td>'
@@ -2533,19 +2539,19 @@ class Component extends DCLogic {
               return '<tr><td style="padding:8px 0;border-top:1px solid #eee">' + esc(bonito(k)) + ' <span style="color:#9a9a9a">(' + u + ')</span></td>'
                 + cks.map(c => { const v = (c.valores || {})[k]; return '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? esc(v) : '—') + '</td>'; }).join('')
                 + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + (d == null ? '#9a9a9a' : d > 0 ? '#1e7e34' : d < 0 ? '#c0392b' : '#b8860b') + '">'
-                + (d == null ? '—' : ((d > 0 ? '+' : '') + String(d).replace('.', ','))) + '</td></tr>'; }).join('')
+                + (d == null ? '—' : ((d > 0 ? '+' : '') + dec(d))) + '</td></tr>'; }).join('')
           + '</table>'
 
         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No check-ins this month.' : 'Este mes no hubo check-ins.') + '</div>')
       + '<div style="height:1px;background:#e6e6e6;margin:26px 0 10px"></div>'
-      + '<div style="font-size:10px;font-weight:600;letter-spacing:.24em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">· ' + (en ? 'Monthly summary' : 'Resumen mensual') + ' · ' + m.label + '</span></div>';
+      + '<div style="font-size:10px;font-weight:600;letter-spacing:.24em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">· ' + (en ? 'Summary' : 'Resumen') + ' · ' + esc(etiqueta) + '</span></div>';
 
     // ── Página de WHOOP ──────────────────────────────────────────────────────────
     // Solo aparece si el cliente tiene WHOOP conectado Y hay días con datos dentro del periodo.
     // Si conectó a mitad de mes, sale desde el día que conectó: no se inventa nada hacia atrás.
     const _MES3rep = en ? ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'] : ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
     const _fechaLarga = f => { try { const q = String(f).split('-'); return parseInt(q[2], 10) + ' ' + _MES3rep[parseInt(q[1], 10) - 1]; } catch (er) { return f; } };
-    const _num = v => v == null ? '—' : String(v).replace('.', ',');
+    const _num = v => v == null ? '—' : dec(v);
     let pWhoop = '';
     if (wh && wh.ok && wh.conectado && wh.diasConDatos > 0) {
       const md = wh.medias || {}, er2 = wh.entrenosResumen || {};
@@ -2582,14 +2588,14 @@ class Component extends DCLogic {
         + '<div style="height:1px;background:#e6e6e6;margin:26px 0 10px"></div>'
         + '<div style="display:flex;align-items:center;gap:7px"><div style="font-size:10px;font-weight:600;letter-spacing:.24em;color:#141414">C A S T I L L O</div>'
         + '<img src="' + LOGO_WHOOP + '" alt="WHOOP" style="height:9px;width:auto;opacity:.5" />'
-        + '<div style="font-size:10px;color:#9a9a9a">· ' + esc(m.label) + '</div></div>';
+        + '<div style="font-size:10px;color:#9a9a9a">· ' + esc(etiqueta) + '</div></div>';
     }
 
     const doc = '<!doctype html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#141414;background:#fff;width:794px}</style></head><body>'
       + PAG(p1) + PAG(p2) + hojasEj.map(PAG).join('') + PAG(p4) + PAG(p5) + PAG(p6) + PAG(p7)
       + (pWhoop ? PAG(pWhoop) : '')
       + '</body></html>';
-    return { doc: doc, nombre: 'Resumen-' + m.label.replace(/\s+/g, '-') + '.pdf' };
+    return { doc: doc, nombre: (en ? 'Summary-' : 'Resumen-') + etiqueta.replace(/\s+/g, '-') + '.pdf' };
   };
   // Espera a que carguen jsPDF + html2canvas (CDN) — evita el fallo "no se puede generar" si aún no están.
   _ensurePdfLibs = async () => {
