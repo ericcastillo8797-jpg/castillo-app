@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=192"></script>
-<script src="./castillo-transform.js?v=192"></script>
-<script src="./castillo-equiv.js?v=192"></script>
-<script src="./castillo-data.js?v=192"></script>
+<script src="./castillo-i18n.js?v=193"></script>
+<script src="./castillo-transform.js?v=193"></script>
+<script src="./castillo-equiv.js?v=193"></script>
+<script src="./castillo-data.js?v=193"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 192;
+  var VERSION_ACTUAL = 193;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2380,6 +2380,7 @@ class Component extends DCLogic {
     const tEjer = n => { try { return (window.I18N && window.I18N.exercise) ? window.I18N.exercise(n, this.state.lang) : n; } catch (er) { return n; } };
     const tOpc  = l => en ? String(l || '').replace(/^Opción/, 'Option').replace(/^Comida libre/, 'Free meal') : l;
     const tCom  = n => { try { return (window.I18N && window.I18N.meal) ? window.I18N.meal(n, this.state.lang) : n; } catch (er) { return n; } };
+    const tFood = n => { try { return (window.I18N && window.I18N.food) ? window.I18N.food(n, this.state.lang) : n; } catch (er) { return n; } };
     // El nombre del periodo viene en español desde la capa de datos ("Agosto 2026", "sep 2025 – ago 2026").
     // En el informe hay que traducirlo igual que en pantalla, si no salía "Summary · Agosto 2026".
     const etiqueta = (function () { try { return window.I18N ? window.I18N.date(m.label, this.state.lang) : m.label; } catch (er) { return m.label; } }).call(this);
@@ -2402,6 +2403,11 @@ class Component extends DCLogic {
         + arr.join('') + '</table>') : '';
       return '<div style="display:flex;gap:26px"><div style="flex:1">' + bloque(filas.slice(0, mitad)) + '</div><div style="flex:1">' + bloque(filas.slice(mitad)) + '</div></div>';
     };
+    // Una sola columna: el mes entero cabe de sobra en la hoja y se lee del día 1 al último
+    // seguido, en vez de media lista a la izquierda y media a la derecha.
+    const UNACOL = (filas, cabs) => filas.length ? ('<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+      + '<tr>' + cabs.map((c, i) => '<td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px' + (i ? ';text-align:right' : '') + '">' + c + '</td>').join('') + '</tr>'
+      + filas.join('') + '</table>') : '';
     // Recuadro que compara lo que hace con lo que debería hacer, para que se vea de un vistazo.
     const OBJETIVO = (etiqueta, media, objetivo, unidad) => {
       const o = Number(objetivo) || 0, md = Number(media) || 0;
@@ -2442,10 +2448,19 @@ class Component extends DCLogic {
     // ── PÁGINA 2 · entrenamientos ──
     const ses = (m.entrenos.sesiones || []);
     const filasSes = ses.map(x => FILA(esc(x.lbl), '<span style="color:' + (x.done ? '#141414' : '#c0392b') + '">' + esc(tEjer(x.titulo)) + (x.done ? '' : ' · ' + (en ? 'missed' : 'sin hacer')) + '</span>'));
+    const POR_HOJA_SES = 30;
+    const trozosSes = [];
+    for (let i = 0; i < filasSes.length; i += POR_HOJA_SES) trozosSes.push(filasSes.slice(i, i + POR_HOJA_SES));
+    if (!trozosSes.length) trozosSes.push([]);
     const p2 = CAB(1, en ? 'Training' : 'Entrenamientos')
       + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.entrenos.done + ' ' + (en ? 'of' : 'de') + ' ' + m.entrenos.total + '</b> ' + (en ? 'sessions completed' : 'sesiones completadas') + ' · <b>' + m.entrenos.pct + '%</b></div>'
-      + (filasSes.length ? ROT(en ? 'Sessions this month' : 'Sesiones del mes') + DOSCOL(filasSes, [en ? 'Day' : 'Día', en ? 'Workout' : 'Entrenamiento'])
+      + (filasSes.length ? ROT(en ? 'Sessions this month' : 'Sesiones del mes') + UNACOL(trozosSes[0], [en ? 'Day' : 'Día', en ? 'Workout' : 'Entrenamiento'])
                         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No sessions planned this month.' : 'Este mes no había sesiones planificadas.') + '</div>');
+
+    // Si el periodo es largo (trimestre, semestre, año) la lista sigue en hojas aparte.
+    const hojasSes = trozosSes.slice(1).map((chunk, i) => CAB(1, (en ? 'Training' : 'Entrenamientos') + ' · ' + (i + 2) + '/' + trozosSes.length)
+      + '<div style="height:4px"></div>'
+      + UNACOL(chunk, [en ? 'Day' : 'Día', en ? 'Workout' : 'Entrenamiento']));
 
     // ── PÁGINA 3 · progreso por ejercicio, semana a semana ──
     // Se parte en varias hojas: con 26 ejercicios la tabla se salía del folio y la última
@@ -2500,8 +2515,11 @@ class Component extends DCLogic {
       + (grupos.length ? ROT(en ? 'What was chosen at each meal' : 'Qué eligió en cada comida')
           + grupos.map(g => '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">' + esc(tCom(g.meal)) + '</div>'
               + '<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
-              + g.opciones.map(o => '<tr><td style="padding:7px 0;border-top:1px solid #eee"><b>' + esc(tOpc(o.lbl)) + '</b></td>'
-                  + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b">' + o.veces + ' ' + (en ? (o.veces === 1 ? 'time' : 'times') : (o.veces === 1 ? 'vez' : 'veces')) + '</td></tr>').join('')
+              + g.opciones.map(o => '<tr><td style="padding:7px 0;border-top:1px solid #eee"><b>' + esc(tOpc(o.lbl)) + '</b>'
+                  // "Opción 2" no dice nada por sí sola: debajo van los alimentos de esa opción
+                  + ((o.alimentos || []).length ? '<div style="font-size:11px;color:#6b6b6b;margin-top:2px;line-height:1.4">' + esc((o.alimentos || []).map(tFood).join(' · ')) + '</div>' : '')
+                  + '</td>'
+                  + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:#6b6b6b;vertical-align:top;white-space:nowrap">' + o.veces + ' ' + (en ? (o.veces === 1 ? 'time' : 'times') : (o.veces === 1 ? 'vez' : 'veces')) + '</td></tr>').join('')
               + '</table></div>').join('')
         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'Nothing logged this month.' : 'Este mes no se registró nada.') + '</div>')
       + '<div style="margin-top:16px;background:#f2f3f4;border-radius:12px;padding:13px 16px;font-size:12.5px">'
@@ -2538,7 +2556,7 @@ class Component extends DCLogic {
           + claves.map(k => { const d = cambio(k); const u = unidad(k);
               return '<tr><td style="padding:8px 0;border-top:1px solid #eee">' + esc(bonito(k)) + ' <span style="color:#9a9a9a">(' + u + ')</span></td>'
                 + cks.map(c => { const v = (c.valores || {})[k]; return '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? esc(v) : '—') + '</td>'; }).join('')
-                + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + (d == null ? '#9a9a9a' : d > 0 ? '#1e7e34' : d < 0 ? '#c0392b' : '#b8860b') + '">'
+                + '<td style="padding:8px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + (d == null ? '#9a9a9a' : d > 0 ? '#1e7e34' : d < 0 ? '#c0392b' : '#141414') + '">'
                 + (d == null ? '—' : ((d > 0 ? '+' : '') + dec(d))) + '</td></tr>'; }).join('')
           + '</table>'
 
@@ -2592,7 +2610,7 @@ class Component extends DCLogic {
     }
 
     const doc = '<!doctype html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#141414;background:#fff;width:794px}</style></head><body>'
-      + PAG(p1) + PAG(p2) + hojasEj.map(PAG).join('') + PAG(p4) + PAG(p5) + PAG(p6) + PAG(p7)
+      + PAG(p1) + PAG(p2) + hojasSes.map(PAG).join('') + hojasEj.map(PAG).join('') + PAG(p4) + PAG(p5) + PAG(p6) + PAG(p7)
       + (pWhoop ? PAG(pWhoop) : '')
       + '</body></html>';
     return { doc: doc, nombre: (en ? 'Summary-' : 'Resumen-') + etiqueta.replace(/\s+/g, '-') + '.pdf' };

@@ -697,8 +697,10 @@
         var dt = new Date(ms(e.date));
         var k = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
         var reg = regByDate[k] || {};
-        return { lbl: DW[dt.getDay()] + ' ' + dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3), titulo: e.title || 'Entrenamiento', done: !!(e.completed || reg.workout) };
-      }).sort(function (a, b) { return 0; });
+        // se guarda la fecha real para poder ordenar: antes el sort no hacía nada y las sesiones
+        // salían en el orden en que venían (24 ago antes que 2 jul).
+        return { t: dt.getTime(), lbl: DW[dt.getDay()] + ' ' + dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3), titulo: e.title || 'Entrenamiento', done: !!(e.completed || reg.workout) };
+      }).sort(function (a, b) { return a.t - b.t; });
       // cardio día a día (planificado o hecho)
       var cardioDias = [];
       for (var dc = 1; dc <= daysInMonth; dc++) {   // cardio día a día: mes completo
@@ -746,8 +748,18 @@
       }
       nutDias.reverse();
       // recuento agrupado por comida en el orden del plan (Desayuno, Comida, Cena…)
+      // "Opción 2" a secas no dice nada: se guardan también los alimentos de esa opción para que
+      // en el informe se lea qué comió sin tener que entrar en la app a mirarlo.
+      function alimentosDeOpcion(m, lbl) {
+        var mm = /^Opción (\d+)$/.exec(lbl);
+        if (!mm) return [];
+        var str = (m.o || [])[(+mm[1]) - 1] || '';
+        return String(str).split(';').map(function (t) { return (t.split(':')[0] || '').trim(); }).filter(Boolean);
+      }
       var conteoGrupos = DIET.map(function (m) {
-        var ops = Object.keys(_cont[m.id] || {}).map(function (lbl) { return { lbl: lbl, veces: _cont[m.id][lbl] }; }).sort(function (a, b) { return b.veces - a.veces; });
+        var ops = Object.keys(_cont[m.id] || {}).map(function (lbl) {
+          return { lbl: lbl, veces: _cont[m.id][lbl], alimentos: alimentosDeOpcion(m, lbl) };
+        }).sort(function (a, b) { return b.veces - a.veces; });
         return { meal: m.n, opciones: ops };
       }).filter(function (g) { return g.opciones.length; });
       var nutPct = nutPlanMeals ? Math.round(nutDoneMeals / nutPlanMeals * 100) : 0;
@@ -854,11 +866,15 @@
       meses.forEach(function (m) {
         ((m.nutricion && m.nutricion.conteoGrupos) || []).forEach(function (g) {
           var d3 = gm[g.meal] || (gm[g.meal] = {});
-          (g.opciones || []).forEach(function (o) { d3[o.lbl] = (d3[o.lbl] || 0) + o.veces; });
+          (g.opciones || []).forEach(function (o) {
+            var e = d3[o.lbl] || (d3[o.lbl] = { veces: 0, alimentos: [] });
+            e.veces += o.veces;
+            if (!e.alimentos.length && (o.alimentos || []).length) e.alimentos = o.alimentos;
+          });
         });
       });
       var conteoGrupos = Object.keys(gm).map(function (k) {
-        return { meal: k, opciones: Object.keys(gm[k]).map(function (l) { return { lbl: l, veces: gm[k][l] }; }).sort(function (a, b) { return b.veces - a.veces; }) };
+        return { meal: k, opciones: Object.keys(gm[k]).map(function (l) { return { lbl: l, veces: gm[k][l].veces, alimentos: gm[k][l].alimentos || [] }; }).sort(function (a, b) { return b.veces - a.veces; }) };
       });
 
       // ejercicios: una columna por MES del periodo (o por TRIMESTRE si el periodo es largo),
@@ -904,7 +920,7 @@
       return {
         key: key, label: label, cerrado: true, periodo: true,
         desde: _d1 + '-01', hasta: _finMes,
-        entrenos: { done: ent.done, total: ent.total, pct: ent.pct, sesiones: meses.reduce(function (a, m) { return a.concat((m.entrenos && m.entrenos.sesiones) || []); }, []) },
+        entrenos: { done: ent.done, total: ent.total, pct: ent.pct, sesiones: meses.reduce(function (a, m) { return a.concat((m.entrenos && m.entrenos.sesiones) || []); }, []).sort(function (a, b) { return (a.t || 0) - (b.t || 0); }) },
         cardio: { done: car.done, total: car.total, pct: car.pct, objetivo: obj, media: diasCar ? Math.round(pasosTot / diasCar) : 0, totalPasos: pasosTot, dias: dias },
         nutricion: { done: nut.done, total: nut.total, pct: nut.pct, dias: nutDias, conteoGrupos: conteoGrupos },
         metricas: { done: met.done, total: met.total, pct: met.pct, checkins: checkins },
