@@ -59,7 +59,10 @@
     chkList.forEach(function (c) { var _f = (c.fecha || '').slice(0, 10); if (c.valores && Object.keys(c.valores).length) chkMedDates[_f] = true; if (c.fotos && Object.keys(c.fotos).length) chkFotoDates[_f] = true; });
     function wkKeyOf(dt) { return dt.getFullYear() + '-W' + isoWeek(dt); }
     function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
-    function cardioSub(item) { var p = item && item.config && item.config.pasos; return p ? (miles(p) + ' pasos') : 'Cardio'; }
+    // La capa de datos también escribe texto que ve el cliente, así que necesita saber el idioma.
+    var _EN = (function () { try { return localStorage.getItem('castillo_lang') === 'en'; } catch (e) { return false; } })();
+    var TXT = { pasos: _EN ? 'steps' : 'pasos', faltan: _EN ? 'to go' : 'faltan', cumplido: _EN ? 'goal reached' : 'objetivo cumplido' };
+    function cardioSub(item) { var p = item && item.config && item.config.pasos; return p ? (miles(p) + ' ' + TXT.pasos) : 'Cardio'; }
     // Un día de cardio se da por cumplido si lo marcó el cliente O si los pasos reales que trae
     // Apple Salud llegan al objetivo que Alex le puso a ESE cliente (no a un 10.000 fijo para todos).
     function cardioCumplido(marcado, pasosHechos, objetivo) {
@@ -92,10 +95,10 @@
       var h = (hechos == null || hechos === '') ? null : (parseInt(String(hechos).replace(/[^0-9]/g, ''), 10) || 0);
       if (h != null && p) {
         var falta = p - h;
-        return miles(h) + ' / ' + miles(p) + ' pasos' + (falta > 0 ? (' · faltan ' + miles(falta)) : ' · objetivo cumplido');
+        return miles(h) + ' / ' + miles(p) + ' ' + TXT.pasos + (falta > 0 ? (' · ' + TXT.faltan + ' ' + miles(falta)) : (' · ' + TXT.cumplido));
       }
-      if (h != null) return miles(h) + ' pasos';
-      return p ? (miles(p) + ' pasos') : 'Cardio';
+      if (h != null) return miles(h) + ' ' + TXT.pasos;
+      return p ? (miles(p) + ' ' + TXT.pasos) : 'Cardio';
     }
     row = row || {};
     // "now" en la ZONA HORARIA DEL CLIENTE (row.tz; presencial = Miami). Así el día/semana/hoy van por su zona, no la del dispositivo.

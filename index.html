@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=180"></script>
-<script src="./castillo-transform.js?v=180"></script>
-<script src="./castillo-equiv.js?v=180"></script>
-<script src="./castillo-data.js?v=180"></script>
+<script src="./castillo-i18n.js?v=181"></script>
+<script src="./castillo-transform.js?v=181"></script>
+<script src="./castillo-equiv.js?v=181"></script>
+<script src="./castillo-data.js?v=181"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 180;
+  var VERSION_ACTUAL = 181;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -525,7 +525,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
         <div style="text-align:right">
           <div style="font-size:15px;font-weight:600">{{ pesoDelta }}</div>
-          <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.36);margin-top:2px">variación</div>
+          <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.36);margin-top:2px">{{ L.variacion }}</div>
         </div>
       </div>
       <div style="position:relative;margin-top:10px">
@@ -862,7 +862,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:600">{{ woTitle }}</div>
-          <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.42);margin-top:1px">{{ setsDoneLabel }} series registradas</div>
+          <div style="font-size:11px;color:rgba(var(--fgc,255,255,255),.42);margin-top:1px">{{ setsDoneLabel }} {{ L.seriesReg }}</div>
         </div>
         <div style="font-family:'Instrument Serif',serif;font-size:19px;color:rgba(var(--fgc,255,255,255),.5)">{{ trainPctLabel }}</div>
       </div>
@@ -3183,6 +3183,7 @@ class Component extends DCLogic {
     const tMeal = n => _i18n ? _i18n.meal(n, lang) : n;      // nombre de comida
     const tEx = n => _i18n ? _i18n.exercise(n, lang) : n;    // nombre de ejercicio
     const tD = s => _i18n ? _i18n.date(s, lang) : s;         // fecha (meses/días)
+    const _w1 = s => (_i18n && _i18n.weekd1) ? _i18n.weekd1(s, lang) : s;  // inicial del día (L→M, X→W…)
     const isEN = lang === 'en';
     const foodSub = (m, i) => {
       if (i === 'mp') return T('Meal prep');
@@ -3208,7 +3209,7 @@ class Component extends DCLogic {
     // el entreno abierto es el del día que se tocó (st.wWk), no el de la semana de hoy
     const _wk = st.wWk || _wkDay.wk;
     const workoutEx = (WK[_wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
-    const woTitle = st.wTitle || _wkDay.t || 'Entrenamiento';
+    const woTitle = st.wTitle || _wkDay.t || T('Entrenamiento');
     // Una serie cuenta como hecha si el cliente la ha rellenado (reps + peso) o si pulsó el tic.
     // Antes solo contaba el tic, así que el contador y el porcentaje se quedaban en cero.
     const _serieHecha = x => !!(x && (x.done || (String(x.r == null ? '' : x.r).trim() && String(x.w == null ? '' : x.w).trim())));
@@ -3270,7 +3271,7 @@ class Component extends DCLogic {
     const _rmPct = o => (o && o.total) ? (o.pct + '%') : '—';
     const _rmSub = o => o ? (o.done + ' / ' + o.total) : '';
     const resumenMes = _rm ? {
-      hay: true, label: _rm.label, global: _rm.global + '%',
+      hay: true, label: tD(_rm.label), global: _rm.global + '%',
       prev: this.setMes(1), next: this.setMes(-1),
       prevOp: (st.periodo && st.periodo !== 'mes' && _mi >= this._listaPeriodo().length - 1) ? '.2' : '.75', nextOp: _mi <= 0 ? '.2' : '.75',
       periodo: st.periodo || 'mes',
@@ -3514,7 +3515,7 @@ class Component extends DCLogic {
     const weekDays = _agDays.map(d => {
       const sel = d.d === st.day;
       return {
-        w: tD(d.w), d: d.d, pick: () => this.setState({ day: d.d }),
+        w: _w1(d.w), d: d.d, pick: () => this.setState({ day: d.d }),
         bg: sel ? 'var(--fg,#fff)' : (d.today ? 'rgba(var(--fgc,255,255,255),.07)' : 'transparent'),
         fg: sel ? 'var(--bg,#000)' : (d.today ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.58)'),
         bd: sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
@@ -3561,7 +3562,8 @@ class Component extends DCLogic {
           }
           const pctX = i => lp.length <= 1 ? 50 : (i / (lp.length - 1)) * 100;
           const pctY = v => 100 - ((v - lo) / (hi - lo)) * 100;
-          const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+          const MES = (lang === 'en') ? ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+                                       : ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
           const dia = d => { try { const t = String(d).slice(0, 10).split('-'); return parseInt(t[2], 10) + ' ' + MES[parseInt(t[1], 10) - 1]; } catch (err) { return ''; } };
           // si hay muchas sesiones se alterna para que las fechas no se solapen
           const salto = lp.length > 9 ? 3 : (lp.length > 6 ? 2 : 1);
@@ -3784,7 +3786,7 @@ class Component extends DCLogic {
         sinPesoTitulo: isEN ? 'No weight logged yet' : 'Aún no hay registros de peso', sinPesoSub: isEN ? 'When you log your progress, your chart will show here.' : 'Cuando registres tu evolución, verás aquí tu gráfica.',
         sinMedidasTitulo: isEN ? 'No measurements yet' : 'Aún no hay medidas', sinMedidasSub: isEN ? 'When you log your progress, your measurements will show here.' : 'Cuando registres tu evolución, verás aquí tus medidas.',
         finalizar: T('Finalizar'), total: T('Total'), elija: T('Elija'), unaOpcion: T('una opción'), completadoLbl: T('completado'), descargarDieta: T('Descargar dieta'), imprimirDieta: T('Imprimir dieta'), compartirDieta: T('Compartir dieta'), descargarPdf: T('Puedes descargar en PDF'),
-        pesoCorporal: T('Peso corporal'), variacion: T('variación'), empezoEn: T('Empezó en'), ahora: T('ahora'),
+        pesoCorporal: T('Peso corporal'), variacion: T('variación'), seriesReg: T('series registradas'), empezoEn: T('Empezó en'), ahora: T('ahora'),
         progresoTitulo: T('Tu progreso'), fotoPrimeras: T('Primeras'), fotoUltimas: T('Últimas'), deslizaFotos: T('Desliza para ver frontal, lateral y espalda'),
         medidasEseDia: T('Medidas de ese día'), fotoArchivada: T('Enviada en su check-in semanal. Queda archivada para su consulta: no puede modificarse ni eliminarse.'), enEseCheckin: T('en ese check-in'),
         cambiarAlimento: T('Cambiar alimento'), equivExplica: T('Mismas calorías, distinto alimento. Toca el que prefieras.'),

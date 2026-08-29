@@ -148,6 +148,10 @@
     'Registrar entreno': 'Log workout', 'Registrar pauta alimenticia': 'Log nutrition plan',
     'Cardio': 'Cardio', 'Caminar': 'Walk', 'Entrenamiento': 'Workout', 'Cardio marcado': 'Cardio logged',
     'Entrenos': 'Workouts', 'Métricas': 'Metrics',
+    // faltaban: salían en español con la app en inglés (capturas App Store, 29 ago)
+    'Ver toda mi dieta': 'See my full diet', 'Desayuno, comida, cena y todas tus opciones': 'Breakfast, lunch, dinner and all your options',
+    'Tu dieta completa': 'Your full diet', 'Toca para ocultar': 'Tap to hide', 'Toca para ver todas tus medidas': 'Tap to see all your measurements',
+    'series registradas': 'sets logged', 'pasos': 'steps', 'faltan': 'to go', 'objetivo cumplido': 'goal reached',
     // Agenda
     'Pauta alimenticia': 'Nutrition plan', 'Nutrición': 'Nutrition', 'Marca lo que has comido': 'Mark what you ate', 'Registrar evolución': 'Record progress', 'Día de descanso — sin actividades asignadas.': 'Rest day — no activities assigned.',
     'Descanso': 'Rest', 'Sin sesión': 'No session',
@@ -257,6 +261,14 @@
     return out;
   }
 
+  // Inicial del día de la semana en la tira de la agenda (ES: D L M X J V S)
+  var WEEKD1 = { D: 'S', L: 'M', M: 'T', X: 'W', J: 'T', V: 'F', S: 'S' };
+  function weekd1(letter, lang) {
+    if (lang !== 'en' || !letter) return letter;
+    var k = String(letter).trim().toUpperCase();
+    return WEEKD1[k] != null && String(letter).trim().length === 1 ? WEEKD1[k] : letter;
+  }
+
   function pick(map, key, lang) {
     var e = map[key];
     if (!e) return key;
@@ -342,6 +354,7 @@
       return name;
     },
     t: function (str, lang) { if (lang !== 'en') return str; return UI[str] != null ? UI[str] : str; },
-    date: tdate
+    date: tdate,
+    weekd1: weekd1
   };
 })(typeof window !== 'undefined' ? window : globalThis);
