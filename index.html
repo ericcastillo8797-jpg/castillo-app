@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=185"></script>
-<script src="./castillo-transform.js?v=185"></script>
-<script src="./castillo-equiv.js?v=185"></script>
-<script src="./castillo-data.js?v=185"></script>
+<script src="./castillo-i18n.js?v=186"></script>
+<script src="./castillo-transform.js?v=186"></script>
+<script src="./castillo-equiv.js?v=186"></script>
+<script src="./castillo-data.js?v=186"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 185;
+  var VERSION_ACTUAL = 186;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -3872,6 +3872,15 @@ class Component extends DCLogic {
       moreApps: [{ name: 'Garmin' }, { name: 'Fitbit' }, { name: 'Google Fit' }, { name: 'Samsung Health' }, { name: 'Strava' }, { name: 'Polar' }, { name: 'Oura' }, { name: 'Coros' }],
       allApps: [{ name: 'Apple Salud', logo: 'logos-app/apple-salud.webp' }, { name: 'WHOOP', logo: 'logos-app/whoop.png' }, { name: 'Garmin', logo: 'logos-app/garmin.png' }, { name: 'Fitbit', logo: 'logos-app/fitbit.png' }, { name: 'Strava', logo: 'logos-app/strava.svg' }, { name: 'Polar', logo: '', noLogo: true }, { name: 'Oura', logo: 'logos-app/oura.png' }, { name: 'Coros', logo: 'logos-app/coros.png' }].map((a) => {
         const isApple = a.name === 'Apple Salud';
+        // Garmin, Fitbit, Strava, Polar, Oura y Coros NO están conectadas de verdad: el botón solo
+        // guardaba una nota en el móvil y decía "conectado". Eso es un rechazo seguro de Apple
+        // (norma 2.1) y además engaña al cliente. Se quedan a la vista, en gris y sin poder tocarse.
+        // Para reactivar una: quitarla de esta lista cuando su conexión real esté montada.
+        const SIN_CONEXION = ['Garmin', 'Fitbit', 'Strava', 'Polar', 'Oura', 'Coros'];
+        if (SIN_CONEXION.indexOf(a.name) >= 0) {
+          return Object.assign({}, a, { estado: T('Próximamente'), estadoColor: 'rgba(var(--fgc,255,255,255),.28)',
+            proximamente: true, onTap: () => {} });
+        }
         const con = !!(window.CastilloData && window.CastilloData.appConectado && window.CastilloData.appConectado(a.name));
         const estado = con ? T('Conectado') : T('Conectar');
         const estadoColor = con ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.5)';
