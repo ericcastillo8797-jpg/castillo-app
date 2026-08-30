@@ -100,10 +100,22 @@
     var list = ALT[g].filter(function (a) { return nrm(a.n).indexOf(self) < 0 && self.indexOf(nrm(a.n)) < 0; });
     if (k0 > 0) list = list.slice().sort(function (a, b) { return Math.abs(a.k - k0) - Math.abs(b.k - k0); });
     // Alex: por debajo de 15 g no se ofrece. Nadie pesa 4 g de salsa, y un cambio así confunde.
+    // Y por arriba tampoco: cambiar queso parmesano por 2,5 KILOS de leche cuadra en calorías
+    // pero no es una comida. Tope: 400 g o 4 veces la ración original, lo que sea menor.
     var MIN_G = 15;
-    return list.map(function (a) {
+    var qty0 = (food.unit === 'g' && food.qty > 0) ? food.qty : 0;
+    var MAX_G = qty0 > 0 ? Math.min(400, qty0 * 4) : 400;
+    // Además el cambio tiene que parecerse en LO QUE APORTA, no solo en calorías: lo que manda
+    // en el original (proteína, hidratos o grasa) tiene que mandar también en el sustituto.
+    function manda(o) {
+      var kp = (o.p || 0) * 4, kc = (o.c || 0) * 4, kg = (o.g || 0) * 9, mx = Math.max(kp, kc, kg);
+      if (mx <= 0) return '';
+      return mx === kg ? 'g' : (mx === kp ? 'p' : 'c');
+    }
+    var m0 = manda(food);
+    return list.filter(function (a) { return !m0 || manda(a) === m0; }).map(function (a) {
       return { a: a, grams: Math.round(food.kcal / (a.k / 100)) };
-    }).filter(function (x) { return x.grams >= MIN_G; }).slice(0, 4).map(function (o) {
+    }).filter(function (x) { return x.grams >= MIN_G && x.grams <= MAX_G; }).slice(0, 4).map(function (o) {
       var a = o.a, grams = o.grams;
       return {
         name: (lang === 'en' ? a.en : a.n), grams: grams, grupo: g,
