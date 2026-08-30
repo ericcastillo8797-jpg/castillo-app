@@ -15,7 +15,7 @@
       { n: 'Pechuga de pollo', en: 'Chicken breast', k: 120, p: 23, c: 0, g: 3 }, { n: 'Pavo', en: 'Turkey', k: 104, p: 17, c: 4, g: 2 },
       { n: 'Ternera magra', en: 'Lean beef', k: 159, p: 28, c: 0, g: 5 }, { n: 'Salmón', en: 'Salmon', k: 146, p: 22, c: 0, g: 6 },
       { n: 'Merluza', en: 'Hake', k: 80, p: 18, c: 0, g: 1 }, { n: 'Atún al natural', en: 'Tuna', k: 100, p: 23, c: 0, g: 1 },
-      { n: 'Huevo', en: 'Egg', k: 148, p: 13, c: 1, g: 10 }, { n: 'Gambas', en: 'Prawns', k: 105, p: 20, c: 1, g: 2 }
+      { n: 'Claras de huevo', en: 'Egg whites', k: 52, p: 11, c: 0.7, g: 0.2 }, { n: 'Gambas', en: 'Prawns', k: 105, p: 20, c: 1, g: 2 }
     ],
     grasa: [
       { n: 'Aceite de oliva', en: 'Olive oil', k: 884, p: 0, c: 0, g: 100 }, { n: 'Aguacate', en: 'Avocado', k: 160, p: 2, c: 9, g: 15 },
@@ -76,6 +76,10 @@
   var REGLAS = [
     // Las aceitunas van antes: "Acei-tuna-s" contenía «tuna» y salían como proteína.
     [/aceituna|\bolives?\b/i, 'grasa'],
+    // Las salsas van de las PRIMERAS a proposito. Si no, "Salsa 4 quesos" caia en lacteos por
+    // la palabra «queso», y la mayonesa se colaba entre las grasas y se cambiaba por aceite.
+    // Toda esta familia esta fija (Alex, 30 ago): las salsas no se cambian entre si.
+    [/\bsalsas?\b|\bsauce\b|mayonesa|mayonnaise|\bmayo\b|alioli|aioli|mostaza|mustard|vinagreta|vinaigrette|k[e\u00e9]tchup|ketchup|barbacoa|barbecue|\bbbq\b|sriracha|teriyaki|t[a\u00e1]rtara|pesto|carbonara|boloñesa|bolognese/i, 'salsa'],
     [/burguer|burger|hamburguesa/i, 'prote'],
     // ojo con las palabras cortas: van con límite de palabra o pescan trozos de otras
     [/\bcarne|beef|pollo|chicken|pavo|turkey|cerdo|pork|ternera|salm[oó]n|\bat[uú]n\b|\btuna\b|merluza|hake|bacalao|\bcod\b|gambas|shrimp|prawns|huevo|\begg/i, 'prote'],
@@ -138,12 +142,25 @@
     }
     return false;
   }
-  var SUST = { carbo: 1, prote: 1, grasa: 1, lacteo: 1, fruta: 1, verdura: 1, salsa: 1 };
-  function esFijo(food) { var g = grupoDe(food); return !g || !SUST[g]; }
+  // Alex (30 ago). Las SALSAS ya no se cambian entre si: entre un ketchup y una mayonesa hay
+  // 29 y 680 kcal por 100 g, y aunque cuadren las calorias no son la misma cosa. Palabras suyas:
+  // "al cliente no se le puede abrir tanto la puerta como para que al pasar se caiga".
+  var SUST = { carbo: 1, prote: 1, grasa: 1, lacteo: 1, fruta: 1, verdura: 1 };
+  // Alex (30 ago). El HUEVO ENTERO no se cambia por nada: 150 g son 222 kcal pero solo 19 g de
+  // proteina (la mitad de sus calorias son grasa), asi que igualar calorias con cualquier carne
+  // magra le duplica la proteina. Una tortilla es una tortilla. Las CLARAS si se cambian.
+  var HUEVO_ENTERO = /huevo|\bhuevos\b|\begg\b|\beggs\b|tortilla|omelet|omelette|revuelto|scrambled/i;
+  var ES_CLARA = /clara|\bclaras\b|egg\s*white|albumina/i;
+  function huevoEntero(food) {
+    var b = sinMarca(food && food.name);
+    return HUEVO_ENTERO.test(b) && !ES_CLARA.test(b);
+  }
+  function esFijo(food) { var g = grupoDe(food); return !g || !SUST[g] || huevoEntero(food); }
   function r1(x) { return Math.round(x * 10) / 10; }
   function alternativas(food, lang) {
     var g = grupoDe(food);
     if (!g || !SUST[g]) return null;
+    if (huevoEntero(food)) return null;   // tortilla, revuelto, huevo entero: no hay cambio
     // El plan de Alex escribe los alimentos en INGLES ("White Rice") y nuestra lista esta en
     // espanol ("Arroz blanco"). Si comparamos solo el texto no vemos que son el MISMO alimento
     // y acabamos ofreciendole al cliente "cambia tu arroz por arroz". Traducimos los dos lados.
