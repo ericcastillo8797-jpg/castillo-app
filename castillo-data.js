@@ -203,10 +203,14 @@
     return (H.isHealthAvailable ? H.isHealthAvailable() : Promise.resolve({ available: true })).then(function (a) {
       if (a && a.available === false) return;
       return H.requestHealthPermissions({ permissions: ['READ_STEPS'] }).catch(function () {}).then(function () {
-        // Antes solo se leía HOY: si el cliente no abría la app un día, esos pasos se perdían para
-        // siempre. Ahora se recuperan los últimos 7 días de una sola consulta, día a día.
+        // Apple Salud guarda el histórico entero, así que no hay motivo para leer solo la última
+        // semana. La primera vez se recuperan 180 días hacia atrás (rellena todo lo que el cliente
+        // caminó antes de instalar la app); después, 30 días en cada arranque.
         var now = new Date();
-        var desde = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6).toISOString();
+        var claveBF = 'salud_backfill_' + (_ctx.email || '');
+        var yaHecho = false; try { yaHecho = localStorage.getItem(claveBF) === '1'; } catch (e) {}
+        var dias = yaHecho ? 30 : 180;
+        var desde = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (dias - 1)).toISOString();
         return H.queryAggregated({ startDate: desde, endDate: now.toISOString(), dataType: 'steps', bucket: 'day' });
       }).then(function (res) {
         var buckets = (res && res.aggregatedData) || [];
@@ -221,15 +225,20 @@
           if (!k || k > hoyF) return;                      // nunca escribe días futuros
           porDia[k] = (porDia[k] || 0) + Math.round(b.value || 0);
         });
-        var filas = Object.keys(porDia).filter(function (k) { return porDia[k] > 0; }).map(function (k) {
-          var row = { cliente_email: _ctx.email, fecha: k, pasos: porDia[k], registrado_por: _ctx.email, updated_at: new Date().toISOString() };
-          if (porDia[k] >= objetivo) row.cardio = true;     // llegó a SU objetivo → cardio hecho
-          return row;
+        var conPasos = Object.keys(porDia).filter(function (k) { return porDia[k] > 0; });
+        if (!conPasos.length) return;
+        // uno a uno y fusionando: así no se pisa el entreno que el cliente ya guardó ese día
+        // Uno a uno y fusionando: así no se pisa el entreno que el cliente ya guardó ese día,
+        // y si un día falla no se lleva por delante a los demás (antes iba todo en un solo envío).
+        return conPasos.reduce(function (p2, k) {
+          return p2.then(function () {
+            var campos = { pasos: porDia[k] };
+            if (porDia[k] >= objetivo) campos.cardio = true;
+            return guardaDia(k, campos).catch(function () {});
+          });
+        }, Promise.resolve()).then(function () {
+          try { localStorage.setItem(claveBF, '1'); } catch (e) {}
         });
-        if (!filas.length) return;
-        return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
-          method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(filas)
-        }, _ctx.token);
       });
     }).catch(function () {});
   }
@@ -254,14 +263,35 @@
       if (res && res.aggregatedData && res.aggregatedData.length) pasos = Math.round(res.aggregatedData.reduce(function (s, x) { return s + (x.value || 0); }, 0));
       var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
       var hoyF = tzToday(_ctx.tz);   // fecha fresca en la zona del cliente
-      var row = { cliente_email: _ctx.email, fecha: hoyF, pasos: pasos, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
-      if (pasos >= objetivo) row.cardio = true;
+      var campos = { pasos: pasos };
+      if (pasos >= objetivo) campos.cardio = true;
       try { localStorage.setItem('salud_conectado_' + (_ctx.email || ''), '1'); } catch (e) {}
-      return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
-        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
-      }, _ctx.token).then(function () { return { available: true, ok: true, pasos: pasos }; });
+      return guardaDia(hoyF, campos).then(function () { return { available: true, ok: true, pasos: pasos }; });
     }).catch(function () { return { available: true, ok: false }; });
   }
+  // Todo lo del día (entreno, pasos, cardio) vive en la MISMA fila de entreno_registros.
+  // Antes cada cosa hacía un upsert con solo sus campos y eso REEMPLAZA la fila entera: guardar
+  // un entreno borraba los pasos del día, y sincronizar los pasos borraba el entreno.
+  // Ahora: si la fila existe se hace PATCH (solo toca las columnas que se mandan); si no, INSERT.
+  function guardaDia(fecha, campos) {
+    if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+    var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+    var e = encodeURIComponent(_ctx.email);
+    var patch = Object.assign({}, campos, { updated_at: new Date().toISOString() });
+    return api('/rest/v1/entreno_registros?select=id&cliente_email=ilike.' + e + '&fecha=eq.' + f, {}, _ctx.token)
+      .then(function (filas) {
+        if (filas && filas.length) {
+          return api('/rest/v1/entreno_registros?cliente_email=ilike.' + e + '&fecha=eq.' + f, {
+            method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(patch)
+          }, _ctx.token);
+        }
+        return api('/rest/v1/entreno_registros', {
+          method: 'POST', headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify(Object.assign({ cliente_email: _ctx.email, fecha: f, registrado_por: _ctx.email }, patch))
+        }, _ctx.token);
+      });
+  }
+
   function saludConectado() { try { return localStorage.getItem('salud_conectado_' + (_ctx.email || '')) === '1'; } catch (e) { return false; } }
   function desconectarSalud() { try { localStorage.removeItem('salud_conectado_' + (_ctx.email || '')); } catch (e) {} }
   // Estado de conexión de cada app por usuario (Apple Salud es el flag real; el resto se marca en este móvil).
@@ -472,10 +502,7 @@
     registrarEntreno: function (titulo, ejercicios, completo, fecha) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
-      var row = { cliente_email: _ctx.email, fecha: f, titulo: titulo || 'Entrenamiento', ejercicios: ejercicios || [], estado: completo ? 'completado' : 'en_progreso', registrado_por: _ctx.email, updated_at: new Date().toISOString() };
-      return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
-        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
-      }, _ctx.token);
+      return guardaDia(f, { titulo: titulo || 'Entrenamiento', ejercicios: ejercicios || [], estado: completo ? 'completado' : 'en_progreso' });
     },
     // guarda el check-in de HOY (peso, medidas y fotos) que apunta el cliente
     // mode: 'medidas' (solo valores) | 'fotos' (solo fotos) | 'both'. SIEMPRE fusiona con lo ya guardado
@@ -533,13 +560,12 @@
     registrarCardio: function (fecha, done) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
-      var row = { cliente_email: _ctx.email, fecha: f, cardio: !!done, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
-      // marca MANUAL del cardio → cuenta el objetivo de pasos (regla de Alex)
+      var campos = { cardio: !!done };
+      // marca MANUAL del cardio → cuenta el objetivo de pasos, pero SOLO si no hay lectura real
       var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
-      if (done) row.pasos = objetivo;
-      return api('/rest/v1/entreno_registros?on_conflict=cliente_email,fecha', {
-        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
-      }, _ctx.token);
+      var yaReal = (function () { try { var r = (window.__DATA && window.__DATA.logsDia && window.__DATA.logsDia[f]) || null; return r && r.pasosReales; } catch (e) { return false; } })();
+      if (done && !yaReal) campos.pasos = objetivo;
+      return guardaDia(f, campos);
     }
   };
   window.CastilloData = CastilloData;

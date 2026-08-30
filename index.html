@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=203"></script>
-<script src="./castillo-transform.js?v=203"></script>
-<script src="./castillo-equiv.js?v=203"></script>
-<script src="./castillo-data.js?v=203"></script>
+<script src="./castillo-i18n.js?v=204"></script>
+<script src="./castillo-transform.js?v=204"></script>
+<script src="./castillo-equiv.js?v=204"></script>
+<script src="./castillo-data.js?v=204"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 203;
+  var VERSION_ACTUAL = 204;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -846,7 +846,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
 <sc-if value="{{ wMounted }}" hint-placeholder-val="{{ false }}">
 <div data-screen-label="Entrenamiento" style="position:absolute;inset:0;z-index:9;background:var(--bg,#000);transition:transform .52s cubic-bezier(.32,.72,0,1);transform:{{ wTransform }}">
-  <div style="position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain">
+  <!-- Tocar fuera de un campo cierra el teclado: si no, se queda abierto y tapa media pantalla
+       sin poder hacer nada (el cuerpo está fijado para que la app no se arrastre como una web). -->
+  <div onPointerDown="{{ cierraTeclado }}" style="position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">
     <div style="position:sticky;top:0;z-index:4;padding:52px 18px 12px;background:rgba(var(--bgc,0,0,0),.94);border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
       <div style="display:flex;align-items:center;gap:12px">
         <div onClick="{{ askCloseWorkout }}" style="width:30px;height:30px;flex:none;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)">
@@ -2093,6 +2095,16 @@ class Component extends DCLogic {
   later(fn, ms) { this._to = this._to || []; this._to.push(setTimeout(fn, ms)); }
 
   componentDidUpdate() { this._guardaEntreno(); this._marcaUso(); }
+  // Cierra el teclado al tocar cualquier sitio que no sea un campo de texto.
+  // Sin esto el teclado se quedaba abierto y no se podía desplazar la pantalla.
+  cierraTeclado = (ev) => {
+    try {
+      const t = ev && ev.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      const a = document.activeElement;
+      if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
+    } catch (e) {}
+  };
   _marcaUso = () => { try { if (this.stage === 'app') localStorage.setItem('castillo_ultimo_uso', String(Date.now())); } catch (e) {} };
   // ¿Salió solo un momento (a un WhatsApp, una llamada) y volvió? Entonces no se le enseña otra vez
   // la animación de entrada ni el Face ID: se entra directo donde estaba.
