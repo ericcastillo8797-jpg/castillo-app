@@ -89,15 +89,61 @@
     if (mx <= 0) return null;
     if (mx === kg) return 'grasa'; if (mx === kp) return 'prote'; return 'carbo';
   }
+  // Mismo alimento con otro nombre. "Macarrones" es pasta, y ofrecerle pasta al cliente que
+  // ya tiene macarrones no es un cambio.
+  var SINONIMOS = [
+    ['pasta', 'macarrones', 'macaroni', 'espaguetis', 'espagueti', 'spaguetti', 'spaghetti', 'penne', 'fusilli', 'tallarines', 'noodles', 'fideos'],
+    ['crema de cacahuete', 'peanut butter', 'mantequilla de cacahuete'],
+    ['boniato', 'batata', 'sweet potato'],
+    ['gambas', 'langostinos', 'shrimp', 'prawns'],
+    ['avena', 'oats', 'oatmeal', 'porridge', 'gachas'],
+    ['pechuga de pollo', 'chicken breast', 'pollo', 'chicken']
+  ];
+  // Nombres del MISMO alimento en los dos idiomas, para no ofrecerlo como su propia variante.
+  function claves(nombre) {
+    var base = sinMarca(nombre), out = [nrm(base)];
+    try {
+      var I = w.I18N;
+      if (I && I.food) {
+        var es = nrm(sinMarca(I.food(base, 'es'))); if (es && out.indexOf(es) < 0) out.push(es);
+        var en = nrm(sinMarca(I.food(base, 'en'))); if (en && out.indexOf(en) < 0) out.push(en);
+      }
+    } catch (e) {}
+    for (var i = 0; i < SINONIMOS.length; i++) {
+      var gp = SINONIMOS[i];
+      for (var j = 0; j < out.length; j++) {
+        if (gp.indexOf(out[j]) >= 0) { if (out.indexOf(gp[0]) < 0) out.push(gp[0]); break; }
+      }
+    }
+    return out.filter(Boolean);
+  }
+  // Sobran los adjetivos de coccion: "Garbanzos cocidos" y "Garbanzos" son el mismo garbanzo.
+  // Solo el estado de coccion. OJO: "natural" y "fresco" NO se quitan, porque distinguen
+  // alimentos de verdad (Yogur natural / Yogur griego, Atun al natural, Queso fresco).
+  var RELLENO = /\b(cocid[oa]s?|cocinad[oa]s?|hervid[oa]s?|crud[oa]s?|cooked|boiled|raw)\b/g;
+  function nucleo(k) { return k.replace(RELLENO, ' ').replace(/\s+/g, ' ').trim(); }
+  function mismoAlimento(a, b) {
+    for (var i = 0; i < a.length; i++) {
+      var x = nucleo(a[i]); if (!x) continue;
+      for (var j = 0; j < b.length; j++) {
+        var y = nucleo(b[j]); if (!y) continue;
+        if (x === y || x.indexOf(y) >= 0 || y.indexOf(x) >= 0) return true;
+      }
+    }
+    return false;
+  }
   var SUST = { carbo: 1, prote: 1, grasa: 1, lacteo: 1, fruta: 1, verdura: 1, salsa: 1 };
   function esFijo(food) { var g = grupoDe(food); return !g || !SUST[g]; }
   function r1(x) { return Math.round(x * 10) / 10; }
   function alternativas(food, lang) {
     var g = grupoDe(food);
     if (!g || !SUST[g]) return null;
-    var self = nrm(sinMarca(food.name));
+    // El plan de Alex escribe los alimentos en INGLES ("White Rice") y nuestra lista esta en
+    // espanol ("Arroz blanco"). Si comparamos solo el texto no vemos que son el MISMO alimento
+    // y acabamos ofreciendole al cliente "cambia tu arroz por arroz". Traducimos los dos lados.
+    var self = claves(food.name);
     var k0 = (food.unit === 'g' && food.qty > 0) ? (food.kcal * 100 / food.qty) : 0;
-    var list = ALT[g].filter(function (a) { return nrm(a.n).indexOf(self) < 0 && self.indexOf(nrm(a.n)) < 0; });
+    var list = ALT[g].filter(function (a) { return !mismoAlimento(self, claves(a.n).concat(claves(a.en))); });
     if (k0 > 0) list = list.slice().sort(function (a, b) { return Math.abs(a.k - k0) - Math.abs(b.k - k0); });
     // Alex: por debajo de 15 g no se ofrece. Nadie pesa 4 g de salsa, y un cambio así confunde.
     // Y por arriba tampoco: cambiar queso parmesano por 2,5 KILOS de leche cuadra en calorías
@@ -113,7 +159,20 @@
       return mx === kg ? 'g' : (mx === kp ? 'p' : 'c');
     }
     var m0 = manda(food);
-    return list.filter(function (a) { return !m0 || manda(a) === m0; }).map(function (a) {
+    var enRango = function (a) {
+      var gr = Math.round(food.kcal / (a.k / 100));
+      return gr >= MIN_G && gr <= MAX_G;
+    };
+    var dentro = list.filter(enRango);
+    // Preferimos que el sustituto aporte LO MISMO (proteina por proteina, grasa por grasa).
+    // Pero la norma de Alex manda: "cualquier sustitucion siempre se iguala a nivel de calorias".
+    // Asi que esto es una PREFERENCIA, no un muro: si al exigirlo nos quedamos sin opciones
+    // (le pasaba al yogur griego y al ketchup, que se quedaban sin ni una), abrimos la familia
+    // entera ordenada por calorias. El tope de gramos de arriba ya evita los cambios absurdos.
+    var mismos = m0 ? dentro.filter(function (a) { return manda(a) === m0; }) : dentro;
+    var finales = mismos.length >= 2 ? mismos
+      : mismos.concat(dentro.filter(function (a) { return mismos.indexOf(a) < 0; }));
+    return finales.map(function (a) {
       return { a: a, grams: Math.round(food.kcal / (a.k / 100)) };
     }).filter(function (x) { return x.grams >= MIN_G && x.grams <= MAX_G; }).slice(0, 4).map(function (o) {
       var a = o.a, grams = o.grams;
