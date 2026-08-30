@@ -25,13 +25,45 @@
     });
   }
 
+  // ── DONDE SE GUARDA LA SESION ────────────────────────────────────────────────────────────
+  // Desde que la app va empaquetada, sus pantallas ya no viven en una direccion de internet sino
+  // dentro del movil. El almacen del navegador de iOS, en ese caso, se vacia solo (al reiniciar,
+  // al actualizar). Resultado: al cliente le pedia el correo y la contraseña una y otra vez.
+  // Por eso todo lo que TIENE que sobrevivir se guarda ADEMAS en el almacen nativo del telefono,
+  // que no se toca nunca. localStorage sigue usandose como copia rapida (es sincrono).
+  function _prefs() {
+    try { var C = window.Capacitor; return (C && C.Plugins && C.Plugins.Preferences) || null; } catch (e) { return null; }
+  }
+  function guardaDuro(k, v) {
+    try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {}
+    var P = _prefs(); if (!P) return;
+    try { if (v == null) P.remove({ key: k }); else P.set({ key: k, value: v }); } catch (e) {}
+  }
+  // Al arrancar: lo que haya en el almacen nativo se copia al del navegador, para que todo lo
+  // demas siga funcionando igual (sincrono). La app espera a esta promesa antes de decidir si
+  // enseña el Face ID o el formulario.
+  var CLAVES_DURAS = ['castillo_session', 'castillo_creds', 'castillo_lang'];
+  var listo = (function () {
+    var P = _prefs();
+    if (!P) return Promise.resolve(false);
+    return Promise.all(CLAVES_DURAS.map(function (k) {
+      return P.get({ key: k }).then(function (r) {
+        var v = r && r.value;
+        try {
+          if (v && !localStorage.getItem(k)) localStorage.setItem(k, v);        // el movil manda
+          else if (!v && localStorage.getItem(k)) P.set({ key: k, value: localStorage.getItem(k) });  // primera vez: se copia al movil
+        } catch (e) {}
+      }).catch(function () {});
+    })).then(function () { return true; });
+  })();
+
   function saveSession(s) {
-    try { localStorage.setItem(LS, JSON.stringify({ access_token: s.access_token, refresh_token: s.refresh_token, email: (s.user && s.user.email) || s.email, ts: Date.now() })); } catch (e) {}
+    guardaDuro(LS, JSON.stringify({ access_token: s.access_token, refresh_token: s.refresh_token, email: (s.user && s.user.email) || s.email, ts: Date.now() }));
   }
   function readSession() { try { return JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e) { return null; } }
   // "recuérdame": guarda el acceso en ESTE móvil para que el Face ID entre solo aunque caduque la sesión
   var CR = 'castillo_creds';
-  function saveCreds(email, pass) { try { localStorage.setItem(CR, btoa(unescape(encodeURIComponent(JSON.stringify({ e: email, p: pass }))))); } catch (e) {} }
+  function saveCreds(email, pass) { try { guardaDuro(CR, btoa(unescape(encodeURIComponent(JSON.stringify({ e: email, p: pass }))))); } catch (e) {} }
   function readCreds() { try { var v = localStorage.getItem(CR); if (!v) return null; return JSON.parse(decodeURIComponent(escape(atob(v)))); } catch (e) { return null; } }
 
   function friendly(msg) {
@@ -426,6 +458,8 @@
   var CastilloData = {
     // el Face ID solo entra si ya hay una sesión/credenciales guardadas en ESTE móvil (tras acceder una vez con correo)
     hasSession: function () { return !!(readSession() || readCreds()); },
+    listo: listo,                 // promesa: la sesion guardada en el movil ya esta cargada
+    guardaDuro: guardaDuro,       // para el idioma, que lo escribe la pantalla de Ajustes
     loginAndLoad: function (email, pass) {
       return passwordLogin(email, pass).catch(function (e) { e.message = friendly(e.message || ''); throw e; });
     },
@@ -447,7 +481,7 @@
       }
       return (creds ? passwordLogin(creds.e, creds.p).catch(noSesion) : noSesion());
     },
-    logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
+    logout: function () { try { guardaDuro(LS, null); guardaDuro(CR, null); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
     registrarComida: registrarComida,
     desregistrarComida: desregistrarComida,
     guardarPerfil: guardarPerfil, guardaIdioma: guardaIdioma,

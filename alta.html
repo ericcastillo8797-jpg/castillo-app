@@ -432,6 +432,11 @@
         // en ese, no en el del telefono. (En la base ya lo guarda alta-cliente en settings.idioma,
         // que es lo que leen las notificaciones.)
         try{ localStorage.setItem('castillo_lang', lang); }catch(e){}
+        // Y en el almacen nativo, que es el que no se borra al actualizar la app.
+        try{ var _P=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Preferences;
+          if(_P){ _P.set({key:'castillo_session',value:localStorage.getItem(LS)});
+                  _P.set({key:'castillo_creds',value:localStorage.getItem(CR)});
+                  _P.set({key:'castillo_lang',value:lang}); } }catch(e){}
         // Enviar el FORMULARIO (con email+contraseña dentro) provoca una navegación real: así iOS/Safari
         // ofrece "Guardar contraseña" en el llavero, como en Airbnb/Spotify. Se quitan los "name" para que
         // los datos NO viajen en la URL (solo va ?entrar=1).
