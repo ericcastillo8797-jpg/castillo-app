@@ -23,14 +23,38 @@
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
   var VERSION_ACTUAL = 215;
+  // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
+  // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
+  // a si mismo.
+  var REMOTO = 'https://ericcastillo8797-jpg.github.io/castillo-app/';
+  var CU = null;
+  try {
+    var C = window.Capacitor;
+    if (C && C.isNativePlatform && C.isNativePlatform() && C.Plugins) CU = C.Plugins.CapacitorUpdater || null;
+  } catch (e) {}
+
+  // OBLIGATORIO en la app instalada: avisar de que ha arrancado bien. Si no se avisa, el sistema
+  // da por rota la version recien bajada y vuelve solo a la anterior. Es la red de seguridad:
+  // si alguna vez subo algo que no arranca, el cliente no se queda con la app muerta.
+  if (CU) { try { CU.notifyAppReady(); } catch (e) {} }
+
+  var bajando = false;
   function mirar() {
     try {
-      fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
+      fetch((CU ? REMOTO : './') + 'version.json?t=' + Date.now(), { cache: 'no-store' })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
           if (!j || !j.version || j.version <= VERSION_ACTUAL) return;
-          // nunca recargar con un entreno abierto: se perdería lo que está anotando
+          // nunca cortar un entreno abierto: se perderia lo que esta anotando
           try { if (localStorage.getItem('castillo_entreno')) return; } catch (e) {}
+          if (CU) {
+            if (bajando || !j.url) return;
+            bajando = true;
+            CU.download({ url: j.url, version: String(j.version) })
+              .then(function (b) { return CU.set(b); })      // se aplica y recarga
+              .catch(function () { bajando = false; });
+            return;
+          }
           var u = location.pathname + '?b=' + j.version;
           if (location.search.indexOf('b=' + j.version) >= 0) return;   // ya estamos en esa
           location.replace(u);
