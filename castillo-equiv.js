@@ -24,7 +24,13 @@
     ],
     lacteo: [
       { n: 'Leche desnatada', en: 'Skim milk', k: 34, p: 3, c: 5, g: 0 }, { n: 'Yogur natural', en: 'Natural yogurt', k: 60, p: 4, c: 5, g: 3 },
-      { n: 'Yogur griego', en: 'Greek yogurt', k: 117, p: 4, c: 5, g: 9 }, { n: 'Kéfir', en: 'Kefir', k: 40, p: 3, c: 5, g: 1 }
+      { n: 'Yogur griego', en: 'Greek yogurt', k: 117, p: 4, c: 5, g: 9 }, { n: 'Kéfir', en: 'Kefir', k: 40, p: 3, c: 5, g: 1 },
+      // Alex (30 ago): los lacteos se quedaban cortos y el yogur griego solo podia cambiarse
+      // por medio litro de kefir. Estos cuatro llevan proteina de verdad, que es lo que faltaba.
+      { n: 'Queso batido 0%', en: 'Skimmed quark 0%', k: 47, p: 8, c: 4, g: 0.2 },
+      { n: 'Requesón', en: 'Cottage cheese', k: 96, p: 11, c: 3, g: 4 },
+      { n: 'Queso fresco 12%', en: 'Fresh cheese 12%', k: 174, p: 12, c: 4, g: 12 },
+      { n: 'Skyr', en: 'Skyr', k: 63, p: 11, c: 4, g: 0.2 }
     ],
     // Alex (30 ago): la fruta, la verdura y las salsas TAMBIÉN se cambian, siempre igualando
     // calorías, como todo lo demás. Valores por 100 g validados por él.
@@ -144,7 +150,13 @@
     var self = claves(food.name);
     var k0 = (food.unit === 'g' && food.qty > 0) ? (food.kcal * 100 / food.qty) : 0;
     var list = ALT[g].filter(function (a) { return !mismoAlimento(self, claves(a.n).concat(claves(a.en))); });
-    if (k0 > 0) list = list.slice().sort(function (a, b) { return Math.abs(a.k - k0) - Math.abs(b.k - k0); });
+    // Alex (30 ago): "las calorias son lo mas importante, pero la proteina tiene que ser
+    // parecida, no un cambio brusco". Las calorias ya salen clavadas por construccion (se
+    // calculan los gramos justos), asi que lo que ordena aqui es el PARECIDO DE MACROS:
+    // que reparto de calorias entre proteina, hidratos y grasa tiene cada uno. Las cuatro
+    // opciones que ve el cliente son las cuatro mas parecidas de su familia.
+    var perf0 = perfil(food);
+    list = list.slice().sort(function (a, b) { return distancia(perfil(a), perf0) - distancia(perfil(b), perf0); });
     // Alex: por debajo de 15 g no se ofrece. Nadie pesa 4 g de salsa, y un cambio así confunde.
     // Y por arriba tampoco: cambiar queso parmesano por 2,5 KILOS de leche cuadra en calorías
     // pero no es una comida. Tope: 400 g o 4 veces la ración original, lo que sea menor.
@@ -153,6 +165,16 @@
     var MAX_G = qty0 > 0 ? Math.min(400, qty0 * 4) : 400;
     // Además el cambio tiene que parecerse en LO QUE APORTA, no solo en calorías: lo que manda
     // en el original (proteína, hidratos o grasa) tiene que mandar también en el sustituto.
+    // Reparto de las calorias del alimento: cuanto viene de proteina, cuanto de hidratos y
+    // cuanto de grasa. Sirve para comparar dos alimentos de tamanos distintos.
+    function perfil(o) {
+      var kp = (o.p || 0) * 4, kc = (o.c || 0) * 4, kg = (o.g || 0) * 9, t = kp + kc + kg;
+      return t > 0 ? [kp / t, kc / t, kg / t] : null;
+    }
+    function distancia(a, b) {
+      if (!a || !b) return 2;
+      return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
+    }
     function manda(o) {
       var kp = (o.p || 0) * 4, kc = (o.c || 0) * 4, kg = (o.g || 0) * 9, mx = Math.max(kp, kc, kg);
       if (mx <= 0) return '';
@@ -170,8 +192,26 @@
     // (le pasaba al yogur griego y al ketchup, que se quedaban sin ni una), abrimos la familia
     // entera ordenada por calorias. El tope de gramos de arriba ya evita los cambios absurdos.
     var mismos = m0 ? dentro.filter(function (a) { return manda(a) === m0; }) : dentro;
-    var finales = mismos.length >= 2 ? mismos
-      : mismos.concat(dentro.filter(function (a) { return mismos.indexOf(a) < 0; }));
+    // Alex (30 ago): "no puede ser un cambio brusco, si no no va a dar el numero". Las calorias
+    // salen clavadas siempre, pero el macro que MANDA en el alimento (la proteina en una carne,
+    // los hidratos en un arroz) no puede irse mas de un 30%. Ejemplo de por que hace falta:
+    // 150 g de huevo son 222 kcal pero solo 19 g de proteina, y al igualar calorias con pollo
+    // salian 43 g. Mas del doble.
+    var TOPE = 0.30;
+    function dominante(o) { var m = manda(o); return m === 'p' ? (o.p || 0) : (m === 'c' ? (o.c || 0) : (o.g || 0)); }
+    var base0 = dominante(food);
+    function suave(a) {
+      if (!base0 || !m0) return true;
+      var gr = food.kcal / (a.k / 100);
+      var val = (m0 === 'p' ? a.p : (m0 === 'c' ? a.c : a.g)) * gr / 100;
+      return Math.abs(val - base0) / base0 <= TOPE;
+    }
+    var buenos = mismos.filter(suave);
+    // Igual que con las salsas: esto es lo que se PREFIERE, no un muro. Si el tope deja al
+    // cliente con menos de dos opciones, se abre la mano antes que dejarle sin ningun cambio.
+    var finales = buenos.length >= 2 ? buenos
+      : buenos.concat(mismos.filter(function (a) { return buenos.indexOf(a) < 0; }))
+              .concat(dentro.filter(function (a) { return mismos.indexOf(a) < 0; }));
     return finales.map(function (a) {
       return { a: a, grams: Math.round(food.kcal / (a.k / 100)) };
     }).filter(function (x) { return x.grams >= MIN_G && x.grams <= MAX_G; }).slice(0, 4).map(function (o) {
