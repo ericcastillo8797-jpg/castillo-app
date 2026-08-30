@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=218"></script>
-<script src="./castillo-transform.js?v=218"></script>
-<script src="./castillo-equiv.js?v=218"></script>
-<script src="./castillo-data.js?v=218"></script>
+<script src="./castillo-i18n.js?v=219"></script>
+<script src="./castillo-transform.js?v=219"></script>
+<script src="./castillo-equiv.js?v=219"></script>
+<script src="./castillo-data.js?v=219"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 218;
+  var VERSION_ACTUAL = 219;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1786,6 +1786,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 <sc-if value="{{ showLock }}" hint-placeholder-val="{{ false }}">
 <div data-screen-label="Acceso" style="position:absolute;inset:0;z-index:15;background:var(--bg,#000);display:flex;flex-direction:column;transition:opacity .6s cubic-bezier(.32,.72,0,1),transform .6s cubic-bezier(.32,.72,0,1);opacity:{{ lockOpacity }};transform:{{ lockTransform }}">
   <div style="position:absolute;inset:0;background:radial-gradient(90% 60% at 50% 12%,rgba(var(--fgc,255,255,255),.07),transparent 70%)"></div>
+  <!-- Cambiar de idioma ANTES de entrar: un cliente de Miami tiene que poder pasarla a ingles
+       sin haber accedido todavia. Enseña el idioma al que va a cambiar, como en el formulario. -->
+  <div onClick="{{ toggleLang }}" style="position:absolute;top:calc(14px + env(safe-area-inset-top));left:16px;z-index:2;font-size:12px;letter-spacing:.05em;color:rgba(var(--fgc,255,255,255),.45);padding:6px 10px;cursor:pointer" style-active="opacity:.5">{{ otroIdioma }}</div>
   <div style="position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 32px">
     <div style="text-align:center;margin-bottom:46px">
       <div style="font-family:'Instrument Serif',serif;font-size:27px;letter-spacing:.5em;text-indent:.5em">CASTILLO</div>
@@ -4058,7 +4061,8 @@ class Component extends DCLogic {
         volverOriginal: T('Volver al ejercicio original'), siNoMaterial: T('Si no dispone del material'),
         revisadoEquipo: T('Revisado por su equipo antes de la sesión del viernes.')
       },
-      pickEs: this.setLang('es'), pickEn: this.setLang('en'), printDiet: this.printDiet, shareDiet: this.shareDiet, downloadDiet: this.downloadDiet, goAlta: this.goAlta,
+      pickEs: this.setLang('es'), pickEn: this.setLang('en'),
+      toggleLang: this.setLang(lang === 'en' ? 'es' : 'en'), otroIdioma: lang === 'en' ? 'ES' : 'EN', printDiet: this.printDiet, shareDiet: this.shareDiet, downloadDiet: this.downloadDiet, goAlta: this.goAlta,
       langEsBg: !isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEsFg: !isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEsBd: !isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
       langEnBg: isEN ? 'var(--fg,#fff)' : 'var(--s1,#0C0C0E)', langEnFg: isEN ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)', langEnBd: isEN ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)',
       isHome: st.tab === 'home', isDiet: st.tab === 'diet', isTrain: st.tab === 'train', isEvo: st.tab === 'evo',

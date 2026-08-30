@@ -428,6 +428,10 @@
         if(!s || !s.access_token) throw new Error('nologin');
         try{ localStorage.setItem(LS, JSON.stringify({ access_token:s.access_token, refresh_token:s.refresh_token, email:(s.user&&s.user.email)||email, ts:Date.now() })); }catch(e){}
         try{ localStorage.setItem(CR, btoa(unescape(encodeURIComponent(JSON.stringify({ e:email, p:pass }))))); }catch(e){}
+        // El idioma con el que ha rellenado el formulario es el suyo: la app tiene que abrirse
+        // en ese, no en el del telefono. (En la base ya lo guarda alta-cliente en settings.idioma,
+        // que es lo que leen las notificaciones.)
+        try{ localStorage.setItem('castillo_lang', lang); }catch(e){}
         // Enviar el FORMULARIO (con email+contraseña dentro) provoca una navegación real: así iOS/Safari
         // ofrece "Guardar contraseña" en el llavero, como en Airbnb/Spotify. Se quitan los "name" para que
         // los datos NO viajen en la URL (solo va ?entrar=1).
@@ -474,7 +478,16 @@
   // Salir del formulario y volver a la pantalla de acceso.
   (function () {
     var b = document.getElementById('salirBtn');
-    if (b) b.addEventListener('click', function () { window.location.replace('index.html?volver=1'); });
+    if (b) b.addEventListener('click', function () {
+      // Un telon negro por delante antes de navegar: si no, entre que se descarga esta pagina y
+      // se pinta la otra, el navegador enseña un fogonazo blanco.
+      try {
+        var t = document.createElement('div');
+        t.style.cssText = 'position:fixed;inset:0;background:#08080A;z-index:99999';
+        document.body.appendChild(t);
+      } catch (e) {}
+      window.location.replace('index.html?volver=1');
+    });
   })();
 </script>
 </body>
