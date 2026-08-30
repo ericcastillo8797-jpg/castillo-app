@@ -384,6 +384,19 @@
     }, _ctx.token);
   }
 
+  // El cliente cambia el idioma en Ajustes. Ademas de quedarse en el movil tiene que llegar a
+  // su ficha, porque las NOTIFICACIONES PUSH se mandan desde el servidor y miran
+  // clientes_app.settings.idioma. Sin esto, a un cliente con la app en ingles le llegaban en
+  // espanol. El cliente no puede escribir en clientes_app (solo leer), por eso va por la
+  // Edge Function perfil-update, que tiene permiso.
+  function guardaIdioma(lang) {
+    if (!_ctx.token || (lang !== 'es' && lang !== 'en')) return Promise.resolve();
+    return fetch(SUPA + '/functions/v1/perfil-update', {
+      method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idioma: lang })
+    }).catch(function () {});
+  }
+
   // DESmarca una comida de un día (quita el meal_id de comida_registros) — por si el cliente se equivocó
   function desregistrarComida(mealId, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
@@ -437,7 +450,7 @@
     logout: function () { try { localStorage.removeItem(LS); localStorage.removeItem(CR); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
     registrarComida: registrarComida,
     desregistrarComida: desregistrarComida,
-    guardarPerfil: guardarPerfil,
+    guardarPerfil: guardarPerfil, guardaIdioma: guardaIdioma,
     cambiarPassword: cambiarPassword,
     // Borrado de cuenta (obligatorio para la App Store). El email NO se manda: lo saca la función
     // del propio JWT. Aquí solo viaja lo que el cliente ha escrito para confirmar.

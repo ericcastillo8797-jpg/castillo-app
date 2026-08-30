@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=213"></script>
-<script src="./castillo-transform.js?v=213"></script>
-<script src="./castillo-equiv.js?v=213"></script>
-<script src="./castillo-data.js?v=213"></script>
+<script src="./castillo-i18n.js?v=214"></script>
+<script src="./castillo-transform.js?v=214"></script>
+<script src="./castillo-equiv.js?v=214"></script>
+<script src="./castillo-data.js?v=214"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 213;
+  var VERSION_ACTUAL = 214;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -2060,7 +2060,14 @@ class Component extends DCLogic {
     ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
     lang: (function () { try { return localStorage.getItem('castillo_lang') || 'es'; } catch (e) { return 'es'; } })()
   };
-  setLang = l => () => { try { localStorage.setItem('castillo_lang', l); } catch (e) {} this.setState({ lang: l }); };
+  setLang = l => () => {
+    try { localStorage.setItem('castillo_lang', l); } catch (e) {}
+    this.setState({ lang: l });
+    // El idioma tambien tiene que llegar a la base: las notificaciones push se mandan desde el
+    // servidor y leen clientes_app.settings.idioma. Si se queda solo en el movil, a un cliente
+    // que usa la app en ingles le siguen llegando las notificaciones en espanol.
+    try { if (window.CastilloData && window.CastilloData.guardaIdioma) window.CastilloData.guardaIdioma(l); } catch (e) {}
+  };
   setFontScale = v => () => { try { localStorage.setItem('castillo_fontscale', String(v)); } catch (e) {} this.setState({ fontScale: v }); };
   // Ajustes por pestañas + perfil (foto y datos). Se cachea en el móvil y se guarda en Supabase.
   setConfTab = i => () => this.setState({ confTab: i });
