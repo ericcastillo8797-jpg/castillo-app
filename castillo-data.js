@@ -256,12 +256,18 @@
         if (!buckets.length) return;
         var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
         var hoyF = tzToday(_ctx.tz);
+        // El movil puede estar en una zona horaria distinta de la que tiene el cliente en su ficha
+        // (le paso a Mar: ficha en Nueva York y telefono en España). A la 1 de la madrugada en
+        // España en Nueva York es aun el dia anterior, asi que los pasos del dia nuevo se
+        // descartaban por "futuros" y se perdian. Los pasos son del TELEFONO: su calendario manda.
+        var hoyDisp = fechaLocalDe(new Date());
+        var tope = (hoyDisp && hoyDisp > hoyF) ? hoyDisp : hoyF;
         // agrupa por fecha local: el plugin puede devolver varios trozos del mismo día
         var porDia = {};
         buckets.forEach(function (b) {
           var d = b && (b.startDate || b.date || b.start);
-          var k = d ? fechaLocalDe(d) : hoyF;
-          if (!k || k > hoyF) return;                      // nunca escribe días futuros
+          var k = d ? fechaLocalDe(d) : hoyDisp || hoyF;
+          if (!k || k > tope) return;                      // nunca escribe días de verdad futuros
           porDia[k] = (porDia[k] || 0) + Math.round(b.value || 0);
         });
         var conPasos = Object.keys(porDia).filter(function (k) { return porDia[k] > 0; });
