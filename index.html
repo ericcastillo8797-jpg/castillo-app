@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=221"></script>
-<script src="./castillo-transform.js?v=221"></script>
-<script src="./castillo-equiv.js?v=221"></script>
-<script src="./castillo-data.js?v=221"></script>
+<script src="./castillo-i18n.js?v=222"></script>
+<script src="./castillo-transform.js?v=222"></script>
+<script src="./castillo-equiv.js?v=222"></script>
+<script src="./castillo-data.js?v=222"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 221;
+  var VERSION_ACTUAL = 222;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2247,10 +2247,6 @@ class Component extends DCLogic {
     // PIDE IGUAL: cerrar la app y volver a abrirla tiene que pedir Face ID siempre. Antes, dentro
     // de los primeros 10 minutos entraba directo sin preguntar nada.
     this.later(arranca, this._vueltaRapida() ? 400 : 2200);
-  };
-      const L = window.CastilloData && window.CastilloData.listo;
-      if (L && L.then) L.then(seguir).catch(seguir); else seguir();
-    }, 2200);
   };
   skipSplash = () => {
     if (this.stage === 'splash') this.setState({ stage: 'splashOut' });
