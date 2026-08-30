@@ -193,6 +193,7 @@
         data.customMetrics = res[9] || [];   // métricas personalizadas del cliente [{key,label,unit,objetivo}]
         window.__DATA = data;
         try { registerPush(); } catch (e) {}   // registra el móvil para notificaciones (solo app nativa)
+        try { syncZonaHoraria(); } catch (e) {}  // el movil dice en que zona horaria esta el cliente
         try { syncSaludPasos(); } catch (e) {}   // lee pasos de Apple Salud → marca cardio (solo app nativa)
         return data;
       });
@@ -224,6 +225,22 @@
       if (p && (p.receive === 'prompt' || p.receive === 'prompt-with-rationale')) return PN.requestPermissions();
       return p;
     }).then(function (p) { if (p && p.receive === 'granted') PN.register(); }).catch(function () {});
+  }
+
+  // ---- ZONA HORARIA: la del movil manda ----
+  // El "dia" de cada cliente (cuando empieza y acaba, para los pasos y el cardio) sale de su
+  // ficha. Estaba puesto a mano y no se movia nunca: si el cliente viajaba, o si simplemente
+  // estaba mal, su dia empezaba a deshora y los pasos se descuadraban o se perdian. Ahora el
+  // movil dice donde esta y la ficha se corrige sola.
+  function syncZonaHoraria() {
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (!tz || tz === _ctx.tz || !_ctx.token) return;
+      fetch(SUPA + '/functions/v1/perfil-update', {
+        method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tz: tz })
+      }).then(function () { _ctx.tz = tz; }).catch(function () {});
+    } catch (e) {}
   }
 
   // ---- APPLE SALUD: pasos del día → marca el cardio (solo app nativa) ----
