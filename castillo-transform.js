@@ -92,7 +92,14 @@
       var t = String((item && item.cardioText) || '').toLowerCase();
       var m = t.match(/([\d.,]+)\s*k\b/) || t.match(/([\d.,]+)/);
       if (!m) return 0;
-      var n = parseFloat(String(m[1]).replace(',', '.'));
+      // OJO con el punto y la coma. "7.500 pasos" en espanol son SIETE MIL QUINIENTOS, no 7,5:
+      // si se lee como decimal el cliente se queda con un objetivo de 8 pasos y le sale el
+      // cardio hecho nada mas abrir la app. Un punto o una coma seguidos de exactamente tres
+      // cifras (una o mas veces) son separador de miles, no decimal.
+      var crudo = String(m[1]);
+      var n = /^\d{1,3}([.,]\d{3})+$/.test(crudo)
+        ? parseInt(crudo.replace(/[.,]/g, ''), 10)
+        : parseFloat(crudo.replace(',', '.'));
       if (/k\b/.test(t) && n < 1000) n *= 1000;
       return Math.round(n) || 0;
     }
