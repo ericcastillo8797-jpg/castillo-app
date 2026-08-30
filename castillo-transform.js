@@ -76,6 +76,13 @@
     function notaDe(base, titulo) {
       var t = String(titulo || '').trim();
       if (!t || t.toLowerCase() === base.toLowerCase()) return '';
+      // El nombre que viene del CRM solo se enseña si aporta algo. El cardio llega como "Walking"
+      // y poner "Caminar (Walking)" no dice nada nuevo: al cliente español no le sirve el inglés,
+      // y al inglés "Walk (Walking)" tampoco. En cambio "Nutrición (P.S Alimentación M.1)" sí vale.
+      var GENERICOS = ['walking', 'walk', 'steps', 'caminar', 'andar', 'pasos', 'cardio',
+                       'workout', 'training', 'entrenamiento', 'entreno',
+                       'nutrition', 'nutricion', 'nutrición', 'diet', 'dieta', 'meal plan'];
+      if (GENERICOS.indexOf(t.toLowerCase()) >= 0) return '';
       return t;
     }
     // Objetivo de pasos de una tarea de cardio: del campo del CRM o del texto de Harbiz ("10k steps/day")
