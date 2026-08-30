@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=220"></script>
-<script src="./castillo-transform.js?v=220"></script>
-<script src="./castillo-equiv.js?v=220"></script>
-<script src="./castillo-data.js?v=220"></script>
+<script src="./castillo-i18n.js?v=221"></script>
+<script src="./castillo-transform.js?v=221"></script>
+<script src="./castillo-equiv.js?v=221"></script>
+<script src="./castillo-data.js?v=221"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 220;
+  var VERSION_ACTUAL = 221;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1788,7 +1788,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
   <div style="position:absolute;inset:0;background:radial-gradient(90% 60% at 50% 12%,rgba(var(--fgc,255,255,255),.07),transparent 70%)"></div>
   <!-- Cambiar de idioma ANTES de entrar: un cliente de Miami tiene que poder pasarla a ingles
        sin haber accedido todavia. Enseña el idioma al que va a cambiar, como en el formulario. -->
+  <sc-if value="{{ isLoginForm }}" hint-placeholder-val="{{ true }}">
   <div onClick="{{ toggleLang }}" style="position:absolute;top:calc(14px + env(safe-area-inset-top));left:16px;z-index:2;font-size:12px;letter-spacing:.05em;color:rgba(var(--fgc,255,255,255),.45);padding:6px 10px;cursor:pointer" style-active="opacity:.5">{{ otroIdioma }}</div>
+  </sc-if>
   <div style="position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 32px">
     <div style="text-align:center;margin-bottom:46px">
       <div style="font-family:'Instrument Serif',serif;font-size:27px;letter-spacing:.5em;text-indent:.5em">CASTILLO</div>
@@ -1826,7 +1828,11 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </div>
     </sc-if>
   </div>
+  <!-- Solo con el formulario delante. Durante la animacion de entrada no pinta nada: no se puede
+       pulsar y ensucia una pantalla que deberia ser solo el logo. -->
+  <sc-if value="{{ isLoginForm }}" hint-placeholder-val="{{ true }}">
   <div style="position:relative;text-align:center;font-size:12px;color:rgba(var(--fgc,255,255,255),.32);padding-bottom:44px">{{ L.olvidoPass }}</div>
+  </sc-if>
 </div>
 </sc-if>
 
@@ -2225,24 +2231,23 @@ class Component extends DCLogic {
     document.addEventListener('error', this._imgErr, true);   // capture: los eventos 'error' de <img> no burbujean
   }
   runSplash = () => {
-    if (this._vueltaRapida()) {                                        // volvió enseguida: entrada directa
-      this.setState({ stage: 'scan', scan: 1 });
-      window.CastilloData.restoreSession()
-        .then(this._enterWith)
-        .catch(() => { this.setState({ stage: 'lock', scan: 0 }); });
-      return;
-    }
-    this.later(() => {
+    const seguir = () => {
       if (this.stage !== 'splash') return;
-      // La sesion guardada vive en el almacen NATIVO del telefono y se lee de forma asincrona,
-      // asi que hay que esperarla. Sin esta espera preguntabamos demasiado pronto, salia que no
-      // habia sesion, y al cliente le pediamos el correo cada vez que la app se actualizaba.
-      const seguir = () => {
-        if (this.stage !== 'splash') return;
-        if (window.CastilloData && window.CastilloData.hasSession()) { this.doFaceId(); return; }
-        this.setState({ stage: 'splashOut' });
-        this.later(() => { if (this.stage === 'splashOut') this.setState({ stage: 'lock' }); }, 800);
-      };
+      // La sesion vive en el almacen nativo y se lee de forma asincrona: hay que esperarla antes
+      // de decidir, o preguntamos demasiado pronto y sale que no hay sesion.
+      if (window.CastilloData && window.CastilloData.hasSession()) { this.doFaceId(); return; }
+      this.setState({ stage: 'splashOut' });
+      this.later(() => { if (this.stage === 'splashOut') this.setState({ stage: 'lock' }); }, 800);
+    };
+    const arranca = () => {
+      const L = window.CastilloData && window.CastilloData.listo;
+      if (L && L.then) L.then(seguir).catch(seguir); else seguir();
+    };
+    // Si acaba de salir y volver no le hacemos tragarse la animacion entera, pero la cara SE LE
+    // PIDE IGUAL: cerrar la app y volver a abrirla tiene que pedir Face ID siempre. Antes, dentro
+    // de los primeros 10 minutos entraba directo sin preguntar nada.
+    this.later(arranca, this._vueltaRapida() ? 400 : 2200);
+  };
       const L = window.CastilloData && window.CastilloData.listo;
       if (L && L.then) L.then(seguir).catch(seguir); else seguir();
     }, 2200);
