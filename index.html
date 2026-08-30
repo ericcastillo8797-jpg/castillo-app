@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=222"></script>
-<script src="./castillo-transform.js?v=222"></script>
-<script src="./castillo-equiv.js?v=222"></script>
-<script src="./castillo-data.js?v=222"></script>
+<script src="./castillo-i18n.js?v=223"></script>
+<script src="./castillo-transform.js?v=223"></script>
+<script src="./castillo-equiv.js?v=223"></script>
+<script src="./castillo-data.js?v=223"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 222;
+  var VERSION_ACTUAL = 223;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2215,7 +2215,20 @@ class Component extends DCLogic {
     document.addEventListener('touchmove', this._shTM, { passive: true });
     document.addEventListener('touchend', this._shTE, { passive: true });
     // al volver a la app, refresca por si cambió el día (zona horaria del cliente) o los pasos
-    this._visH = () => { if (document.visibilityState === 'visible' && this.stage === 'app') { try { this.refreshData(); } catch (e) {} } };
+    // Apple Salud se lee por su cuenta y tarda. Cuando termine y traiga numeros distintos, la
+    // pantalla se repinta sola: antes se quedaba con los pasos de la carga anterior.
+    try {
+      if (window.CastilloData && window.CastilloData.alSincronizarSalud) {
+        window.CastilloData.alSincronizarSalud(() => { try { this.refreshData(); } catch (e) {} });
+      }
+    } catch (e) {}
+    // Al volver a la app se vuelve a preguntar a Apple Salud, no solo a la base: si ha andado
+    // mientras estaba fuera, el numero sube al momento.
+    this._visH = () => {
+      if (document.visibilityState !== 'visible' || this.stage !== 'app') return;
+      try { this.refreshData(); } catch (e) {}
+      try { if (window.CastilloData && window.CastilloData.sincronizaSalud) window.CastilloData.sincronizaSalud(); } catch (e) {}
+    };
     document.addEventListener('visibilitychange', this._visH);
     // Reintento de fotos: si el WebView de iOS falla al cargar una foto del bucket privado, la re-firmamos y reintentamos UNA vez.
     this._imgErr = (e) => {

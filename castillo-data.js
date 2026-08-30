@@ -228,6 +228,13 @@
 
   // ---- APPLE SALUD: pasos del día → marca el cardio (solo app nativa) ----
   var PASOS_OBJETIVO = 10000;   // objetivo por defecto (futuro: por cliente en la ficha)
+  // La lectura de Apple Salud va por su cuenta y tarda: cuando arranca la app, la pantalla ya se
+  // ha pintado con los pasos VIEJOS y el numero se quedaba clavado hasta la siguiente recarga.
+  // Ahora, si al leer sale un numero distinto del ultimo que escribimos, se avisa a la app para
+  // que se repinte. El cache evita reescribir lo mismo y evita recargar en bucle: en la segunda
+  // pasada los numeros ya coinciden y no se avisa.
+  var _pasosCache = {};
+  var _avisaSalud = null;
   function syncSaludPasos() {
     var C = window.Capacitor, H = C && C.Plugins && C.Plugins.HealthPlugin;
     if (!H || !_ctx.email || !_ctx.token) return Promise.resolve();
@@ -262,14 +269,18 @@
         // uno a uno y fusionando: así no se pisa el entreno que el cliente ya guardó ese día
         // Uno a uno y fusionando: así no se pisa el entreno que el cliente ya guardó ese día,
         // y si un día falla no se lleva por delante a los demás (antes iba todo en un solo envío).
-        return conPasos.reduce(function (p2, k) {
+        var nuevos = conPasos.filter(function (k) { return _pasosCache[k] !== porDia[k]; });
+        if (!nuevos.length) { try { localStorage.setItem(claveBF, '1'); } catch (e) {} return; }
+        return nuevos.reduce(function (p2, k) {
           return p2.then(function () {
             var campos = { pasos: porDia[k] };
             if (porDia[k] >= objetivo) campos.cardio = true;
-            return guardaDia(k, campos).catch(function () {});
+            return guardaDia(k, campos).then(function () { _pasosCache[k] = porDia[k]; }).catch(function () {});
           });
         }, Promise.resolve()).then(function () {
           try { localStorage.setItem(claveBF, '1'); } catch (e) {}
+          // algo ha cambiado de verdad: que la app se repinte con los pasos de ahora mismo
+          try { if (typeof _avisaSalud === 'function') _avisaSalud(); } catch (e) {}
         });
       });
     }).catch(function () {});
@@ -459,6 +470,9 @@
     // el Face ID solo entra si ya hay una sesión/credenciales guardadas en ESTE móvil (tras acceder una vez con correo)
     hasSession: function () { return !!(readSession() || readCreds()); },
     listo: listo,                 // promesa: la sesion guardada en el movil ya esta cargada
+    // La app registra aqui que quiere enterarse cuando los pasos de Apple Salud cambien.
+    alSincronizarSalud: function (fn) { _avisaSalud = fn; },
+    sincronizaSalud: function () { try { return syncSaludPasos(); } catch (e) { return Promise.resolve(); } },
     guardaDuro: guardaDuro,       // para el idioma, que lo escribe la pantalla de Ajustes
     loginAndLoad: function (email, pass) {
       return passwordLogin(email, pass).catch(function (e) { e.message = friendly(e.message || ''); throw e; });
