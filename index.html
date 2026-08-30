@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=217"></script>
-<script src="./castillo-transform.js?v=217"></script>
-<script src="./castillo-equiv.js?v=217"></script>
-<script src="./castillo-data.js?v=217"></script>
+<script src="./castillo-i18n.js?v=218"></script>
+<script src="./castillo-transform.js?v=218"></script>
+<script src="./castillo-equiv.js?v=218"></script>
+<script src="./castillo-data.js?v=218"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 217;
+  var VERSION_ACTUAL = 218;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1024,7 +1024,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 </sc-if>
 
 <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
-<div style="position:absolute;top:62px;left:16px;right:16px;z-index:14;padding:13px 16px;border-radius:16px;background:var(--s4,#18181C);border:.5px solid rgba(var(--fgc,255,255,255),.16);display:flex;align-items:center;gap:11px;animation:cRise .44s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 14px 40px rgba(0,0,0,.38)">
+<!-- z-index 30: la pantalla de acceso va en 15, asi que con 14 el aviso salia POR DETRAS y no se leia.
+     Era el famoso "le doy y no hace nada": la app avisaba, pero el mensaje quedaba tapado. -->
+<div style="position:absolute;top:62px;left:16px;right:16px;z-index:30;padding:13px 16px;border-radius:16px;background:var(--s4,#18181C);border:.5px solid rgba(var(--fgc,255,255,255),.16);display:flex;align-items:center;gap:11px;animation:cRise .44s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 14px 40px rgba(0,0,0,.38)">
   <div style="width:22px;height:22px;flex:none;border-radius:50%;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center">
     <svg width="12" height="12" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
   </div>
@@ -2248,8 +2250,12 @@ class Component extends DCLogic {
   };
 
   get stage() {
+    if (this.state.stage) return this.state.stage;
+    // Si viene de darle a la X del formulario de alta, va DIRECTO a la pantalla de acceso.
+    // Volver a pasar por el logo y toda la animacion, cuando solo querias salir, es absurdo.
+    try { if (new URLSearchParams(window.location.search).get('volver')) return 'lock'; } catch (e) {}
     const a = this.props.arranque;
-    return this.state.stage || (a === 'App' ? 'app' : a === 'Acceso' ? 'lock' : 'splash');
+    return a === 'App' ? 'app' : a === 'Acceso' ? 'lock' : 'splash';
   }
   get restSecs() { return 120; }
 
@@ -2293,7 +2299,7 @@ class Component extends DCLogic {
     // Nadie se fija en el botón pequeño de abajo: le dan a "Acceder". Si ya hay sesión guardada
     // en este móvil y no ha escrito nada, ese botón saca el Face ID directamente.
     if (!email && !pass && window.CastilloData && window.CastilloData.hasSession()) { this.doFaceId(); return; }
-    if (!email || !pass) { this.flash('Introduce tu correo y contraseña'); return; }
+    if (!email || !pass) { this.flash(this.state.lang === 'en' ? 'Enter your email and password' : 'Introduce tu correo y contraseña'); return; }
     if (!window.CastilloData) { this.flash('Cargando… inténtalo de nuevo'); return; }
     this.setState({ stage: 'scan', scan: 1 });
     window.CastilloData.loginAndLoad(email, pass)
@@ -2314,7 +2320,7 @@ class Component extends DCLogic {
       });
   };
   doFaceId = () => {
-    if (!window.CastilloData || !window.CastilloData.hasSession()) { this.flash('Accede con tu correo la primera vez'); return; }
+    if (!window.CastilloData || !window.CastilloData.hasSession()) { this.flash(this.state.lang === 'en' ? 'Sign in with your email once; Face ID will work from then on.' : 'Entra una vez con tu correo y contraseña. A partir de ahí ya funciona el Face ID.'); return; }
     const C = window.Capacitor, hasBio = !!(C && C.Plugins && C.Plugins.BiometricAuthNative && C.Plugins.BiometricAuthNative.internalAuthenticate);
     const enter = () => window.CastilloData.restoreSession()
       .then(this._enterWith)
