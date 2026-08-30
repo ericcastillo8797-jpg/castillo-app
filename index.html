@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=206"></script>
-<script src="./castillo-transform.js?v=206"></script>
-<script src="./castillo-equiv.js?v=206"></script>
-<script src="./castillo-data.js?v=206"></script>
+<script src="./castillo-i18n.js?v=207"></script>
+<script src="./castillo-transform.js?v=207"></script>
+<script src="./castillo-equiv.js?v=207"></script>
+<script src="./castillo-data.js?v=207"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 206;
+  var VERSION_ACTUAL = 207;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -279,9 +279,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;padding:20px 20px 6px;overflow-x:auto">
+    <div style="display:flex;gap:6px;padding:20px 16px 6px">
       <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
-      <div onClick="{{ d.pick }}" style="flex:none;width:46px;padding:10px 0 11px;border-radius:15px;text-align:center;cursor:pointer;transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ d.bg }};border:.5px solid {{ d.bd }};color:{{ d.fg }}" style-active="transform:scale(.94)">
+      <div onClick="{{ d.pick }}" style="flex:1 1 0;min-width:0;padding:10px 0 11px;border-radius:15px;text-align:center;cursor:pointer;transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ d.bg }};border:.5px solid {{ d.bd }};color:{{ d.fg }}" style-active="transform:scale(.94)">
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.12em;opacity:.55">{{ d.w }}</div>
         <div style="font-size:17px;font-weight:600;margin-top:5px">{{ d.d }}</div>
         <div style="height:5px;margin-top:7px;display:flex;gap:2.5px;justify-content:center;align-items:center">
@@ -346,9 +346,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <svg width="13" height="13" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
       </div>
     </div>
-    <div style="display:flex;gap:8px;padding:12px 20px 6px;overflow-x:auto">
+    <div style="display:flex;gap:6px;padding:12px 16px 6px">
       <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
-      <div onClick="{{ d.pick }}" style="flex:none;width:46px;padding:10px 0 11px;border-radius:15px;text-align:center;cursor:pointer;transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ d.bg }};border:.5px solid {{ d.bd }};color:{{ d.fg }}" style-active="transform:scale(.94)">
+      <div onClick="{{ d.pick }}" style="flex:1 1 0;min-width:0;padding:10px 0 11px;border-radius:15px;text-align:center;cursor:pointer;transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ d.bg }};border:.5px solid {{ d.bd }};color:{{ d.fg }}" style-active="transform:scale(.94)">
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.12em;opacity:.55">{{ d.w }}</div>
         <div style="font-size:17px;font-weight:600;margin-top:5px">{{ d.d }}</div>
         <div style="height:5px;margin-top:7px;display:flex;gap:2.5px;justify-content:center;align-items:center">
