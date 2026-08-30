@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=204"></script>
-<script src="./castillo-transform.js?v=204"></script>
-<script src="./castillo-equiv.js?v=204"></script>
-<script src="./castillo-data.js?v=204"></script>
+<script src="./castillo-i18n.js?v=205"></script>
+<script src="./castillo-transform.js?v=205"></script>
+<script src="./castillo-equiv.js?v=205"></script>
+<script src="./castillo-data.js?v=205"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 204;
+  var VERSION_ACTUAL = 205;
   function mirar() {
     try {
       fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -3174,15 +3174,25 @@ class Component extends DCLogic {
       const title = this.state.wTitle || dS.t || 'Entrenamiento';
       const list = (WK[wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
       const logs = this.state.logs || {}, swaps = this.state.swaps || {};
-      const ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, y: e.y, objetivo: e.p, series: (logs[e.id] || []).slice(0, e.s).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && (l.done || (String(l.r == null ? '' : l.r).trim() && String(l.w == null ? '' : l.w).trim()))) })) }));
+      const ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, y: e.y, objetivo: e.p, series: (logs[e.id] || []).slice(0, parseInt(e.s, 10) || 0).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && (l.done || (String(l.r == null ? '' : l.r).trim() && String(l.w == null ? '' : l.w).trim()))) })) }));
       const completo = ejercicios.length > 0 && ejercicios.every(ej => ej.series.length > 0 && ej.series.every(s => String(s.reps).trim() && String(s.peso).trim()));
-      // marca inmediata en la pantalla principal (no espera al servidor)
-      this.setState(s => ({ marks: Object.assign({}, s.marks, { [dS.fecha + '|entreno']: true }) }));
+      // Solo se marca el día como hecho si el entreno está COMPLETO. Si lo dejó a medias
+      // (se cansó, no le dio tiempo), se guarda igual pero el día no se da por cumplido.
+      if (completo) this.setState(s => ({ marks: Object.assign({}, s.marks, { [dS.fecha + '|entreno']: true }) }));
       if (window.CastilloData && window.CastilloData.registrarEntreno) {
         window.CastilloData.registrarEntreno(title, ejercicios, completo, dS.fecha).then(() => this.refreshData(), (e) => { this.flash('No se pudo guardar el entreno'); });
       }
+      // El aviso dice lo que se ha guardado de verdad: media sesión también cuenta y se envía.
+      const hechas = ejercicios.reduce((a, ej) => a + ej.series.filter(x => x.done).length, 0);
+      const totales = ejercicios.reduce((a, ej) => a + ej.series.length, 0);
+      const en = this.state.lang === 'en';
+      this.flash(completo
+        ? (en ? 'Workout logged · sent to your coach' : 'Entreno registrado · enviado al equipo')
+        : (en ? ('Saved · ' + hechas + ' of ' + totales + ' sets · sent to your coach')
+              : ('Guardado · ' + hechas + ' de ' + totales + ' series · enviado al equipo')));
+      return;
     } catch (e) {}
-    this.flash('Entreno registrado · enviado al equipo');
+    this.flash(this.state.lang === 'en' ? 'Workout logged · sent to your coach' : 'Entreno registrado · enviado al equipo');
   };
   toggleEx = id => () => this.setState(s => ({ exClosed: Object.assign({}, s.exClosed, { [id]: !s.exClosed[id] }) }));
 
@@ -3355,9 +3365,15 @@ class Component extends DCLogic {
     // Una serie cuenta como hecha si el cliente la ha rellenado (reps + peso) o si pulsó el tic.
     // Antes solo contaba el tic, así que el contador y el porcentaje se quedaban en cero.
     const _serieHecha = x => !!(x && (x.done || (String(x.r == null ? '' : x.r).trim() && String(x.w == null ? '' : x.w).trim())));
+    // Se cuentan TODAS las series de TODOS los ejercicios del entreno. Si el número de series
+    // llega como texto, sumarlo lo concatenaba ("3"+"3" = "33") y el total salía disparatado.
     let setsDone = 0, totalSets = 0;
-    workoutEx.forEach(e => { totalSets += e.s; setsDone += (logs[e.id] || []).slice(0, e.s).filter(_serieHecha).length; });
-    const trainPct = totalSets ? Math.round((setsDone / totalSets) * 100) : 0;
+    workoutEx.forEach(e => {
+      const n = parseInt(e.s, 10) || 0;
+      totalSets += n;
+      setsDone += (logs[e.id] || []).slice(0, n).filter(_serieHecha).length;
+    });
+    const trainPct = totalSets > 0 ? Math.round((setsDone / totalSets) * 100) : 0;
 
     // --- cabecera + tarjeta "entrenamiento de hoy" con datos reales ---
     const _hdr = (typeof window !== 'undefined' && window.__DATA && window.__DATA.header) || null;
@@ -3992,6 +4008,7 @@ class Component extends DCLogic {
       cHome: tabColor('home'), cDiet: tabColor('diet'), cTrain: tabColor('train'), cEvo: tabColor('evo'),
 
       setsDoneLabel: setsDone + ' ' + T('de') + ' ' + totalSets,
+      trainPctNum: trainPct,
       mealRows, trainPct, trainPctLabel: trainPct + '%',
       headLine, headDay, headMonth, heroRom, heroTitle, heroMeta, entHeader, agendaHdr, agendaSub, dietSub, evoCounts, woTitle,
       prevWeek, nextWeek, prevWeekOpacity, nextWeekOpacity,

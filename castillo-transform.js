@@ -152,7 +152,9 @@
       exN++;
       var id = 'e' + exN;
       var y = ytId(ex.url_provisional || ex.thumbnailUrl || '');
-      var sets = ex.sets || (ex.series && ex.series.length) || 3;
+      // OJO: si esto llega como texto ("3"), las sumas del contador se concatenan en vez de sumar
+      // y el "X de Y series" y el porcentaje del entreno salen mal. Se fuerza a número.
+      var sets = parseInt(ex.sets, 10) || (ex.series && ex.series.length) || 3;
       var target = ex.target || (ex.reps ? ex.reps + ' reps' : '');
       var reps = (target.match(/\d+([-–]\d+)?/) || ['—'])[0];
       var rest = ex.rest ? (String(ex.rest).replace(/[^0-9]/g, '') + ' s') : '—';
