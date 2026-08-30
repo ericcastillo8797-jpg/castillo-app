@@ -717,7 +717,7 @@
     'Ver animación de apertura': 'View opening animation', 'Check-in semanal': 'Weekly check-in',
     'Enviar check-in': 'Send check-in', 'Listo': 'Done', 'Total': 'Total',
     // acceso
-    'Acceder': 'Sign in', 'Acceder con Face ID': 'Sign in with Face ID', 'Saltar': 'Skip',
+    'Acceder': 'Sign in', 'Acceder con Face ID': 'Sign in with Face ID', 'Accediendo…': 'Signing in…', 'Identificado': 'Identified', 'Mire al iPhone': 'Look at your iPhone', 'Saltar': 'Skip',
     'Introduce tu correo y contraseña': 'Enter your email and password',
     'Correo o contraseña incorrectos': 'Wrong email or password'
   };
