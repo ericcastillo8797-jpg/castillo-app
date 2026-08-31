@@ -537,9 +537,11 @@
     // Comparativa antes/después para Hoy: primer set (más antiguo) vs último (más reciente). El render añade el open de cada foto.
     var progresoFotos = null;
     if (PHOTOSETS.length) {
-      // Con UN solo set, las fotos son sus PRIMERAS y "Ultimas" se queda vacia: repetir la misma
-      // foto en las dos columnas hacia creer que ya habia una comparativa cuando no la hay.
-      progresoFotos = { hay: true, dos: PHOTOSETS.length >= 2,
+      // Las DOS columnas se ven siempre. Con un solo set, la derecha sale vacia con un texto que
+      // explica que ahi iran sus ultimas fotos: asi el cliente que acaba de empezar entiende de
+      // un vistazo como va a funcionar esto. Repetir la misma foto a los dos lados (como antes)
+      // hacia creer que ya habia comparativa cuando no la habia.
+      progresoFotos = { hay: true, dos: PHOTOSETS.length >= 1, ultimasVacia: PHOTOSETS.length < 2,
         primeras: PHOTOSETS[PHOTOSETS.length - 1], ultimas: PHOTOSETS.length >= 2 ? PHOTOSETS[0] : null };
     }
     var DATES = (wm && wm.data ? wm.data : []).slice().reverse().slice(0, 10).map(function (p) { var dt = new Date(ms(p.t)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
