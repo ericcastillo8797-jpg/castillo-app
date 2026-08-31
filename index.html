@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=235"></script>
-<script src="./castillo-transform.js?v=235"></script>
-<script src="./castillo-equiv.js?v=235"></script>
-<script src="./castillo-data.js?v=235"></script>
+<script src="./castillo-i18n.js?v=236"></script>
+<script src="./castillo-transform.js?v=236"></script>
+<script src="./castillo-equiv.js?v=236"></script>
+<script src="./castillo-data.js?v=236"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 235;
+  var VERSION_ACTUAL = 236;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1360,7 +1360,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <sc-if value="{{ isPhotoSheet }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Fotografia archivada" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 0 30px">
       <!-- Carrusel por JS (transform): fiable en iOS. La foto tiene altura contenida y la lista va debajo, en el scroll -->
-      <div data-photo-swipe style="overflow:hidden;padding:0 20px 2px">
+      <!-- touch-action:none = si el dedo empieza AQUI, no se mueve la lista de detras. El gesto
+           sobre la foto es solo para pasar de foto; para desplazar la ficha se toca fuera de ella. -->
+      <div data-photo-swipe style="overflow:hidden;padding:0 20px 2px;touch-action:none">
         <div style="display:flex;transition:{{ photoTrans }};transform:translateX({{ photoShift }})">
           <sc-for list="{{ photoSheet.shots }}" as="s" hint-placeholder-count="3">
           <div style="flex:none;width:100%;box-sizing:border-box;padding:0 4px">
@@ -2247,6 +2249,8 @@ class Component extends DCLogic {
     this._shTM = (e) => { const t = e.touches && e.touches[0]; if (!t) return;
       if (this._swipeMode === 'photo' && this._grabX != null) {
         this._grabMovedX = t.clientX - this._grabX; this._grabMoved = t.clientY - this._grabY;
+        // El dedo esta sobre la foto: mande a donde mande, la lista de detras no se mueve.
+        try { if (e.cancelable) e.preventDefault(); } catch (_e) {}
         if (Math.abs(this._grabMovedX) <= Math.abs(this._grabMoved)) return;   // el gesto es vertical
         // Antes se repintaba la app ENTERA en cada pixel que se movia el dedo, y el arrastre iba
         // a tirones y se sentia descontrolado. Ahora se agrupa en un repintado por fotograma.
@@ -2277,7 +2281,9 @@ class Component extends DCLogic {
       else if (this._swipeMode === 'close') { if (this._grabY != null && this._grabMoved > 50 && this.state.sheet) this.closeSheet(); }
       this._grabY = null; this._grabX = null; this._grabMoved = 0; this._grabMovedX = 0; this._swipeMode = null; };
     document.addEventListener('touchstart', this._shTS, { passive: true });
-    document.addEventListener('touchmove', this._shTM, { passive: true });
+    // NO pasivo: hace falta poder cortar el desplazamiento de la lista cuando el dedo esta
+    // pasando fotos. Solo se corta en ese caso; en el resto de la app no se toca nada.
+    document.addEventListener('touchmove', this._shTM, { passive: false });
     document.addEventListener('touchend', this._shTE, { passive: true });
     // al volver a la app, refresca por si cambió el día (zona horaria del cliente) o los pasos
     // Apple Salud se lee por su cuenta y tarda. Cuando termine y traiga numeros distintos, la
