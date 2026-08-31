@@ -61,7 +61,7 @@
     function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
     // La capa de datos también escribe texto que ve el cliente, así que necesita saber el idioma.
     var _EN = (function () { try { return localStorage.getItem('castillo_lang') === 'en'; } catch (e) { return false; } })();
-    var TXT = { pasos: _EN ? 'steps' : 'pasos', faltan: _EN ? 'to go' : 'faltan', cumplido: _EN ? 'goal reached' : 'objetivo cumplido' };
+    var TXT = { pasos: _EN ? 'steps' : 'pasos', faltan: _EN ? 'to go' : 'faltan', cumplido: _EN ? 'goal reached' : 'objetivo cumplido', de: _EN ? 'of' : 'de', series: _EN ? 'sets' : 'series' };
     function cardioSub(item) { var p = item && item.config && item.config.pasos; return p ? (miles(p) + ' ' + TXT.pasos) : 'Cardio'; }
     // Un día de cardio se da por cumplido si lo marcó el cliente O si los pasos reales que trae
     // Apple Salud llegan al objetivo que Alex le puso a ESE cliente (no a un 10.000 fijo para todos).
@@ -203,7 +203,18 @@
     regList.forEach(function (r) {
       var k = (r.fecha || '').slice(0, 10); if (!k) return;
       var o = regByDate[k] || (regByDate[k] = { workout: false, cardio: false, pasos: null });
-      if (r.estado === 'completado' || (Array.isArray(r.ejercicios) && r.ejercicios.length)) o.workout = true;
+      // Un entreno a medias NO cierra el dia. Antes bastaba con que hubiera CUALQUIER ejercicio
+      // guardado para darlo por hecho: el cliente apuntaba 4 series de 21 y le salia "completado".
+      if (r.estado === 'completado') o.workout = true;
+      if (Array.isArray(r.ejercicios) && r.ejercicios.length) {
+        var _h = 0, _t = 0;
+        r.ejercicios.forEach(function (ej) {
+          var ser = (ej && ej.series) || [];
+          _t += ser.length;
+          ser.forEach(function (x) { if (x && (x.done || (String(x.reps || '').trim() && String(x.peso || '').trim()))) _h++; });
+        });
+        if (_h > 0) o.wProg = { hechas: _h, totales: _t };
+      }
       if (r.cardio) o.cardio = true;
       if (r.pasos != null) o.pasos = r.pasos;   // pasos reales de Apple Salud
     });
@@ -605,7 +616,15 @@
     if (hasT('bodyStats')) todayTasks.push({ key: 'medidas', label: 'Métricas personales · medidas', sub: 'Peso y medidas', done: doneT('bodyStats') || !!chkMedDates[todayKey] });
     if (hasT('bodyPhoto')) todayTasks.push({ key: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: doneT('bodyPhoto') || !!chkFotoDates[todayKey] });
     if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: 'Caminar', nota: notaDe('Caminar', _cItem.title), sub: cardioSubReal(_cItem, regToday.pasos), pasos: objPasosDe(_cItem) || '', pasosHechos: (regToday.pasos != null ? regToday.pasos : ''), done: cardioCumplido(doneT('cardio') || !!regToday.cardio, regToday.pasos, objPasosDe(_cItem) || pasosObjetivo) }); }
-    if (hasT('workout')) todayTasks.push({ key: 'entreno', label: 'Entrenamiento', nota: notaDe('Entrenamiento', (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title), sub: 'Marca tus series y pesos', done: entrenoHecho });
+    if (hasT('workout')) {
+      // Si lo dejo a medias, la ficha lo dice: "4 de 21 series" en vez de un texto generico, y
+      // la app pinta el circulo con la parte que lleva en vez del tic de completado.
+      var _wp = regToday.wProg || null;
+      todayTasks.push({ key: 'entreno', label: 'Entrenamiento',
+        nota: notaDe('Entrenamiento', (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title),
+        sub: (_wp && !entrenoHecho) ? (miles(_wp.hechas) + ' ' + TXT.de + ' ' + miles(_wp.totales) + ' ' + TXT.series) : 'Marca tus series y pesos',
+        prog: _wp || null, done: entrenoHecho });
+    }
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
     // Nutrición SOLO los días que el entrenador la haya puesto (con su título del CRM), no todos los días.
     var _nutToday = todayItems.filter(function (x) { return x.type === 'nutritionPlan' || x.type === 'nutrition'; })[0];
