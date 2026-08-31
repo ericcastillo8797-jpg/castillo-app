@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=241"></script>
-<script src="./castillo-transform.js?v=241"></script>
-<script src="./castillo-equiv.js?v=241"></script>
-<script src="./castillo-data.js?v=241"></script>
+<script src="./castillo-i18n.js?v=242"></script>
+<script src="./castillo-transform.js?v=242"></script>
+<script src="./castillo-equiv.js?v=242"></script>
+<script src="./castillo-data.js?v=242"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 241;
+  var VERSION_ACTUAL = 242;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -241,22 +241,18 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </div>
         </div>
         <sc-if value="{{ progresoFotos.dos }}" hint-placeholder-val="{{ false }}">
-        <div style="flex:1;min-width:0">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
           <div style="text-align:center;margin-bottom:9px">
             <div style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.62)">{{ L.fotoUltimas }}</div>
             <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.34);margin-top:2px">{{ progresoFotos.ultimasSub }}</div>
           </div>
           <sc-if value="{{ progresoFotos.ultimasVacia }}" hint-placeholder-val="{{ false }}">
-          <!-- El cliente acaba de empezar: aun no hay con que comparar. Se deja la columna con
-               UN HUECO POR FOTO (frontal, lateral, espalda) para que mida exactamente lo mismo
-               que la de la izquierda; si no, la pagina entera se descuadra y se solapa lo de
-               abajo. El texto va solo en el hueco del medio. -->
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <sc-for list="{{ progresoFotos.ultimasHuecos }}" as="h" hint-placeholder-count="3">
-            <div style="aspect-ratio:3/4;border-radius:12px;border:1px dashed rgba(var(--fgc,255,255,255),.16);display:flex;align-items:center;justify-content:center;padding:14px;text-align:center">
-              <div style="font-size:11px;line-height:1.5;color:rgba(var(--fgc,255,255,255),.38)">{{ h.txt }}</div>
-            </div>
-            </sc-for>
+          <!-- El cliente acaba de empezar y aun no hay con que comparar. UN SOLO hueco que se
+               estira hasta la altura de las tres fotos de al lado: tres huecos sueltos parecian
+               tres agujeros, y el texto quedaba pegado a la foto del medio. El 'flex:1' es lo
+               que lo estira, y por eso la columna es flex-direction:column. -->
+          <div style="flex:1;border-radius:12px;border:1px dashed rgba(var(--fgc,255,255,255),.16);display:flex;align-items:center;justify-content:center;padding:18px;text-align:center">
+            <div style="font-size:11.5px;line-height:1.55;color:rgba(var(--fgc,255,255,255),.4)">{{ L.fotoUltimasVacia }}</div>
           </div>
           </sc-if>
           <sc-if value="{{ progresoFotos.ultimasHay }}" hint-placeholder-val="{{ true }}">
@@ -4354,11 +4350,9 @@ class Component extends DCLogic {
         const col = set => ({ w: tD(set.w), date: tD(set.date), shots: SHOTS.map(n => ({ n: T(n), img: (set.fotos && set.fotos[n]) || '', open: this.openCompare(n) })) });
         // 'ultimas' viene vacio cuando el cliente solo tiene una tanda de fotos (acaba de empezar)
         const _uv = !!pf.ultimasVacia;
-        // un hueco por cada foto, para que la columna mida igual que la de la izquierda
-        const _huecos = SHOTS.map((n, i) => ({ txt: i === 1 ? T('Aquí aparecerán tus últimas fotos, para que veas tu cambio') : '' }));
-        return { dos: pf.dos, ultimasVacia: _uv, ultimasHay: !_uv, ultimasHuecos: _huecos,
+        return { dos: pf.dos, ultimasVacia: _uv, ultimasHay: !_uv,
           // cuando aun no hay segunda tanda, debajo del titulo va un guion en vez de una fecha
-          ultimasSub: pf.ultimas ? (tD(pf.ultimas.w) + ' · ' + tD(pf.ultimas.date)) : '—',
+          ultimasSub: pf.ultimas ? (tD(pf.ultimas.w) + ' · ' + tD(pf.ultimas.date)) : '',
           primeras: col(pf.primeras), ultimas: pf.ultimas ? col(pf.ultimas) : null }; })(),
       vidCats, vidList,
       toggleRegMenu: this.toggleRegMenu, regMedidas: this.regMedidas, regFotos: this.regFotos,
