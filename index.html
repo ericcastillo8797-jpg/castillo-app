@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=229"></script>
-<script src="./castillo-transform.js?v=229"></script>
-<script src="./castillo-equiv.js?v=229"></script>
-<script src="./castillo-data.js?v=229"></script>
+<script src="./castillo-i18n.js?v=230"></script>
+<script src="./castillo-transform.js?v=230"></script>
+<script src="./castillo-equiv.js?v=230"></script>
+<script src="./castillo-data.js?v=230"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 229;
+  var VERSION_ACTUAL = 230;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2000,7 +2000,13 @@ let VID = [
 ];
 
 const THUMB = y => 'https://i.ytimg.com/vi/' + y + '/mqdefault.jpg';
-const EMBED = y => 'https://www.youtube-nocookie.com/embed/' + y + '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+// El video NO se pide a YouTube directamente. Desde que la app va empaquetada, sus pantallas se
+// sirven desde el movil y YouTube se niega a incrustar ahi (error 153): exige una direccion web
+// de verdad. Por eso se carga video.html, que vive en internet en la direccion de siempre — la
+// misma desde la que los videos funcionaban antes de empaquetar — y esa pagina mete el video.
+// Si algun dia se cambia de sitio la web, hay que cambiar esta direccion tambien.
+const VIDEO_HOST = 'https://ericcastillo8797-jpg.github.io/castillo-app/';
+const EMBED = y => VIDEO_HOST + 'video.html?v=' + encodeURIComponent(y);
 
 
 const PTS = [
@@ -3254,7 +3260,14 @@ class Component extends DCLogic {
       const list = (WK[wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
       const logs = this.state.logs || {}, swaps = this.state.swaps || {};
       const ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, y: e.y, objetivo: e.p, series: (logs[e.id] || []).slice(0, parseInt(e.s, 10) || 0).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && (l.done || (String(l.r == null ? '' : l.r).trim() && String(l.w == null ? '' : l.w).trim()))) })) }));
-      const completo = ejercicios.length > 0 && ejercicios.every(ej => ej.series.length > 0 && ej.series.every(s => String(s.reps).trim() && String(s.peso).trim()));
+      // COMPLETO = todas las series PLANIFICADAS de TODOS los ejercicios, rellenas. Antes se
+      // miraba solo lo que el cliente habia tocado: si rellenaba 2 de 3 series y nada del resto,
+      // los ejercicios sin tocar no contaban y el entreno salia "completado" con un ejercicio.
+      const completo = list.length > 0 && list.every(e => {
+        const n = parseInt(e.s, 10) || 0;
+        const ser = (logs[e.id] || []).slice(0, n);
+        return n > 0 && ser.length === n && ser.every(l => String((l && l.r) || '').trim() && String((l && l.w) || '').trim());
+      });
       // Solo se marca el día como hecho si el entreno está COMPLETO. Si lo dejó a medias
       // (se cansó, no le dio tiempo), se guarda igual pero el día no se da por cumplido.
       if (completo) this.setState(s => ({ marks: Object.assign({}, s.marks, { [dS.fecha + '|entreno']: true }) }));
@@ -3263,10 +3276,13 @@ class Component extends DCLogic {
       }
       // El aviso dice lo que se ha guardado de verdad: media sesión también cuenta y se envía.
       const hechas = ejercicios.reduce((a, ej) => a + ej.series.filter(x => x.done).length, 0);
-      const totales = ejercicios.reduce((a, ej) => a + ej.series.length, 0);
+      // El total son las series que TENIA QUE HACER, no las que llego a tocar. Antes decia
+      // "3 de 3" habiendo hecho 3 series de un entreno de 24: contaba solo lo rellenado.
+      const totales = list.reduce((a, e) => a + (parseInt(e.s, 10) || 0), 0);
       const en = this.state.lang === 'en';
       this.flash(completo
-        ? (en ? 'Workout logged · sent to your coach' : 'Entreno registrado · enviado al equipo')
+        ? (en ? ('Workout logged · ' + hechas + ' of ' + totales + ' sets · sent to your coach')
+              : ('Entreno registrado · ' + hechas + ' de ' + totales + ' series · enviado al equipo'))
         : (en ? ('Saved · ' + hechas + ' of ' + totales + ' sets · sent to your coach')
               : ('Guardado · ' + hechas + ' de ' + totales + ' series · enviado al equipo')));
       return;
