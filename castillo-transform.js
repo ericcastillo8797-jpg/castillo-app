@@ -532,14 +532,15 @@
     var seenD = {};
     var PHOTOSETS = _allSets.sort(function (a, b) { return b.t - a.t; })
       .filter(function (s) { if (seenD[s.key]) return false; seenD[s.key] = 1; return true; })
-      .slice(0, 12).map(function (s) { return { w: semRel(s.t), date: s.date, kg: s.kg, fotos: s.fotos, medidas: s.medidas || [] }; });
+      .slice(0, 12).map(function (s) { return { key: s.key, w: semRel(s.t), date: s.date, kg: s.kg, fotos: s.fotos, medidas: s.medidas || [] }; });
     var SESS = PHOTOSETS.map(function (p) { return p.date; });
     // Comparativa antes/después para Hoy: primer set (más antiguo) vs último (más reciente). El render añade el open de cada foto.
     var progresoFotos = null;
     if (PHOTOSETS.length) {
-      // dos columnas SIEMPRE que haya fotos: si solo hay un set, la derecha ("Últimas") se rellena con el mismo (mejor que una foto suelta gigante)
-      progresoFotos = { hay: true, dos: PHOTOSETS.length >= 1,
-        primeras: PHOTOSETS[PHOTOSETS.length - 1], ultimas: PHOTOSETS[0] };
+      // Con UN solo set, las fotos son sus PRIMERAS y "Ultimas" se queda vacia: repetir la misma
+      // foto en las dos columnas hacia creer que ya habia una comparativa cuando no la hay.
+      progresoFotos = { hay: true, dos: PHOTOSETS.length >= 2,
+        primeras: PHOTOSETS[PHOTOSETS.length - 1], ultimas: PHOTOSETS.length >= 2 ? PHOTOSETS[0] : null };
     }
     var DATES = (wm && wm.data ? wm.data : []).slice().reverse().slice(0, 10).map(function (p) { var dt = new Date(ms(p.t)); return dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3); });
     if (!DATES.length) DATES = SESS.slice();
@@ -696,21 +697,36 @@
     // las tareas del lunes) y también lo que marque el entrenador. Antes las métricas solo contaban si las
     // marcaba el entrenador, por eso salía 0 aunque el cliente las hubiera registrado.
     var _wkDays = buildWeek(new Date(mon.getTime())).days || [];
+    // Alex (31 ago 2026): el semanal cuenta LA PARTE HECHA, no solo los dias perfectos. Antes era
+    // todo o nada: 9.536 pasos de 10.000 contaban lo mismo que quedarse en casa, y 18 series de
+    // 21 contaban como cero. Reglas suyas, literales:
+    //   ENTRENO  marcado como completado = 100%, aunque no apunte ni una serie. A medias, la
+    //            parte de series que llevo.
+    //   CARDIO   marcado a mano = 100% aunque Apple Salud diga 0. Si no, los pasos reales sobre
+    //            su objetivo, con tope del 100%.
+    //   NUTRICION se cuenta por COMIDAS, no por dias ("14 de 21 comidas").
+    //   METRICAS por dias: o se registra o no, ahi no hay medias tintas.
     function complTareas(tipos) {
       var tot = 0, dn = 0;
       _wkDays.forEach(function (d) {
         (d.acts || []).forEach(function (a) {
           if (tipos.indexOf(a.type) < 0) return;
-          tot++;
-          var hecho = !!a.done;
-          if (a.type === 'nutricion' && DIET.length) {   // nutrición: hecha si están TODAS las comidas de ese día
+          if (a.type === 'nutricion' && DIET.length) {
+            // por comidas: el total de la semana son las comidas del plan de cada dia
             var _c = comByDate[d.fecha] || {};
-            hecho = DIET.every(function (m) { return _c[m.id] != null; });
+            tot += DIET.length;
+            DIET.forEach(function (m) { if (_c[m.id] != null) dn++; });
+            return;
           }
-          if (hecho) dn++;
+          tot++;
+          if (a.done) { dn++; return; }                       // marcado como hecho: cuenta entero
+          // a medias: la fraccion que llevo. 'prog' lo calcula progresoEntreno (series) y, en el
+          // cardio, los pasos reales sobre el objetivo.
+          if (a.prog && a.prog.totales > 0) { dn += Math.min(1, a.prog.hechas / a.prog.totales); }
         });
       });
-      return { done: dn, total: tot, pct: tot ? Math.round(dn / tot * 100) : 0 };
+      dn = Math.round(dn * 100) / 100;
+      return { done: Math.round(dn), doneExacto: dn, total: tot, pct: tot ? Math.round(dn / tot * 100) : 0 };
     }
     var cEntreno = complTareas(['workout']), cCardio = complTareas(['cardio']);
     var cMetricas = complTareas(['medidas', 'fotos']), cNutricion = complTareas(['nutricion']);
@@ -778,7 +794,27 @@
       function evMonth(types) {
         var pl = events.filter(function (e) { if (e.removed) return false; var dt = new Date(ms(e.date)); return !isNaN(dt) && _mkey(dt) === mk && types.indexOf(e.type) >= 0; });
         var dn = pl.filter(function (e) { if (e.completed) return true; var dt = new Date(ms(e.date)); var k = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()); var reg = regByDate[k] || {}; if (types.indexOf('workout') >= 0 && reg.workout) return true; if (types.indexOf('cardio') >= 0 && reg.cardio) return true; return false; });
-        return { done: dn.length, total: pl.length, pct: pl.length ? Math.round(dn.length / pl.length * 100) : 0 };
+        // Alex (31 ago 2026) quiere el informe con LAS DOS cifras: "3 de 4 sesiones completas ·
+        // 86% de las series". 'pct' son los dias enteros; 'pctParcial' es la parte real hecha
+        // (series del entreno, pasos del cardio). Antes un dia a medias contaba como cero.
+        var frac = 0;
+        pl.forEach(function (e) {
+          var dt = new Date(ms(e.date));
+          var k = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
+          var reg = regByDate[k] || {};
+          if (dn.indexOf(e) >= 0) { frac += 1; return; }              // dia cerrado: cuenta entero
+          if (types.indexOf('workout') >= 0 && reg.wReg) {
+            var pr = progresoEntreno(reg.wReg, slug(e.title || ''));
+            if (pr && pr.totales) { frac += Math.min(1, pr.hechas / pr.totales); return; }
+          }
+          if (types.indexOf('cardio') >= 0 && reg.pasos != null) {
+            var obj = objPasosDe(e) || _pasosObj || 0;
+            if (obj > 0) { frac += Math.min(1, (parseInt(reg.pasos, 10) || 0) / obj); return; }
+          }
+        });
+        return { done: dn.length, total: pl.length,
+                 pct: pl.length ? Math.round(dn.length / pl.length * 100) : 0,
+                 pctParcial: pl.length ? Math.round(frac / pl.length * 100) : 0 };
       }
       var mEnt = evMonth(['workout']), mCar = evMonth(['cardio']), mMet = evMonth(['bodyStats', 'bodyPhoto']);
       // Sesiones del mes día a día (día + nombre del entreno + si se hizo) → página "Entrenamientos" del PDF
@@ -912,13 +948,15 @@
       // fotos del mes
       var fotosN = _allSets.filter(function (s) { var dt = new Date(s.t); return dt.getFullYear() === yr && dt.getMonth() === mo; }).length;
       // cumplimiento global = MEDIA de los % de las áreas que aplican (no ponderado por volumen, para que la nutrición en comidas no lo desequilibre)
-      var _gp = []; if (mEnt.total) _gp.push(mEnt.pct); if (mCar.total) _gp.push(mCar.pct); if (mMet.total) _gp.push(mMet.pct); if (nutPlanMeals) _gp.push(nutPct);
+      // El global usa la parte REAL hecha, para que no mezcle formas de medir: la nutricion ya
+      // contaba comida a comida y el resto contaba dias enteros.
+      var _gp = []; if (mEnt.total) _gp.push(mEnt.pctParcial); if (mCar.total) _gp.push(mCar.pctParcial); if (mMet.total) _gp.push(mMet.pct); if (nutPlanMeals) _gp.push(nutPct);
       return {
         key: mk, label: MO[mo].charAt(0).toUpperCase() + MO[mo].slice(1) + ' ' + yr,
         // rango del mes, para pedirle a WHOOP solo esos días en el informe
         desde: mk + '-01', hasta: mk + '-' + d2(new Date(yr, mo + 1, 0).getDate()),
         cerrado: !isCurrent,   // el mes ya terminó (se puede compartir/imprimir/guardar); el mes en curso, NO
-        entrenos: mEnt, cardio: { done: mCar.done, total: mCar.total, pct: mCar.pct, objetivo: _pasosObj, media: cardioMedia, totalPasos: cardioTotal, dias: cardioDias },
+        entrenos: mEnt, cardio: { done: mCar.done, total: mCar.total, pct: mCar.pct, pctParcial: mCar.pctParcial, objetivo: _pasosObj, media: cardioMedia, totalPasos: cardioTotal, dias: cardioDias },
         nutricion: { done: nutDoneMeals, total: nutPlanMeals, pct: nutPct, dias: nutDias, conteoGrupos: conteoGrupos },
         metricas: { done: mMet.done, total: mMet.total, pct: mMet.pct, checkins: checkins },
         global: _gp.length ? Math.round(_gp.reduce(function (a, b) { return a + b; }, 0) / _gp.length) : 0,

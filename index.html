@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=237"></script>
-<script src="./castillo-transform.js?v=237"></script>
-<script src="./castillo-equiv.js?v=237"></script>
-<script src="./castillo-data.js?v=237"></script>
+<script src="./castillo-i18n.js?v=238"></script>
+<script src="./castillo-transform.js?v=238"></script>
+<script src="./castillo-equiv.js?v=238"></script>
+<script src="./castillo-data.js?v=238"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 237;
+  var VERSION_ACTUAL = 238;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1776,7 +1776,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 
 <sc-if value="{{ pad }}" hint-placeholder-val="{{ false }}">
 <div style="position:absolute;inset:0;z-index:13;pointer-events:none">
-  <div style="position:absolute;inset:0;background:rgba(0,0,0,.28);transition:opacity .4s;opacity:{{ padDim }};pointer-events:none"></div>
+  <!-- Tocar fuera cierra el teclado. Antes este fondo tenia los toques desactivados y el
+       cliente se quedaba encerrado: daba igual donde pulsara, no habia forma de salir. -->
+  <div onClick="{{ descartaPad }}" style="position:absolute;inset:0;background:rgba(0,0,0,.28);transition:opacity .4s;opacity:{{ padDim }};pointer-events:auto"></div>
   <div style="position:absolute;left:0;right:0;bottom:0;pointer-events:auto;background:var(--s4,#141418);border-top:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:26px 26px 0 0;padding:16px 14px 30px;transition:transform .44s cubic-bezier(.32,.72,0,1);transform:{{ padY }};box-shadow:0 -18px 50px rgba(0,0,0,.4)">
     <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 6px 14px">
       <div>
@@ -2299,6 +2301,7 @@ class Component extends DCLogic {
       if (document.visibilityState !== 'visible' || this.stage !== 'app') return;
       try { this.refreshData(); } catch (e) {}
       try { if (window.CastilloData && window.CastilloData.sincronizaSalud) window.CastilloData.sincronizaSalud(); } catch (e) {}
+      try { this._tickRest(); } catch (e) {}   // el descanso ha seguido corriendo mientras estaba fuera
     };
     document.addEventListener('visibilitychange', this._visH);
     // Reintento de fotos: si el WebView de iOS falla al cargar una foto del bucket privado, la re-firmamos y reintentamos UNA vez.
@@ -2616,7 +2619,10 @@ class Component extends DCLogic {
     for (let i = 0; i < filasSes.length; i += POR_HOJA_SES) trozosSes.push(filasSes.slice(i, i + POR_HOJA_SES));
     if (!trozosSes.length) trozosSes.push([]);
     const p2 = CAB(1, en ? 'Training' : 'Entrenamientos')
-      + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.entrenos.done + ' ' + (en ? 'of' : 'de') + ' ' + m.entrenos.total + '</b> ' + (en ? 'sessions completed' : 'sesiones completadas') + ' · <b>' + m.entrenos.pct + '%</b></div>'
+      // Alex quiere las DOS cifras: cuantas sesiones cerro Y que parte de las series hizo. Una
+      // sesion a medias no es lo mismo que no ir, y antes contaba igual: cero.
+      + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.entrenos.done + ' ' + (en ? 'of' : 'de') + ' ' + m.entrenos.total + '</b> ' + (en ? 'sessions completed' : 'sesiones completadas')
+        + ' · <b>' + (m.entrenos.pctParcial != null ? m.entrenos.pctParcial : m.entrenos.pct) + '%</b> ' + (en ? 'of the sets' : 'de las series') + '</div>'
       + (filasSes.length ? ROT(en ? 'Sessions this month' : 'Sesiones del mes') + UNACOL(trozosSes[0], [en ? 'Day' : 'Día', en ? 'Workout' : 'Entrenamiento'])
                         : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No sessions planned this month.' : 'Este mes no había sesiones planificadas.') + '</div>');
 
@@ -2658,7 +2664,7 @@ class Component extends DCLogic {
                       : (miles(d.pasos) + (d.real ? '' : '<span style="font-size:9px;color:#9a9a9a"> ·' + (en ? ' marked' : ' marcado') + '</span>')),
       (m.cardio.objetivo && d.pasos != null) ? (d.pasos < m.cardio.objetivo) : false));
     const p4 = CAB(3, 'Cardio')
-      + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.cardio.done + ' ' + (en ? 'of' : 'de') + ' ' + m.cardio.total + '</b> ' + (en ? 'days reached the goal of' : 'días con el objetivo de') + ' <b>' + miles(m.cardio.objetivo) + ' ' + T('pasos') + '</b> · <b>' + m.cardio.pct + '%</b>'
+      + '<div style="font-size:12.5px;margin-bottom:14px"><b>' + m.cardio.done + ' ' + (en ? 'of' : 'de') + ' ' + m.cardio.total + '</b> ' + (en ? 'days reached the goal of' : 'días con el objetivo de') + ' <b>' + miles(m.cardio.objetivo) + ' ' + T('pasos') + '</b> · <b>' + (m.cardio.pctParcial != null ? m.cardio.pctParcial : m.cardio.pct) + '%</b> ' + (en ? 'of the steps' : 'de los pasos')
       + '<br><span style="color:#6b6b6b">' + (en ? 'Total steps this month' : 'Pasos totales del mes') + ': <b>' + miles(m.cardio.totalPasos) + '</b></span></div>'
       + (filasCar.length ? ROT(en ? 'Steps day by day' : 'Pasos día a día') + DOSCOL(filasCar, [en ? 'Day' : 'Día', T('pasos')])
                          : '<div style="font-size:12px;color:#9a9a9a">' + (en ? 'No cardio planned this month.' : 'Este mes no había cardio planificado.') + '</div>')
@@ -3062,6 +3068,16 @@ class Component extends DCLogic {
   openMet = f => () => this.openSheet({ k: 'met', f });
   openHist = e => () => this.openSheet({ k: 'exh', e });
   openPhoto = (p, view) => () => { this.setState({ photoIdx: 0, photoDrag: 0 }); this.openSheet({ k: 'photo', p, view }); };
+  // Tocar unas metricas YA completadas: el cliente quiere VER lo que subio, no rellenarlo otra
+  // vez. Le llevamos a Evolucion, a la tanda de fotos de ese dia, abierta en la frontal (las
+  // medidas salen debajo de la foto). Si ese dia no tiene fotos, se abre el registro normal.
+  verMetricas = (fecha, modo) => () => {
+    try {
+      const p = (PHOTOSETS || []).filter(x => x.key === fecha)[0];
+      if (p) { this.setState({ tab: 'evo' }); this.later(this.openPhoto(p, SHOTS[0] || 'Frontal'), 90); return; }
+    } catch (e) {}
+    this.openCheckin(modo, fecha);
+  };
   // Comparativa antes/después de UNA vista (frontal/lateral/espalda): primera foto -> deslizar -> última
   openCompare = (view) => () => {
     const pf = (typeof window !== 'undefined' && window.__DATA && window.__DATA.progresoFotos) || null;
@@ -3296,6 +3312,7 @@ class Component extends DCLogic {
     } catch (e) {}
   };
   startWorkout = (wk, title) => {
+    this.later(() => { try { this._retomaRest(); } catch (e) {} }, 60);   // ¿venia de un descanso a medias?
     // Carga lo que YA registró ese día (reps/pesos) y bloquea si el entreno está completado (no se puede rehacer).
     const _d = this._selDay(); const _f = _d.fecha;
     const _dd = (window.__DATA) || {};
@@ -3363,7 +3380,13 @@ class Component extends DCLogic {
     } catch (e) {}
     this.flash(this.state.lang === 'en' ? 'Workout logged · sent to your coach' : 'Entreno registrado · enviado al equipo');
   };
-  toggleEx = id => () => this.setState(s => ({ exClosed: Object.assign({}, s.exClosed, { [id]: !s.exClosed[id] }) }));
+  toggleEx = id => () => this.setState(s => ({
+    exClosed: Object.assign({}, s.exClosed, { [id]: !s.exClosed[id] }),
+    // Al plegar el ejercicio se apaga su video. Antes seguia marcado como "en reproduccion" por
+    // dentro, y al volver a desplegarlo se recreaba el reproductor y arrancaba solo. El video
+    // solo debe sonar si el cliente le da al play.
+    playEx: s.playEx === id ? null : s.playEx
+  }));
 
   setLog = (ex, i, f, v) => this.setState(s => {
     const logs = Object.assign({}, s.logs);
@@ -3386,15 +3409,43 @@ class Component extends DCLogic {
     }
   };
 
+  // El descanso se guarda como HORA DE FIN, no como una cuenta atras en memoria. Antes, si el
+  // cliente salia a WhatsApp o apagaba la pantalla, iOS congelaba el contador y al volver le
+  // quedaban los mismos segundos que al salir. Ahora siempre se calcula contra el reloj real,
+  // asi que el descanso corre aunque la app no este delante.
+  RESTK = 'castillo_rest_fin';
   startRest = () => {
     clearInterval(this._iv);
-    this.setState({ rest: this.restSecs, restMax: this.restSecs });
-    this._iv = setInterval(() => this.setState(s => {
-      if (s.rest <= 1) { clearInterval(this._iv); return { rest: 0 }; }
-      return { rest: s.rest - 1 };
-    }), 1000);
+    const secs = this.restSecs;
+    this._restFin = Date.now() + secs * 1000;
+    try { localStorage.setItem(this.RESTK, this._restFin + '|' + secs); } catch (e) {}
+    this.setState({ rest: secs, restMax: secs });
+    this._iv = setInterval(this._tickRest, 500);
   };
-  skipRest = () => { clearInterval(this._iv); this.setState({ rest: 0 }); };
+  _tickRest = () => {
+    if (!this._restFin) return;
+    const queda = Math.max(0, Math.ceil((this._restFin - Date.now()) / 1000));
+    if (queda <= 0) { this.skipRest(); return; }
+    if (queda !== this.state.rest) this.setState({ rest: queda });
+  };
+  // Si la app se recarga en mitad de un descanso (una actualizacion, iOS descargandola de
+  // memoria), se retoma donde iba en vez de perderse.
+  _retomaRest = () => {
+    try {
+      const v = (localStorage.getItem(this.RESTK) || '').split('|');
+      const fin = parseInt(v[0], 10) || 0, max = parseInt(v[1], 10) || 0;
+      if (!fin || fin <= Date.now()) { localStorage.removeItem(this.RESTK); return; }
+      this._restFin = fin;
+      this.setState({ rest: Math.ceil((fin - Date.now()) / 1000), restMax: max || 90 });
+      clearInterval(this._iv);
+      this._iv = setInterval(this._tickRest, 500);
+    } catch (e) {}
+  };
+  skipRest = () => {
+    clearInterval(this._iv); this._restFin = 0;
+    try { localStorage.removeItem(this.RESTK); } catch (e) {}
+    this.setState({ rest: 0 });
+  };
 
   openPad = p => { this.setState({ pad: p, padIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ padIn: true }))); };
   // abre el teclado numérico Y sube el campo tocado por encima del teclado (para que el cliente vea lo que rellena)
@@ -3406,6 +3457,9 @@ class Component extends DCLogic {
   };
   // Pasa el teclado del campo REPETICIONES al de PESO de la misma serie SIN cerrarlo (ahorra un toque). Vibra para que se note el cambio.
   _padToWeight = p => { this._haptic(); this.setState({ pad: { t: 'set', ex: p.ex, i: p.i, f: 'w', label: 'Peso', unit: 'kg' } }); };
+  // Cerrar SIN confirmar: se sale del teclado y lo escrito se queda como estaba, sin dar la
+  // serie por hecha. Es lo que toca al tocar fuera: el cliente queria irse, no confirmar.
+  descartaPad = () => { this.setState({ padIn: false }); this.later(() => this.setState({ pad: null }), 460); };
   closePad = () => {
     const p = this.state.pad;
     // Repeticiones con valor + "Listo" → pasa directo al PESO sin cerrar el teclado
@@ -3533,7 +3587,10 @@ class Component extends DCLogic {
     const woTitle = T(st.wTitle || _wkDay.t || 'Entrenamiento');
     // Una serie cuenta como hecha si el cliente la ha rellenado (reps + peso) o si pulsó el tic.
     // Antes solo contaba el tic, así que el contador y el porcentaje se quedaban en cero.
-    const _serieHecha = x => !!(x && (x.done || (String(x.r == null ? '' : x.r).trim() && String(x.w == null ? '' : x.w).trim())));
+    // Una serie cuenta cuando el cliente la CONFIRMA (tic, o "Listo" tras poner el peso), no
+    // por tener los campos escritos. Antes subia el porcentaje al teclear el primer digito del
+    // peso, cuando aun no habia terminado de anotar la serie.
+    const _serieHecha = x => !!(x && x.done);
     // Se cuentan TODAS las series de TODOS los ejercicios del entreno. Si el número de series
     // llega como texto, sumarlo lo concatenaba ("3"+"3" = "33") y el total salía disparatado.
     let setsDone = 0, totalSets = 0;
@@ -3571,7 +3628,14 @@ class Component extends DCLogic {
     // --- Plan de hoy (tareas + progreso) + Resumen semanal ---
     const _dd = (typeof window !== 'undefined' && window.__DATA) || {};
     const _todayFecha = (DAYS.find(d => d.today) || {}).fecha || 'hoy';
-    const _acts = { entreno: () => this.startWorkout(_realToday.wk, _realToday.t), nutricion: this.openDietSheet(_todayFecha), metricas: this.openCheckin, medidas: () => this.openCheckin('medidas'), fotos: () => this.openCheckin('fotos'), cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
+    // Si las metricas de hoy YA estan hechas, tocarlas lleva a verlas en Evolucion en vez de no
+    // hacer nada, que es lo que pasaba: la ficha salia "Completado" y no era pulsable.
+    const _medHechas = !!((_dd.checkinHoy && Object.keys(_dd.checkinHoy).length) || (st.ck && Object.keys(st.ck).length));
+    const _fotoHechas = !!((_dd.checkinFotosHoy && Object.keys(_dd.checkinFotosHoy).length) || (st.ckPhotos && Object.keys(st.ckPhotos).length));
+    const _acts = { entreno: () => this.startWorkout(_realToday.wk, _realToday.t), nutricion: this.openDietSheet(_todayFecha), metricas: this.openCheckin,
+      medidas: _medHechas ? this.verMetricas(_todayFecha, 'medidas') : () => this.openCheckin('medidas'),
+      fotos: _fotoHechas ? this.verMetricas(_todayFecha, 'fotos') : () => this.openCheckin('fotos'),
+      cardio: this.toggleMark(_todayFecha, 'cardio', 'Cardio marcado') };
     // Colores por tipo de tarea (estilo Harbiz: un color por cosa) — se usan en el tick de hoy, los anillos del resumen y los puntos de la agenda
     const TASK_COL = { entreno: '#5B8CFF', workout: '#5B8CFF', cardio: '#FF6B5C', nutricion: '#3DD68C', nutrition: '#3DD68C', metricas: '#C084FC', metrics: '#C084FC', medidas: '#C084FC', bodyStats: '#C084FC', fotos: '#E879C7', bodyPhoto: '#E879C7' };
     const taskColor = k => TASK_COL[k] || 'rgba(var(--fgc,255,255,255),.55)';
@@ -3595,11 +3659,13 @@ class Component extends DCLogic {
         sub: (tk.key === 'cardio' && tk.sub) ? tr(tk.sub) : (done ? T('Completado') : tr(tk.sub)),
         done, pending: !done,
         subColor: done ? _c : 'rgba(var(--fgc,255,255,255),.42)',
-        cursor: done ? 'default' : 'pointer',
+        // Las metricas y las fotos SI se pueden tocar estando completadas: llevan a verlas en
+        // Evolucion. El resto no, para que nadie desmarque una tarea sin querer (lo pidio Alex).
+        cursor: (done && tk.key !== 'medidas' && tk.key !== 'fotos') ? 'default' : 'pointer',
         ckBg: done ? _c : 'transparent', ckFg: done ? '#0C0C0E' : 'transparent',
         ckBd: done ? _c : 'rgba(var(--fgc,255,255,255),.24)',
         // una vez completada, se queda confirmada y NO se puede sacar desde aquí (lo pidió Alex)
-        open: done ? (() => {}) : (_acts[tk.key] || (() => {}))
+        open: (!done || tk.key === 'medidas' || tk.key === 'fotos') ? (_acts[tk.key] || (() => {})) : (() => {})
       };
     });
     const planPct = planTasks.length ? Math.round(planTasks.filter(t => t.done).length / planTasks.length * 100) : 0;
@@ -4270,7 +4336,8 @@ class Component extends DCLogic {
       weekDays, daySel, appts: APPTS,
       progresoFotos: (() => { const pf = _dd.progresoFotos; if (!pf) return null;
         const col = set => ({ w: tD(set.w), date: tD(set.date), shots: SHOTS.map(n => ({ n: T(n), img: (set.fotos && set.fotos[n]) || '', open: this.openCompare(n) })) });
-        return { dos: pf.dos, primeras: col(pf.primeras), ultimas: col(pf.ultimas) }; })(),
+        // 'ultimas' viene vacio cuando el cliente solo tiene una tanda de fotos (acaba de empezar)
+        return { dos: pf.dos, primeras: col(pf.primeras), ultimas: pf.ultimas ? col(pf.ultimas) : null }; })(),
       vidCats, vidList,
       toggleRegMenu: this.toggleRegMenu, regMedidas: this.regMedidas, regFotos: this.regFotos,
       regMenuOpen: !!st.regMenuOpen, regMenuRot: st.regMenuOpen ? 'rotate(45deg)' : 'none',
@@ -4442,7 +4509,7 @@ class Component extends DCLogic {
       ckSubmitLabel: sh.mode === 'fotos' ? T('Guardar fotos') : (sh.mode === 'medidas' ? T('Guardar medidas') : T('Enviar check-in')),
 
       pad: st.pad, padDim: st.padIn ? 1 : 0, padY: st.padIn ? 'none' : 'translateY(100%)',
-      closePad: this.closePad, padVal: this.padValue(st.pad) || '—',
+      closePad: this.closePad, descartaPad: this.descartaPad, padVal: this.padValue(st.pad) || '—',
       padKeys: ['1','2','3','4','5','6','7','8','9',',','0','⌫'].map(n => ({ n, tap: this.padPress(n) })),
 
       showLock: stage === 'lock' || stage === 'scan' || stage === 'splashOut',
