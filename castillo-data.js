@@ -366,8 +366,14 @@
   // WHOOP: pide al servidor la URL de login OAuth (con el token del cliente) para abrirla.
   function conectarWhoop() {
     if (!_ctx.token) return Promise.resolve({ ok: false });
+    // Hay que decirle A DONDE devolver al cliente cuando termine de identificarse en WHOOP:
+    // la app instalada y la version de navegador viven en direcciones distintas, y si se equivoca
+    // el cliente acaba en el navegador en vez de volver a su app.
+    var enApp = false;
+    try { var C = window.Capacitor; enApp = !!(C && C.isNativePlatform && C.isNativePlatform()); } catch (e) {}
     return fetch(SUPA + '/functions/v1/whoop-connect', {
-      method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': 'application/json' }
+      method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ desde: enApp ? 'app' : 'web' })
     }).then(function (r) { return r.json(); }).catch(function () { return { ok: false }; });
   }
   function conectarApp(name) { try { localStorage.setItem(_appKey(name), '1'); } catch (e) {} }
