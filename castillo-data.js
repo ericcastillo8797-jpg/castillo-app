@@ -43,10 +43,23 @@
   // demas siga funcionando igual (sincrono). La app espera a esta promesa antes de decidir si
   // enseña el Face ID o el formulario.
   var CLAVES_DURAS = ['castillo_session', 'castillo_creds', 'castillo_lang'];
+  // Ademas de la sesion hay que recuperar QUE APPS tiene conectadas (Apple Salud, WHOOP). Vivian
+  // solo en el navegador y se borraban en cada actualizacion: al cliente le salia "Conectar"
+  // aunque ya lo tuviera conectado, y encima dejabamos de leerle los pasos hasta que lo tocara.
+  function _duras() {
+    var P = _prefs(); if (!P || !P.keys) return Promise.resolve(CLAVES_DURAS.slice());
+    return P.keys().then(function (r) {
+      var todas = CLAVES_DURAS.slice();
+      ((r && r.keys) || []).forEach(function (k) {
+        if (todas.indexOf(k) < 0 && (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0)) todas.push(k);
+      });
+      return todas;
+    }).catch(function () { return CLAVES_DURAS.slice(); });
+  }
   var listo = (function () {
     var P = _prefs();
     if (!P) return Promise.resolve(false);
-    return Promise.all(CLAVES_DURAS.map(function (k) {
+    return _duras().then(function (CLAVES) { return Promise.all(CLAVES.map(function (k) {
       return P.get({ key: k }).then(function (r) {
         var v = r && r.value;
         try {
@@ -54,7 +67,7 @@
           else if (!v && localStorage.getItem(k)) P.set({ key: k, value: localStorage.getItem(k) });  // primera vez: se copia al movil
         } catch (e) {}
       }).catch(function () {});
-    })).then(function () { return true; });
+    })); }).then(function () { return true; });
   })();
 
   function saveSession(s) {
@@ -331,7 +344,7 @@
       var hoyF = tzToday(_ctx.tz);   // fecha fresca en la zona del cliente
       var campos = { pasos: pasos };
       if (pasos >= objetivo) campos.cardio = true;
-      try { localStorage.setItem('salud_conectado_' + (_ctx.email || ''), '1'); } catch (e) {}
+      try { guardaDuro('salud_conectado_' + (_ctx.email || ''), '1'); } catch (e) {}
       return guardaDia(hoyF, campos).then(function () { return { available: true, ok: true, pasos: pasos }; });
     }).catch(function () { return { available: true, ok: false }; });
   }
@@ -359,7 +372,7 @@
   }
 
   function saludConectado() { try { return localStorage.getItem('salud_conectado_' + (_ctx.email || '')) === '1'; } catch (e) { return false; } }
-  function desconectarSalud() { try { localStorage.removeItem('salud_conectado_' + (_ctx.email || '')); } catch (e) {} }
+  function desconectarSalud() { guardaDuro('salud_conectado_' + (_ctx.email || ''), null); }
   // Estado de conexión de cada app por usuario (Apple Salud es el flag real; el resto se marca en este móvil).
   function _appKey(name) { return 'app_con_' + (_ctx.email || '') + '_' + String(name).replace(/\s+/g, '_'); }
   function appConectado(name) { if (name === 'Apple Salud') return saludConectado(); try { return localStorage.getItem(_appKey(name)) === '1'; } catch (e) { return false; } }
@@ -376,8 +389,8 @@
       body: JSON.stringify({ desde: enApp ? 'app' : 'web' })
     }).then(function (r) { return r.json(); }).catch(function () { return { ok: false }; });
   }
-  function conectarApp(name) { try { localStorage.setItem(_appKey(name), '1'); } catch (e) {} }
-  function desconectarApp(name) { try { localStorage.removeItem(_appKey(name)); } catch (e) {} }
+  function conectarApp(name) { guardaDuro(_appKey(name), '1'); }
+  function desconectarApp(name) { guardaDuro(_appKey(name), null); }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
   function registrarComida(mealId, opcion, fecha) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));

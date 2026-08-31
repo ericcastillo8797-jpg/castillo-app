@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=231"></script>
-<script src="./castillo-transform.js?v=231"></script>
-<script src="./castillo-equiv.js?v=231"></script>
-<script src="./castillo-data.js?v=231"></script>
+<script src="./castillo-i18n.js?v=232"></script>
+<script src="./castillo-transform.js?v=232"></script>
+<script src="./castillo-equiv.js?v=232"></script>
+<script src="./castillo-data.js?v=232"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 231;
+  var VERSION_ACTUAL = 232;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2372,14 +2372,19 @@ class Component extends DCLogic {
       });
   };
   doFaceId = () => {
-    if (!window.CastilloData || !window.CastilloData.hasSession()) { this.flash(this.state.lang === 'en' ? 'Sign in with your email once; Face ID will work from then on.' : 'Entra una vez con tu correo y contraseña. A partir de ahí ya funciona el Face ID.'); return; }
+    // Candado: si por lo que sea se llama dos veces (una actualizacion que recarga, un doble
+    // toque, el arranque coincidiendo con algo), iOS enseñaba el Face ID DOS veces seguidas.
+    if (this._bioEnCurso) return;
+    this._bioEnCurso = true;
+    this.later(() => { this._bioEnCurso = false; }, 12000);
+    if (!window.CastilloData || !window.CastilloData.hasSession()) { this._bioEnCurso = false; this.flash(this.state.lang === 'en' ? 'Sign in with your email once; Face ID will work from then on.' : 'Entra una vez con tu correo y contraseña. A partir de ahí ya funciona el Face ID.'); return; }
     const C = window.Capacitor, hasBio = !!(C && C.Plugins && C.Plugins.BiometricAuthNative && C.Plugins.BiometricAuthNative.internalAuthenticate);
     const enter = () => window.CastilloData.restoreSession()
       .then(this._enterWith)
       .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'Vuelve a acceder con tu correo'); });
     if (hasBio) {
       // Face ID REAL de Apple: SIN la animación falsa. Se queda en el bloqueo mientras sale el prompt de Apple.
-      this._bioCheck().then((ok) => { if (ok) enter(); else this.setState({ stage: 'lock', scan: 0 }); });
+      this._bioCheck().then((ok) => { this._bioEnCurso = false; if (ok) enter(); else this.setState({ stage: 'lock', scan: 0 }); });
     } else {
       // web / sin plugin nativo: animación simulada (como antes, solo para previsualizar en navegador)
       this.setState({ stage: 'scan', scan: 1 });
@@ -3283,7 +3288,11 @@ class Component extends DCLogic {
       const title = this.state.wTitle || dS.t || 'Entrenamiento';
       const list = (WK[wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
       const logs = this.state.logs || {}, swaps = this.state.swaps || {};
-      const ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, y: e.y, objetivo: e.p, series: (logs[e.id] || []).slice(0, parseInt(e.s, 10) || 0).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && (l.done || (String(l.r == null ? '' : l.r).trim() && String(l.w == null ? '' : l.w).trim()))) })) }));
+      // 'plan' = series que TOCABAN en ese ejercicio. Sin esto solo se guardaba lo que el cliente
+      // llego a tocar, y luego la app leia "4 de 4 series" en un entreno de 21.
+      const ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, y: e.y, objetivo: e.p,
+        plan: parseInt(e.s, 10) || 0,
+        series: (logs[e.id] || []).slice(0, parseInt(e.s, 10) || 0).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && (l.done || (String(l.r == null ? '' : l.r).trim() && String(l.w == null ? '' : l.w).trim()))) })) }));
       // COMPLETO = todas las series PLANIFICADAS de TODOS los ejercicios, rellenas. Antes se
       // miraba solo lo que el cliente habia tocado: si rellenaba 2 de 3 series y nada del resto,
       // los ejercicios sin tocar no contaban y el entreno salia "completado" con un ejercicio.

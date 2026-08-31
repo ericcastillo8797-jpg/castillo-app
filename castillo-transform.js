@@ -61,7 +61,7 @@
     function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
     // La capa de datos también escribe texto que ve el cliente, así que necesita saber el idioma.
     var _EN = (function () { try { return localStorage.getItem('castillo_lang') === 'en'; } catch (e) { return false; } })();
-    var TXT = { pasos: _EN ? 'steps' : 'pasos', faltan: _EN ? 'to go' : 'faltan', cumplido: _EN ? 'goal reached' : 'objetivo cumplido', de: _EN ? 'of' : 'de', series: _EN ? 'sets' : 'series' };
+    var TXT = { pasos: _EN ? 'steps' : 'pasos', faltan: _EN ? 'to go' : 'faltan', cumplido: _EN ? 'goal reached' : 'objetivo cumplido', de: _EN ? 'of' : 'de', series: _EN ? 'sets' : 'series', ejercicios: _EN ? 'exercises' : 'ejercicios' };
     function cardioSub(item) { var p = item && item.config && item.config.pasos; return p ? (miles(p) + ' ' + TXT.pasos) : 'Cardio'; }
     // Un día de cardio se da por cumplido si lo marcó el cliente O si los pasos reales que trae
     // Apple Salud llegan al objetivo que Alex le puso a ESE cliente (no a un 10.000 fijo para todos).
@@ -207,13 +207,19 @@
       // guardado para darlo por hecho: el cliente apuntaba 4 series de 21 y le salia "completado".
       if (r.estado === 'completado') o.workout = true;
       if (Array.isArray(r.ejercicios) && r.ejercicios.length) {
-        var _h = 0, _t = 0;
+        var _h = 0, _t = 0, _ejH = 0, _ejT = 0;
         r.ejercicios.forEach(function (ej) {
           var ser = (ej && ej.series) || [];
-          _t += ser.length;
-          ser.forEach(function (x) { if (x && (x.done || (String(x.reps || '').trim() && String(x.peso || '').trim()))) _h++; });
+          // 'plan' son las series que TOCABAN. Los registros antiguos no lo traen: para esos se
+          // usa lo que hay guardado, que es lo unico que se sabe de ellos.
+          var plan = parseInt((ej && ej.plan) || 0, 10) || ser.length;
+          var hechas = 0;
+          ser.forEach(function (x) { if (x && (x.done || (String(x.reps || '').trim() && String(x.peso || '').trim()))) hechas++; });
+          _t += plan; _h += Math.min(hechas, plan);
+          _ejT++; if (plan > 0 && hechas >= plan) _ejH++;
         });
-        if (_h > 0) o.wProg = { hechas: _h, totales: _t };
+        if (_h > 0) o.wProg = { hechas: _h, totales: _t, ejHechos: _ejH, ejTotales: _ejT,
+                                pct: _t > 0 ? Math.round(_h / _t * 100) : 0 };
       }
       if (r.cardio) o.cardio = true;
       if (r.pasos != null) o.pasos = r.pasos;   // pasos reales de Apple Salud
@@ -246,7 +252,15 @@
         var wkKey = wkItem ? slug(wkItem.title) : 'descanso';
         var title = wkItem ? wkItem.title : (cardio ? cardio.title : 'Descanso');
         var status = isToday ? 'Hoy' : (dt < startOfDay(now) ? (wkItem && wkItem.done ? 'Completado' : (wkItem ? 'No realizado' : 'Descanso')) : 'Programado');
-        var nCount = wkItem && WK[wkKey] ? (wkItem.done ? WK[wkKey].length + ' de ' + WK[wkKey].length : '—') : '—';
+        // Cuenta REAL de ejercicios del dia. Antes solo decia "7 de 7" si estaba completado y
+        // un guion en cualquier otro caso: un entreno a medias no se veia por ningun lado.
+        var _wpD = regDay.wProg || null;
+        var _nTot = (wkItem && WK[wkKey]) ? WK[wkKey].length : 0;
+        var nCount = '—';
+        if (wkItem && _nTot) {
+          if (wkItem.done) nCount = _nTot + ' ' + TXT.de + ' ' + _nTot;
+          else if (_wpD) nCount = (_wpD.ejHechos || 0) + ' ' + TXT.de + ' ' + (_wpD.ejTotales || _nTot);
+        }
         var hh = wkItem ? d2(wkItem.dt.getHours()) + ':' + d2(wkItem.dt.getMinutes()) : '';
         // lista de actividades del día (como Harbiz > Planificación): métricas (foto incluida) / cardio / entreno
         var acts = [];
@@ -255,12 +269,16 @@
         // "Registrar evolución"), también sale la de fotos, para que el cliente pueda subirlas (igual que en el CRM).
         if (photoItem || statsItem) acts.push({ type: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: !!((photoItem && photoItem.done) || chkFotoDates[key]) });
         if (cardio) acts.push({ type: 'cardio', label: 'Caminar', nota: notaDe('Caminar', cardio.title), sub: cardioSubReal(cardio, regDay.pasos), pasos: objPasosDe(cardio) || '', pasosHechos: (regDay.pasos != null ? regDay.pasos : ''), done: cardioCumplido(!!cardio.done || !!regDay.cardio, regDay.pasos, objPasosDe(cardio)) });
-        if (wkItem) acts.push({ type: 'workout', label: 'Entrenamiento', nota: notaDe('Entrenamiento', wkItem.title), sub: (WK[wkKey] ? WK[wkKey].length + ' ejercicios' : 'Entrenamiento'), done: !!wkItem.done, wk: wkKey });
+        if (wkItem) acts.push({ type: 'workout', label: 'Entrenamiento', nota: notaDe('Entrenamiento', wkItem.title),
+          sub: (!wkItem.done && _wpD) ? (miles(_wpD.hechas) + ' ' + TXT.de + ' ' + miles(_wpD.totales) + ' ' + TXT.series)
+                                      : (WK[wkKey] ? WK[wkKey].length + ' ' + TXT.ejercicios : 'Entrenamiento'),
+          prog: (!wkItem.done && _wpD) ? _wpD : null, done: !!wkItem.done, wk: wkKey });
         // Nutrición del programa (con el título TAL CUAL lo puso el entrenador en el CRM, ej. "P.S Alimentación aumento músculo M.1")
         if (nutriItem) acts.push({ type: 'nutricion', label: 'Nutrición', nota: notaDe('Nutrición', nutriItem.title), sub: 'Marca lo que has comido', done: !!nutriItem.done });
         out.push({
           d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
           rom: ROM[i], t: title, s: status, wk: wkKey, n: nCount, acts: acts,
+          wPct: (wkItem && !wkItem.done && _wpD) ? _wpD.pct : (wkItem && wkItem.done ? 100 : 0),
           fecha: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()),
           ses: wkItem ? 'Su domicilio' : (cardio ? cardio.title : 'Sin sesión'),
           dot: isToday ? 2 : (wkItem && wkItem.done ? 1 : 0), today: isToday
