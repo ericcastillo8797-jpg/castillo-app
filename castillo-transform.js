@@ -104,6 +104,30 @@
       return Math.round(n) || 0;
     }
     // Lo que lleva HOY frente a su objetivo, para que vea cuánto le falta: "3.253 / 10.000 pasos · faltan 6.747"
+    // Cuanto lleva hecho de un entreno. El TOTAL sale del plan (las series que tocaban), no de
+    // lo que el cliente llego a apuntar. Los ejercicios se emparejan POR POSICION, que es como se
+    // guardan, para que siga cuadrando aunque el cliente haya cambiado un ejercicio por otro.
+    function progresoEntreno(reg, wkKey) {
+      var lista = WK[wkKey] || [];
+      if (!lista.length) return null;
+      var guardados = (reg && reg.ejercicios) || [];
+      var hechas = 0, totales = 0, ejHechos = 0;
+      lista.forEach(function (linea, i) {
+        var nombre = String(linea).split('|')[0];
+        var rec = exByName[nombre];
+        var plan = rec ? (parseInt(rec.s, 10) || 0) : 0;
+        totales += plan;
+        var ser = (guardados[i] && guardados[i].series) || [];
+        var h = 0;
+        ser.forEach(function (x) { if (x && (x.done || (String(x.reps || '').trim() && String(x.peso || '').trim()))) h++; });
+        if (plan > 0 && h > plan) h = plan;
+        hechas += h;
+        if (plan > 0 && h >= plan) ejHechos++;
+      });
+      if (!totales) return null;
+      return { hechas: hechas, totales: totales, ejHechos: ejHechos, ejTotales: lista.length,
+               pct: Math.round(hechas / totales * 100) };
+    }
     function cardioSubReal(item, hechos) {
       var p = objPasosDe(item);
       var h = (hechos == null || hechos === '') ? null : (parseInt(String(hechos).replace(/[^0-9]/g, ''), 10) || 0);
@@ -206,21 +230,10 @@
       // Un entreno a medias NO cierra el dia. Antes bastaba con que hubiera CUALQUIER ejercicio
       // guardado para darlo por hecho: el cliente apuntaba 4 series de 21 y le salia "completado".
       if (r.estado === 'completado') o.workout = true;
-      if (Array.isArray(r.ejercicios) && r.ejercicios.length) {
-        var _h = 0, _t = 0, _ejH = 0, _ejT = 0;
-        r.ejercicios.forEach(function (ej) {
-          var ser = (ej && ej.series) || [];
-          // 'plan' son las series que TOCABAN. Los registros antiguos no lo traen: para esos se
-          // usa lo que hay guardado, que es lo unico que se sabe de ellos.
-          var plan = parseInt((ej && ej.plan) || 0, 10) || ser.length;
-          var hechas = 0;
-          ser.forEach(function (x) { if (x && (x.done || (String(x.reps || '').trim() && String(x.peso || '').trim()))) hechas++; });
-          _t += plan; _h += Math.min(hechas, plan);
-          _ejT++; if (plan > 0 && hechas >= plan) _ejH++;
-        });
-        if (_h > 0) o.wProg = { hechas: _h, totales: _t, ejHechos: _ejH, ejTotales: _ejT,
-                                pct: _t > 0 ? Math.round(_h / _t * 100) : 0 };
-      }
+      // El registro se guarda TAL CUAL. El progreso NO se puede calcular aqui: lo guardado solo
+      // tiene las series que el cliente llego a tocar, y por eso salia "4 de 4" en un entreno de
+      // 21. El total tiene que salir del PLAN, y el plan se sabe mas abajo, con el entreno del dia.
+      if (Array.isArray(r.ejercicios) && r.ejercicios.length) o.wReg = r;
       if (r.cardio) o.cardio = true;
       if (r.pasos != null) o.pasos = r.pasos;   // pasos reales de Apple Salud
     });
@@ -254,7 +267,7 @@
         var status = isToday ? 'Hoy' : (dt < startOfDay(now) ? (wkItem && wkItem.done ? 'Completado' : (wkItem ? 'No realizado' : 'Descanso')) : 'Programado');
         // Cuenta REAL de ejercicios del dia. Antes solo decia "7 de 7" si estaba completado y
         // un guion en cualquier otro caso: un entreno a medias no se veia por ningun lado.
-        var _wpD = regDay.wProg || null;
+        var _wpD = (regDay.wReg && wkItem) ? progresoEntreno(regDay.wReg, wkKey) : null;
         var _nTot = (wkItem && WK[wkKey]) ? WK[wkKey].length : 0;
         var nCount = '—';
         if (wkItem && _nTot) {
@@ -637,7 +650,8 @@
     if (hasT('workout')) {
       // Si lo dejo a medias, la ficha lo dice: "4 de 21 series" en vez de un texto generico, y
       // la app pinta el circulo con la parte que lleva en vez del tic de completado.
-      var _wp = regToday.wProg || null;
+      var _wTit = (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title;
+      var _wp = (regToday.wReg && _wTit) ? progresoEntreno(regToday.wReg, slug(_wTit)) : null;
       todayTasks.push({ key: 'entreno', label: 'Entrenamiento',
         nota: notaDe('Entrenamiento', (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title),
         sub: (_wp && !entrenoHecho) ? (miles(_wp.hechas) + ' ' + TXT.de + ' ' + miles(_wp.totales) + ' ' + TXT.series) : 'Marca tus series y pesos',

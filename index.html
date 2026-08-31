@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=232"></script>
-<script src="./castillo-transform.js?v=232"></script>
-<script src="./castillo-equiv.js?v=232"></script>
-<script src="./castillo-data.js?v=232"></script>
+<script src="./castillo-i18n.js?v=233"></script>
+<script src="./castillo-transform.js?v=233"></script>
+<script src="./castillo-equiv.js?v=233"></script>
+<script src="./castillo-data.js?v=233"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 232;
+  var VERSION_ACTUAL = 233;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -161,11 +161,13 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <sc-for list="{{ planTasks }}" as="t" hint-placeholder-count="4">
       <div onClick="{{ t.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:{{ t.cursor }};transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
         <sc-if value="{{ t.enCurso }}" hint-placeholder-val="{{ false }}">
-        <!-- A medias: en vez del tic se ve cuanto lleva hecho del entreno. -->
+        <!-- A medias: una TARTA rellena con la porcion hecha, no un aro. El truco es un circulo
+             pequeño con un borde tan gordo que llega hasta el filo: asi el trozo sale macizo. -->
         <div style="width:26px;height:26px;flex:none;position:relative">
-          <svg width="26" height="26" viewBox="0 0 26 26" style="transform:rotate(-90deg)">
-            <circle cx="13" cy="13" r="11.3" fill="none" stroke="rgba(var(--fgc,255,255,255),.16)" stroke-width="2"></circle>
-            <circle cx="13" cy="13" r="11.3" fill="none" stroke="{{ t.progColor }}" stroke-width="2" stroke-linecap="round" stroke-dasharray="71" stroke-dashoffset="{{ t.progOffset }}"></circle>
+          <svg width="26" height="26" viewBox="0 0 26 26">
+            <circle cx="13" cy="13" r="12.4" fill="rgba(var(--fgc,255,255,255),.12)"></circle>
+            <circle cx="13" cy="13" r="6.2" fill="none" stroke="{{ t.progColor }}" stroke-width="12.4"
+                    stroke-dasharray="{{ t.pieDash }}" transform="rotate(-90 13 13)"></circle>
           </svg>
         </div>
         </sc-if>
@@ -408,9 +410,20 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden">
         <sc-for list="{{ daySel.acts }}" as="a" hint-placeholder-count="3">
         <div onClick="{{ a.open }}" style="display:flex;align-items:center;gap:13px;padding:14px 15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s,transform .18s cubic-bezier(.2,.8,.2,1)" style-hover="background:rgba(var(--fgc,255,255,255),.035)" style-active="transform:scale(.985)">
+          <sc-if value="{{ a.enCurso }}" hint-placeholder-val="{{ false }}">
+          <div style="width:26px;height:26px;flex:none;position:relative">
+            <svg width="26" height="26" viewBox="0 0 26 26">
+              <circle cx="13" cy="13" r="12.4" fill="rgba(var(--fgc,255,255,255),.12)"></circle>
+              <circle cx="13" cy="13" r="6.2" fill="none" stroke="{{ a.progColor }}" stroke-width="12.4"
+                      stroke-dasharray="{{ a.pieDash }}" transform="rotate(-90 13 13)"></circle>
+            </svg>
+          </div>
+          </sc-if>
+          <sc-if value="{{ a.noEnCurso }}" hint-placeholder-val="{{ true }}">
           <div style="width:26px;height:26px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ a.ckBg }};color:{{ a.ckFg }};border:1.3px solid {{ a.ckBd }}">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.9 5.2 9.4 10.6 3.6"></path></svg>
           </div>
+          </sc-if>
           <div style="flex:1;min-width:0">
             <div style="font-size:14.5px;font-weight:500">{{ a.label }}<sc-if value="{{ a.nota }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:400;color:rgba(var(--fgc,255,255,255),.38);margin-left:5px">({{ a.nota }})</span></sc-if></div>
             <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:2.5px">{{ a.sub }}</div>
@@ -3547,7 +3560,9 @@ class Component extends DCLogic {
         // Y si el entreno esta a medias, el circulo enseña la parte hecha en vez del tic: el
         // cliente puede salir un momento y volver, y tiene que verse que sigue en marcha.
         enCurso: _pr > 0, noEnCurso: !(_pr > 0),
-        progColor: _c, progOffset: Math.round(71 * (1 - _pr) * 10) / 10,
+        // La porcion: el contorno del circulo interior mide 2·PI·6,2 = 38,96. Se pinta la parte
+        // proporcional y el resto se deja sin pintar.
+        progColor: _c, pieDash: (Math.round(38.96 * _pr * 100) / 100) + ' 38.96',
         label: tr(tk.label), nota: tk.nota || '',
         sub: (tk.key === 'cardio' && tk.sub) ? tr(tk.sub) : (done ? T('Completado') : tr(tk.sub)),
         done, pending: !done,
@@ -3815,8 +3830,12 @@ class Component extends DCLogic {
       // día futuro → no se puede registrar; solo avisar
       if (_dayFuturo && !done) open = () => this.flash(st.lang === 'en' ? "It's not that day yet" : 'Aún no es ese día');
       const _c = taskColor(a.type);
+      // Igual que en Hoy: si el entreno esta a medias, la tarta con la parte hecha en vez del tic.
+      const _apr = (!done && a.prog && a.prog.totales > 0) ? Math.min(1, a.prog.hechas / a.prog.totales) : 0;
       return {
         type: a.type, label: tr(a.label), nota: a.nota || '', sub: tr(a.sub), done, open, thumb,
+        enCurso: _apr > 0, noEnCurso: !(_apr > 0),
+        progColor: _c, pieDash: (Math.round(38.96 * _apr * 100) / 100) + ' 38.96',
         ckBg: done ? _c : 'transparent', ckFg: done ? '#0C0C0E' : 'transparent',
         ckBd: done ? _c : 'rgba(var(--fgc,255,255,255),.24)'
       };
