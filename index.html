@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=233"></script>
-<script src="./castillo-transform.js?v=233"></script>
-<script src="./castillo-equiv.js?v=233"></script>
-<script src="./castillo-data.js?v=233"></script>
+<script src="./castillo-i18n.js?v=234"></script>
+<script src="./castillo-transform.js?v=234"></script>
+<script src="./castillo-equiv.js?v=234"></script>
+<script src="./castillo-data.js?v=234"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 233;
+  var VERSION_ACTUAL = 234;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -3817,7 +3817,15 @@ class Component extends DCLogic {
     const dayActs = (dS.acts || []).map(a => {
       // hecho = lo dice el programa, o lo marcó el cliente (incluye el entreno recién finalizado)
       let done = a.done || !!st.marks[dS.fecha + '|' + a.type] || (a.type === 'workout' && !!st.marks[dS.fecha + '|entreno']);
-      if (a.type === 'nutricion' && DIET && DIET.length) { const _nm = ((_dd.mealsByDate) || {})[dS.fecha] || {}; done = DIET.every(function (m) { return _nm[m.id] != null; }); }
+      // Nutricion: cuantas comidas de ese dia lleva registradas (para el texto y para la tarta).
+      let _nProg = null;
+      if (a.type === 'nutricion' && DIET && DIET.length) {
+        const _nm = ((_dd.mealsByDate) || {})[dS.fecha] || {};
+        const _nHechas = DIET.filter(m => _nm[m.id] != null).length;
+        done = _nHechas === DIET.length;
+        if (_nHechas > 0) _nProg = { hechas: _nHechas, totales: DIET.length };
+        a = Object.assign({}, a, { sub: _nHechas + ' ' + (st.lang === 'en' ? 'of' : 'de') + ' ' + DIET.length + ' ' + (st.lang === 'en' ? 'meals' : 'comidas') });
+      }
       let open, thumb = '';
       if (a.type === 'metricas') open = () => this.openCheckin(undefined, dS.fecha);
       else if (a.type === 'medidas') open = () => this.openCheckin('medidas', dS.fecha);
@@ -3831,7 +3839,8 @@ class Component extends DCLogic {
       if (_dayFuturo && !done) open = () => this.flash(st.lang === 'en' ? "It's not that day yet" : 'Aún no es ese día');
       const _c = taskColor(a.type);
       // Igual que en Hoy: si el entreno esta a medias, la tarta con la parte hecha en vez del tic.
-      const _apr = (!done && a.prog && a.prog.totales > 0) ? Math.min(1, a.prog.hechas / a.prog.totales) : 0;
+      const _pAct = a.prog || _nProg;
+      const _apr = (!done && _pAct && _pAct.totales > 0) ? Math.min(1, _pAct.hechas / _pAct.totales) : 0;
       return {
         type: a.type, label: tr(a.label), nota: a.nota || '', sub: tr(a.sub), done, open, thumb,
         enCurso: _apr > 0, noEnCurso: !(_apr > 0),

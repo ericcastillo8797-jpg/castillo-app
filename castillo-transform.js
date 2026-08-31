@@ -61,7 +61,7 @@
     function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
     // La capa de datos también escribe texto que ve el cliente, así que necesita saber el idioma.
     var _EN = (function () { try { return localStorage.getItem('castillo_lang') === 'en'; } catch (e) { return false; } })();
-    var TXT = { pasos: _EN ? 'steps' : 'pasos', faltan: _EN ? 'to go' : 'faltan', cumplido: _EN ? 'goal reached' : 'objetivo cumplido', de: _EN ? 'of' : 'de', series: _EN ? 'sets' : 'series', ejercicios: _EN ? 'exercises' : 'ejercicios' };
+    var TXT = { pasos: _EN ? 'steps' : 'pasos', faltan: _EN ? 'to go' : 'faltan', cumplido: _EN ? 'goal reached' : 'objetivo cumplido', de: _EN ? 'of' : 'de', series: _EN ? 'sets' : 'series', ejercicios: _EN ? 'exercises' : 'ejercicios', comidas: _EN ? 'meals' : 'comidas' };
     function cardioSub(item) { var p = item && item.config && item.config.pasos; return p ? (miles(p) + ' ' + TXT.pasos) : 'Cardio'; }
     // Un día de cardio se da por cumplido si lo marcó el cliente O si los pasos reales que trae
     // Apple Salud llegan al objetivo que Alex le puso a ESE cliente (no a un 10.000 fijo para todos).
@@ -281,7 +281,15 @@
         // La foto de progreso va SIEMPRE con las métricas: si hay tarea de métricas (aunque el evento sea solo bodyStats
         // "Registrar evolución"), también sale la de fotos, para que el cliente pueda subirlas (igual que en el CRM).
         if (photoItem || statsItem) acts.push({ type: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: !!((photoItem && photoItem.done) || chkFotoDates[key]) });
-        if (cardio) acts.push({ type: 'cardio', label: 'Caminar', nota: notaDe('Caminar', cardio.title), sub: cardioSubReal(cardio, regDay.pasos), pasos: objPasosDe(cardio) || '', pasosHechos: (regDay.pasos != null ? regDay.pasos : ''), done: cardioCumplido(!!cardio.done || !!regDay.cardio, regDay.pasos, objPasosDe(cardio)) });
+        if (cardio) {
+          var _objD = objPasosDe(cardio);
+          var _dadosD = (regDay.pasos != null) ? (parseInt(regDay.pasos, 10) || 0) : 0;
+          acts.push({ type: 'cardio', label: 'Caminar', nota: notaDe('Caminar', cardio.title),
+            sub: cardioSubReal(cardio, regDay.pasos), pasos: _objD || '',
+            pasosHechos: (regDay.pasos != null ? regDay.pasos : ''),
+            prog: (_objD > 0 && _dadosD > 0) ? { hechas: _dadosD, totales: _objD } : null,
+            done: cardioCumplido(!!cardio.done || !!regDay.cardio, regDay.pasos, _objD) });
+        }
         if (wkItem) acts.push({ type: 'workout', label: 'Entrenamiento', nota: notaDe('Entrenamiento', wkItem.title),
           sub: (!wkItem.done && _wpD) ? (miles(_wpD.hechas) + ' ' + TXT.de + ' ' + miles(_wpD.totales) + ' ' + TXT.series)
                                       : (WK[wkKey] ? WK[wkKey].length + ' ' + TXT.ejercicios : 'Entrenamiento'),
@@ -646,7 +654,17 @@
     var checkinDoneThisWeek = !!chkWeeks[wkKeyOf(now)];
     if (hasT('bodyStats')) todayTasks.push({ key: 'medidas', label: 'Métricas personales · medidas', sub: 'Peso y medidas', done: doneT('bodyStats') || !!chkMedDates[todayKey] });
     if (hasT('bodyPhoto')) todayTasks.push({ key: 'fotos', label: 'Métricas personales · fotos', sub: 'Frontal, lateral y espalda', done: doneT('bodyPhoto') || !!chkFotoDates[todayKey] });
-    if (hasT('cardio')) { var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {}; todayTasks.push({ key: 'cardio', label: 'Caminar', nota: notaDe('Caminar', _cItem.title), sub: cardioSubReal(_cItem, regToday.pasos), pasos: objPasosDe(_cItem) || '', pasosHechos: (regToday.pasos != null ? regToday.pasos : ''), done: cardioCumplido(doneT('cardio') || !!regToday.cardio, regToday.pasos, objPasosDe(_cItem) || pasosObjetivo) }); }
+    if (hasT('cardio')) {
+      var _cItem = todayItems.filter(function (x) { return x.type === 'cardio'; })[0] || {};
+      var _obj = objPasosDe(_cItem) || pasosObjetivo;
+      var _dados = (regToday.pasos != null) ? (parseInt(regToday.pasos, 10) || 0) : 0;
+      todayTasks.push({ key: 'cardio', label: 'Caminar', nota: notaDe('Caminar', _cItem.title),
+        sub: cardioSubReal(_cItem, regToday.pasos), pasos: objPasosDe(_cItem) || '',
+        pasosHechos: (regToday.pasos != null ? regToday.pasos : ''),
+        // La tarta con los pasos que lleva sobre su objetivo, igual que el entreno.
+        prog: (_obj > 0 && _dados > 0) ? { hechas: _dados, totales: _obj } : null,
+        done: cardioCumplido(doneT('cardio') || !!regToday.cardio, regToday.pasos, _obj) });
+    }
     if (hasT('workout')) {
       // Si lo dejo a medias, la ficha lo dice: "4 de 21 series" en vez de un texto generico, y
       // la app pinta el circulo con la parte que lleva en vez del tic de completado.
@@ -660,7 +678,14 @@
     var comHoy = comByDate[todayKey] || {};   // comidas REALMENTE registradas hoy (no las opciones por defecto del plan)
     // Nutrición SOLO los días que el entrenador la haya puesto (con su título del CRM), no todos los días.
     var _nutToday = todayItems.filter(function (x) { return x.type === 'nutritionPlan' || x.type === 'nutrition'; })[0];
-    if (_nutToday) todayTasks.push({ key: 'nutricion', label: 'Nutrición', nota: notaDe('Nutrición', _nutToday.title), sub: (DIET.length ? DIET.length + ' comidas' : 'Marca lo que has comido'), done: (DIET.length ? DIET.every(function (m) { return comHoy[m.id] != null; }) : !!_nutToday.done) });
+    if (_nutToday) {
+      // Comidas ya registradas de las que tiene. Si se ha tomado el desayuno y se sale, se ve.
+      var _cReg = DIET.filter(function (m) { return comHoy[m.id] != null; }).length;
+      todayTasks.push({ key: 'nutricion', label: 'Nutrición', nota: notaDe('Nutrición', _nutToday.title),
+        sub: DIET.length ? (_cReg + ' ' + TXT.de + ' ' + DIET.length + ' ' + TXT.comidas) : 'Marca lo que has comido',
+        prog: (DIET.length && _cReg > 0) ? { hechas: _cReg, totales: DIET.length } : null,
+        done: (DIET.length ? DIET.every(function (m) { return comHoy[m.id] != null; }) : !!_nutToday.done) });
+    }
     var trainDoneN = todayTasks.filter(function (t) { return t.done; }).length;
     var planHoyPct = todayTasks.length ? Math.round(trainDoneN / todayTasks.length * 100) : 0;
     // cumplimiento semanal (planificado vs completado en la semana actual)
