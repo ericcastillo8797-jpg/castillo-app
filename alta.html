@@ -461,7 +461,10 @@
     var parq={}; PARQ.forEach(function(p){ parq[p.k]={ q:p.es, si:!!yn[p.k] }; });
     var payload={ token:codigo, code:codigo, email:email, password:pass, nombre:$('nombre').value.trim(), apellido:$('apellido').value.trim(),
       telefono:$('telefono').value.trim(), prefix:$('prefijo').value.trim(), genero:choice.genero||null, birthdate:getBirthdate(),
-      objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true, lang:lang, foto:fotoData||null };
+      objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true, lang:lang, foto:fotoData||null,
+      // Zona horaria del movil: asi la ficha nace con el huso correcto viva donde viva el cliente
+      // (Miami, España, China...). No es la ubicacion: es un ajuste del telefono, como el idioma.
+      tz:(function(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||''; }catch(e){ return ''; } })() };
     submitting=true; $('nextBtn').disabled=true; $('backBtn').disabled=true; $('nextBtn').textContent=t.creando;
     fetch(SUPA+'/functions/v1/alta-cliente',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'}, body:JSON.stringify(payload) })
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
