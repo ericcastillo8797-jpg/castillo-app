@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=244"></script>
-<script src="./castillo-transform.js?v=244"></script>
-<script src="./castillo-equiv.js?v=244"></script>
-<script src="./castillo-data.js?v=244"></script>
+<script src="./castillo-i18n.js?v=245"></script>
+<script src="./castillo-transform.js?v=245"></script>
+<script src="./castillo-equiv.js?v=245"></script>
+<script src="./castillo-data.js?v=245"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 244;
+  var VERSION_ACTUAL = 245;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -3029,7 +3029,7 @@ class Component extends DCLogic {
     const alimentos = sel.map(x => ({ nombre: x.nombre, kcal100: x.kcal100, gpu: x.gpu, modo: x.modo, cantidad: x.cantidad, gramos: (x.modo === 'ud' ? Math.round(x.cantidad * (x.gpu || 100)) : x.cantidad), kcal: x.kcal }));
     const cd = window.CastilloData;
     if (cd && cd.guardarComidaLibre) cd.guardarComidaLibre(ch.comida, alimentos, fecha).catch(() => {});
-    if (cd && cd.registrarComida) cd.registrarComida(ch.mealId, 'libre', fecha).then(() => this.refreshData(), () => {});   // marca la comida como registrada
+    if (cd && cd.registrarComida) cd.registrarComida(ch.mealId, 'libre', fecha).then(() => this.refreshData(), () => this.flash(this.state.lang === 'en' ? 'Saved on your phone. It will sync when you have signal.' : 'Guardado en tu móvil. Se enviará cuando tengas cobertura.'));   // marca la comida como registrada
     this.flash(en ? 'Free meal logged' : 'Comida libre registrada');
     this.closeCheat();
   };
@@ -3219,13 +3219,13 @@ class Component extends DCLogic {
     const CD = window.CastilloData;
     // si tocas la MISMA opción que ya está marcada -> se DESmarca (por si se equivocó)
     if (day[id] === i) {
-      if (CD && CD.desregistrarComida) CD.desregistrarComida(id, fecha).then(() => { this.flash('Comida desmarcada'); this.refreshData(); }, () => {});
+      if (CD && CD.desregistrarComida) CD.desregistrarComida(id, fecha).then(() => { this.flash(T('Comida desmarcada')); this.refreshData(); }, () => this.flash(this.state.lang === 'en' ? 'Saved on your phone. It will sync when you have signal.' : 'Guardado en tu móvil. Se enviará cuando tengas cobertura.'));
       this.setState({});
       return;   // al desmarcar no se cierra la hoja
     }
     // si no, se registra (o se cambia a otra opción)
     if (CD && CD.registrarComida) {
-      CD.registrarComida(id, i, fecha).then(() => { this.flash('Comida registrada'); this.refreshData(); }, () => {});
+      CD.registrarComida(id, i, fecha).then(() => { this.flash(T('Comida registrada')); this.refreshData(); }, () => this.flash(this.state.lang === 'en' ? 'Saved on your phone. It will sync when you have signal.' : 'Guardado en tu móvil. Se enviará cuando tengas cobertura.'));
     }
     this.setState({});   // refresco inmediato (registrarComida ya actualizó __DATA.mealsByDate)
     const sk = (this.state.sheet || {}).k;
@@ -3554,7 +3554,7 @@ class Component extends DCLogic {
         window.CastilloData.subirFotoProgreso(f, id).then(url => {
           this.setState(s => { const up = Object.assign({}, s.ckUploading); delete up[id]; return { ckPhotos: Object.assign({}, s.ckPhotos, { [id]: url }), ckUploading: up }; });
           this.flash('Foto añadida');
-        }, () => { this.setState(s => { const up = Object.assign({}, s.ckUploading); delete up[id]; return { ckUploading: up }; }); this.flash('No se pudo subir la foto'); });
+        }, () => { this.setState(s => { const up = Object.assign({}, s.ckUploading); delete up[id]; return { ckUploading: up }; }); this.flash(this.state.lang === 'en' ? 'Could not upload the photo. Please try again.' : 'No se pudo subir la foto. Inténtalo otra vez.'); });
       }
     };
     inp.click();
@@ -3578,7 +3578,7 @@ class Component extends DCLogic {
     }
     // Se envían medidas Y fotos del estado (ya trae lo existente de hoy), así guardar una no borra la otra.
     if (window.CastilloData && window.CastilloData.registrarCheckin) {
-      window.CastilloData.registrarCheckin(vals, fotos, sh.fecha, mode).then(() => { this.flash('Guardado'); this.refreshData(); }, () => this.flash('No se pudo guardar'));
+      window.CastilloData.registrarCheckin(vals, fotos, sh.fecha, mode).then(() => { this.flash(T('Guardado')); this.refreshData(); }, () => this.flash(this.state.lang === 'en' ? 'Saved on your phone. It will sync when you have signal.' : 'Guardado en tu móvil. Se enviará cuando tengas cobertura.'));
     } else { this.flash('Guardado'); }
   };
 

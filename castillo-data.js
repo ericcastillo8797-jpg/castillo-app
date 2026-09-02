@@ -373,8 +373,17 @@
     if (a.length > 60) a = a.slice(-60);
     escribeCola(a);
   }
+  // Reintenta un pendiente llamando a la MISMA funcion que lo genero, con sinCola=true para que
+  // un fallo repetido no lo encole otra vez y se duplique.
   function aplicaPendiente(it) {
-    if (it.k === 'dia') return guardaDia(it.f, it.campos, true);
+    if (it.k === 'dia')         return guardaDia(it.f, it.campos, true);
+    if (it.k === 'comida')      return registrarComida(it.mealId, it.opcion, it.f, true);
+    if (it.k === 'descomida')   return desregistrarComida(it.mealId, it.f, true);
+    if (it.k === 'libre')       return guardarComidaLibre(it.comida, it.alimentos, it.f, true);
+    if (it.k === 'checkin')     return CastilloData.registrarCheckin(it.valores, it.fotos, it.f, it.mode, true);
+    if (it.k === 'sustitucion') return CastilloData.registrarSustitucion(it.comida, it.original, it.nuevo, it.gramos, it.macros, it.f, true);
+    if (it.k === 'perfil')      return guardarPerfil(it.p, true);
+    if (it.k === 'favorito')    return CastilloData.marcarFavorito(it.nombre, it.kcal, it.activar, true).then(function (ok) { return ok ? true : Promise.reject(new Error('no')); });
     return Promise.reject(new Error('tipo desconocido'));
   }
   // Devuelve cuantos se han guardado por fin, para poder avisar al cliente.
@@ -434,7 +443,7 @@
   function conectarApp(name) { guardaDuro(_appKey(name), '1'); }
   function desconectarApp(name) { guardaDuro(_appKey(name), null); }
   // registra (bloquea) una comida de UN DÍA (por defecto hoy): mergea meal_id->opcion en comida_registros
-  function registrarComida(mealId, opcion, fecha) {
+  function registrarComida(mealId, opcion, fecha, sinCola) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
     var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
     var byDate = (window.__DATA && window.__DATA.mealsByDate) || {};
@@ -446,7 +455,10 @@
     var row = { cliente_email: _ctx.email, fecha: f, comidas: comidas, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
     return api('/rest/v1/comida_registros?on_conflict=cliente_email,fecha', {
       method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
-    }, _ctx.token);
+    }, _ctx.token).catch(function (err) {
+      if (!sinCola) encola({ k: 'comida', f: f, mealId: mealId, opcion: opcion });
+      throw err;
+    });
   }
 
   // ---- Buscador de alimentos (comida libre / cheat meal) ----
@@ -478,13 +490,16 @@
   }
 
   // guarda una comida libre / cheat meal del día: alimentos elegidos + marca esa comida como registrada ('libre')
-  function guardarComidaLibre(comida, alimentos, fecha) {
+  function guardarComidaLibre(comida, alimentos, fecha, sinCola) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
     var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
     var row = { cliente_email: _ctx.email, fecha: f, comida: comida || '', alimentos: alimentos || [], registrado_por: _ctx.email, updated_at: new Date().toISOString() };
     return api('/rest/v1/comida_libre', {
       method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(row)
-    }, _ctx.token);
+    }, _ctx.token).catch(function (err) {
+      if (!sinCola) encola({ k: 'libre', f: f, comida: comida, alimentos: alimentos });
+      throw err;
+    });
   }
 
   // cambia la contraseña del cliente (Supabase Auth). NO afecta al CRM: el CRM enlaza por EMAIL, no por contraseña.
@@ -495,7 +510,7 @@
   }
 
   // guarda el perfil del cliente (datos + foto) en Supabase (una fila por cliente)
-  function guardarPerfil(p) {
+  function guardarPerfil(p, sinCola) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
     p = p || {};
     var row = { cliente_email: _ctx.email, nombre: p.nombre || null, apellidos: p.apellidos || null, nombre_publico: p.nombrePublico || null, fecha_nac: p.fechaNac || null, prefijo: p.prefijo || null, telefono: p.telefono || null, foto: p.foto || null, updated_at: new Date().toISOString() };
@@ -508,7 +523,10 @@
     } catch (e) {}
     return api('/rest/v1/perfil_cliente?on_conflict=cliente_email', {
       method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
-    }, _ctx.token);
+    }, _ctx.token).catch(function (err) {
+      if (!sinCola) encola({ k: 'perfil', f: 'perfil', p: p });
+      throw err;
+    });
   }
 
   // El cliente cambia el idioma en Ajustes. Ademas de quedarse en el movil tiene que llegar a
@@ -525,7 +543,7 @@
   }
 
   // DESmarca una comida de un día (quita el meal_id de comida_registros) — por si el cliente se equivocó
-  function desregistrarComida(mealId, fecha) {
+  function desregistrarComida(mealId, fecha, sinCola) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
     var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
     var byDate = (window.__DATA && window.__DATA.mealsByDate) || {};
@@ -537,7 +555,10 @@
     var row = { cliente_email: _ctx.email, fecha: f, comidas: comidas, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
     return api('/rest/v1/comida_registros?on_conflict=cliente_email,fecha', {
       method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
-    }, _ctx.token);
+    }, _ctx.token).catch(function (err) {
+      if (!sinCola) encola({ k: 'descomida', f: f, mealId: mealId });
+      throw err;
+    });
   }
 
   // login con correo+contraseña (guarda sesión + credenciales para el Face ID)
@@ -610,17 +631,21 @@
         .then(function (r) { return (r || []).map(function (x) { return { nombre: x.nombre, kcal: Number(x.kcal) || 0, fav: true }; }); })
         .catch(function () { return []; });
     },
-    marcarFavorito: function (nombre, kcal, activar) {
+    marcarFavorito: function (nombre, kcal, activar, sinCola) {
       if (!_ctx.token || !_ctx.email || !nombre) return Promise.resolve(false);
+      var alFallar = function () {
+        if (!sinCola) encola({ k: 'favorito', f: 'fav:' + nombre, nombre: nombre, kcal: kcal, activar: !!activar });
+        return false;
+      };
       if (activar) {
         return api('/rest/v1/alimentos_favoritos?on_conflict=cliente_email,nombre', {
           method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
           body: JSON.stringify({ cliente_email: _ctx.email, nombre: nombre, kcal: Number(kcal) || 0 })
-        }, _ctx.token).then(function () { return true; }).catch(function () { return false; });
+        }, _ctx.token).then(function () { return true; }).catch(alFallar);
       }
       var e = encodeURIComponent(_ctx.email), n = encodeURIComponent(nombre);
       return api('/rest/v1/alimentos_favoritos?cliente_email=ilike.' + e + '&nombre=eq.' + n, { method: 'DELETE', headers: { 'Prefer': 'return=minimal' } }, _ctx.token)
-        .then(function () { return true; }).catch(function () { return false; });
+        .then(function () { return true; }).catch(alFallar);
     },
     guardarComidaLibre: guardarComidaLibre,
     conectarSalud: conectarSalud,
@@ -656,7 +681,7 @@
     // guarda el check-in de HOY (peso, medidas y fotos) que apunta el cliente
     // mode: 'medidas' (solo valores) | 'fotos' (solo fotos) | 'both'. SIEMPRE fusiona con lo ya guardado
     // de ese día: así subir fotos NO borra las medidas (ni al revés), que era el bug.
-    registrarCheckin: function (valores, fotos, fecha, mode) {
+    registrarCheckin: function (valores, fotos, fecha, mode, sinCola) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
       var m = (mode === 'medidas' || mode === 'fotos') ? mode : 'both';
@@ -672,17 +697,25 @@
           return api('/rest/v1/checkin_registros?on_conflict=cliente_email,fecha', {
             method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
           }, _ctx.token);
+        }).catch(function (err) {
+          // Las medidas y las fotos de progreso NO se pueden perder: si falla, al movil y se
+          // reintenta. Antes solo salia "No se pudo guardar" y adios.
+          if (!sinCola) encola({ k: 'checkin', f: f, valores: valores, fotos: fotos, mode: m });
+          throw err;
         });
     },
     // registra una sustitución de alimento del día (equivalencias); lo verá el entrenador en el CRM
-    registrarSustitucion: function (comida, original, nuevo, gramos, macros, fecha) {
+    registrarSustitucion: function (comida, original, nuevo, gramos, macros, fecha, sinCola) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var mc = macros || {};
       var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
       var row = { cliente_email: _ctx.email, fecha: f, comida: comida || '', original: original || '', nuevo: nuevo || '', gramos: (gramos != null ? gramos : null), kcal_new: (mc.kcal != null ? mc.kcal : null), p_new: (mc.p != null ? mc.p : null), c_new: (mc.c != null ? mc.c : null), g_new: (mc.g != null ? mc.g : null), registrado_por: _ctx.email, updated_at: new Date().toISOString() };
       return api('/rest/v1/sustituciones_dieta?on_conflict=cliente_email,fecha,comida,original', {
         method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
-      }, _ctx.token);
+      }, _ctx.token).catch(function (err) {
+        if (!sinCola) encola({ k: 'sustitucion', f: f, comida: comida, original: original, nuevo: nuevo, gramos: gramos, macros: mc });
+        throw err;
+      });
     },
     // sube una FOTO de progreso al almacenamiento (bucket 'progreso') y devuelve su URL pública
     subirFotoProgreso: function (file, slot) {
