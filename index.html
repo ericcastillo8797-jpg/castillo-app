@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=243"></script>
-<script src="./castillo-transform.js?v=243"></script>
-<script src="./castillo-equiv.js?v=243"></script>
-<script src="./castillo-data.js?v=243"></script>
+<script src="./castillo-i18n.js?v=244"></script>
+<script src="./castillo-transform.js?v=244"></script>
+<script src="./castillo-equiv.js?v=244"></script>
+<script src="./castillo-data.js?v=244"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 243;
+  var VERSION_ACTUAL = 244;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2310,6 +2310,20 @@ class Component extends DCLogic {
         window.CastilloData.alSincronizarSalud(() => { try { this.refreshData(); } catch (e) {} });
       }
     } catch (e) {}
+    // Cuando por fin entra algo que estaba pendiente, se avisa y se repinta: el cliente tiene que
+    // saber que su entreno SI se ha guardado, aunque sea mas tarde.
+    try {
+      if (window.CastilloData && window.CastilloData.alGuardarPendientes) {
+        window.CastilloData.alGuardarPendientes((n) => {
+          try {
+            this.refreshData();
+            this.flash(this.state.lang === 'en'
+              ? ('Saved: ' + n + ' pending record' + (n > 1 ? 's' : '') + ' went through')
+              : ('Guardado: ' + n + ' registro' + (n > 1 ? 's' : '') + ' que quedaba pendiente'));
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
     // Al volver a la app se vuelve a preguntar a Apple Salud, no solo a la base: si ha andado
     // mientras estaba fuera, el numero sube al momento.
     this._visH = () => {
@@ -2317,6 +2331,8 @@ class Component extends DCLogic {
       try { this.refreshData(); } catch (e) {}
       try { if (window.CastilloData && window.CastilloData.sincronizaSalud) window.CastilloData.sincronizaSalud(); } catch (e) {}
       try { this._tickRest(); } catch (e) {}   // el descanso ha seguido corriendo mientras estaba fuera
+      // ¿quedo algo sin guardar? Se reintenta cada vez que vuelve a la app.
+      try { if (window.CastilloData && window.CastilloData.reintentaPendientes) window.CastilloData.reintentaPendientes(); } catch (e) {}
     };
     document.addEventListener('visibilitychange', this._visH);
     // Reintento de fotos: si el WebView de iOS falla al cargar una foto del bucket privado, la re-firmamos y reintentamos UNA vez.
@@ -3378,7 +3394,12 @@ class Component extends DCLogic {
       // (se cansó, no le dio tiempo), se guarda igual pero el día no se da por cumplido.
       if (completo) this.setState(s => ({ marks: Object.assign({}, s.marks, { [dS.fecha + '|entreno']: true }) }));
       if (window.CastilloData && window.CastilloData.registrarEntreno) {
-        window.CastilloData.registrarEntreno(title, ejercicios, completo, dS.fecha).then(() => this.refreshData(), (e) => { this.flash('No se pudo guardar el entreno'); });
+        window.CastilloData.registrarEntreno(title, ejercicios, completo, dS.fecha).then(() => this.refreshData(), () => {
+          // Ya no se pierde: queda en la cola del movil y entra en cuanto haya conexion.
+          this.flash(this.state.lang === 'en'
+            ? 'Saved on your phone. It will sync as soon as you have signal.'
+            : 'Guardado en tu móvil. Se enviará en cuanto tengas cobertura.');
+        });
       }
       // El aviso dice lo que se ha guardado de verdad: media sesión también cuenta y se envía.
       const hechas = ejercicios.reduce((a, ej) => a + ej.series.filter(x => x.done).length, 0);

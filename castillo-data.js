@@ -206,6 +206,9 @@
         data.customMetrics = res[9] || [];   // métricas personalizadas del cliente [{key,label,unit,objetivo}]
         window.__DATA = data;
         try { registerPush(); } catch (e) {}   // registra el móvil para notificaciones (solo app nativa)
+        // Antes que nada: lo que quedo sin guardar en el intento anterior. Si el cliente apunto
+        // un entreno sin cobertura, entra ahora.
+        try { vaciaCola().then(function (n) { if (n && typeof _avisaCola === 'function') _avisaCola(n); }); } catch (e) {}
         try { syncZonaHoraria(); } catch (e) {}  // el movil dice en que zona horaria esta el cliente
         try { syncSaludPasos(); } catch (e) {}   // lee pasos de Apple Salud → marca cardio (solo app nativa)
         return data;
@@ -265,6 +268,7 @@
   // pasada los numeros ya coinciden y no se avisa.
   var _pasosCache = {};
   var _avisaSalud = null;
+  var _avisaCola = null;
   function syncSaludPasos() {
     var C = window.Capacitor, H = C && C.Plugins && C.Plugins.HealthPlugin;
     if (!H || !_ctx.email || !_ctx.token) return Promise.resolve();
@@ -352,12 +356,46 @@
   // Antes cada cosa hacía un upsert con solo sus campos y eso REEMPLAZA la fila entera: guardar
   // un entreno borraba los pasos del día, y sincronizar los pasos borraba el entreno.
   // Ahora: si la fila existe se hace PATCH (solo toca las columnas que se mandan); si no, INSERT.
-  function guardaDia(fecha, campos) {
+  // ── COLA DE PENDIENTES ───────────────────────────────────────────────────────────────────
+  // Si el guardado falla —sin cobertura en el gimnasio, sesion caducada, la app se cierra a
+  // mitad— lo que apunto el cliente NO se puede perder. Antes se perdia: solo salia un aviso de
+  // un segundo y ahi acababa todo. Le paso a Eric con su entreno del 31 de agosto.
+  // Ahora se guarda en el movil (almacen nativo, el que sobrevive a todo) y se reintenta al
+  // abrir la app y cada vez que el cliente vuelve a ella.
+  var COLA = 'castillo_pendientes';
+  function leeCola() { try { return JSON.parse(localStorage.getItem(COLA) || '[]') || []; } catch (e) { return []; } }
+  function escribeCola(a) { guardaDuro(COLA, JSON.stringify(a || [])); }
+  function encola(item) {
+    var a = leeCola();
+    // si ya habia algo pendiente del MISMO dia y del mismo tipo, se sustituye: vale lo ultimo
+    a = a.filter(function (x) { return !(x.k === item.k && x.f === item.f); });
+    a.push(Object.assign({ t: Date.now() }, item));
+    if (a.length > 60) a = a.slice(-60);
+    escribeCola(a);
+  }
+  function aplicaPendiente(it) {
+    if (it.k === 'dia') return guardaDia(it.f, it.campos, true);
+    return Promise.reject(new Error('tipo desconocido'));
+  }
+  // Devuelve cuantos se han guardado por fin, para poder avisar al cliente.
+  function vaciaCola() {
+    var a = leeCola();
+    if (!a.length || !_ctx.token || !_ctx.email) return Promise.resolve(0);
+    var quedan = [], hechos = 0;
+    return a.reduce(function (p, it) {
+      return p.then(function () {
+        return aplicaPendiente(it).then(function () { hechos++; }, function () { quedan.push(it); });
+      });
+    }, Promise.resolve()).then(function () { escribeCola(quedan); return hechos; });
+  }
+
+  // 'sinCola' evita que un reintento que vuelve a fallar se encole otra vez y se duplique.
+  function guardaDia(fecha, campos, sinCola) {
     if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
     var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
     var e = encodeURIComponent(_ctx.email);
     var patch = Object.assign({}, campos, { updated_at: new Date().toISOString() });
-    return api('/rest/v1/entreno_registros?select=id&cliente_email=ilike.' + e + '&fecha=eq.' + f, {}, _ctx.token)
+    var _guardar = api('/rest/v1/entreno_registros?select=id&cliente_email=ilike.' + e + '&fecha=eq.' + f, {}, _ctx.token)
       .then(function (filas) {
         if (filas && filas.length) {
           return api('/rest/v1/entreno_registros?cliente_email=ilike.' + e + '&fecha=eq.' + f, {
@@ -369,6 +407,10 @@
           body: JSON.stringify(Object.assign({ cliente_email: _ctx.email, fecha: f, registrado_por: _ctx.email }, patch))
         }, _ctx.token);
       });
+    return _guardar.catch(function (err) {
+      if (!sinCola) encola({ k: 'dia', f: f, campos: patch });   // no se pierde: se reintenta
+      throw err;
+    });
   }
 
   function saludConectado() { try { return localStorage.getItem('salud_conectado_' + (_ctx.email || '')) === '1'; } catch (e) { return false; } }
@@ -514,6 +556,10 @@
     listo: listo,                 // promesa: la sesion guardada en el movil ya esta cargada
     // La app registra aqui que quiere enterarse cuando los pasos de Apple Salud cambien.
     alSincronizarSalud: function (fn) { _avisaSalud = fn; },
+    // La app se entera cuando por fin se ha guardado algo que estaba pendiente, para avisar.
+    alGuardarPendientes: function (fn) { _avisaCola = fn; },
+    reintentaPendientes: function () { try { return vaciaCola(); } catch (e) { return Promise.resolve(0); } },
+    hayPendientes: function () { try { return leeCola().length; } catch (e) { return 0; } },
     sincronizaSalud: function () { try { return syncSaludPasos(); } catch (e) { return Promise.resolve(); } },
     guardaDuro: guardaDuro,       // para el idioma, que lo escribe la pantalla de Ajustes
     loginAndLoad: function (email, pass) {
