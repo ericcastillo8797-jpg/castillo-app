@@ -2127,6 +2127,10 @@ function applyRealData(d) {
   // Biblioteca GLOBAL de técnica/ejercicios (no es personal): si viene de la BBDD se usa; si no, se deja la de referencia.
   if (nz(d.EX)) EX = d.EX;
   if (nz(d.WK)) WK = d.WK;
+  // Un cliente SIN plan asignado veía la rutina de EJEMPLO que lleva la app dentro —y encima con
+  // los nombres en inglés— como si fuera suya. Eso es peligroso: puede ponerse a entrenar algo
+  // que nadie le ha mandado. Si no tiene plan, no hay ejercicios.
+  if (d.sinPlan) { WK = {}; EX = []; }
   if (nz(d.VID)) VID = d.VID;
   if (nz(d.SHOTS)) SHOTS = d.SHOTS;
   VAR = d.VAR || {};
@@ -3323,20 +3327,33 @@ class Component extends DCLogic {
   // WhatsApp y iOS descarta la app, al volver sigue donde estaba en vez de empezar de cero.
   _guardaEntreno = () => {
     try {
-      if (!this.state.wOpen) { localStorage.removeItem('castillo_entreno'); return; }
-      localStorage.setItem('castillo_entreno', JSON.stringify({
+      const dd = window.CastilloData;
+      if (!this.state.wOpen) {
+        localStorage.removeItem('castillo_entreno');
+        try { if (dd && dd.guardaDuro) dd.guardaDuro('castillo_entreno', null); } catch (e) {}
+        return;
+      }
+      const txt = JSON.stringify({
         t: Date.now(), fecha: (this._selDay() || {}).fecha || '',
         wWk: this.state.wWk, wTitle: this.state.wTitle, day: this.state.day, weekIdx: this.state.weekIdx,
         logs: this.state.logs || {}, swaps: this.state.swaps || {}
-      }));
+      });
+      localStorage.setItem('castillo_entreno', txt);
+      // Y TAMBIEN en el almacen nativo del movil. localStorage se lo lleva iOS por delante cuando
+      // mata la app: el cliente rellenaba el entreno entero, salia un momento y al volver estaba
+      // en blanco. Se escribe con un respiro para no castigar el disco en cada tecla.
+      if (dd && dd.guardaDuro) {
+        clearTimeout(this._tGuardaEnt);
+        this._tGuardaEnt = setTimeout(() => { try { dd.guardaDuro('castillo_entreno', txt); } catch (e) {} }, 600);
+      }
     } catch (e) {}
   };
   _recuperaEntreno = () => {
     try {
       const raw = localStorage.getItem('castillo_entreno'); if (!raw) return;
       const g = JSON.parse(raw); if (!g || !g.t) return;
-      // solo si es de las últimas 12 horas: un entreno de anteayer no se reabre
-      if (Date.now() - g.t > 12 * 3600000) { localStorage.removeItem('castillo_entreno'); return; }
+      // 48 h: con 12 se perdia el entreno empezado por la noche y retomado al dia siguiente
+      if (Date.now() - g.t > 48 * 3600000) { localStorage.removeItem('castillo_entreno'); try { const dd = window.CastilloData; if (dd && dd.guardaDuro) dd.guardaDuro('castillo_entreno', null); } catch (e) {} return; }
       this.setState({ wOpen: true, wIn: true, wWk: g.wWk, wTitle: g.wTitle,
         day: (g.day != null ? g.day : this.state.day), weekIdx: (g.weekIdx != null ? g.weekIdx : this.state.weekIdx),
         logs: g.logs || {}, swaps: g.swaps || {} });
@@ -3354,7 +3371,7 @@ class Component extends DCLogic {
       logs: _dayLogs ? JSON.parse(JSON.stringify(_dayLogs)) : {}, wLock: _cerrado });
     requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ wIn: true })));
   };
-  closeWorkout = () => { try { localStorage.removeItem('castillo_entreno'); } catch (e) {} this.setState({ wIn: false, wExit: false }); this.later(() => this.setState({ wOpen: false }), 540); };
+  closeWorkout = () => { try { localStorage.removeItem('castillo_entreno'); const dd = window.CastilloData; if (dd && dd.guardaDuro) dd.guardaDuro('castillo_entreno', null); } catch (e) {} this.setState({ wIn: false, wExit: false }); this.later(() => this.setState({ wOpen: false }), 540); };
   // La X ya no tira el entreno a la basura sin avisar. Si hay algo registrado, pregunta.
   // Si no ha tocado nada todavía, sale directo: no tiene sentido preguntar por nada.
   _seriesRegistradas = () => {
@@ -3677,7 +3694,7 @@ class Component extends DCLogic {
     const taskColor = k => TASK_COL[k] || 'rgba(var(--fgc,255,255,255),.55)';
     const planTasks = (_dd.todayTasks || []).map(tk => {
       const marked = st.marks[_todayFecha + '|' + tk.key];
-      const done = tk.done || !!marked;
+      const done = (marked != null) ? !!marked : !!tk.done;   // desmarcar tiene que poder quitar, no solo añadir
       const _c = taskColor(tk.key);
       // parte del entreno ya hecha (0 a 1). Solo cuenta si esta a medias: si esta hecho va el tic.
       const _pr = (!done && tk.prog && tk.prog.totales > 0) ? Math.min(1, tk.prog.hechas / tk.prog.totales) : 0;
@@ -3946,7 +3963,10 @@ class Component extends DCLogic {
     const _dayFuturo = this._fechaFutura(dS.fecha);   // no se puede registrar NADA de un día que aún no ha llegado
     const dayActs = (dS.acts || []).map(a => {
       // hecho = lo dice el programa, o lo marcó el cliente (incluye el entreno recién finalizado)
-      let done = a.done || !!st.marks[dS.fecha + '|' + a.type] || (a.type === 'workout' && !!st.marks[dS.fecha + '|entreno']);
+      const _mk = st.marks[dS.fecha + '|' + a.type];
+      let done = (_mk != null)
+        ? !!_mk                                  // el cliente lo ha tocado: manda el
+        : (a.done || (a.type === 'workout' && !!st.marks[dS.fecha + '|entreno']));
       // Nutricion: cuantas comidas de ese dia lleva registradas (para el texto y para la tarta).
       let _nProg = null;
       if (a.type === 'nutricion' && DIET && DIET.length) {

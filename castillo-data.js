@@ -42,7 +42,9 @@
   // Al arrancar: lo que haya en el almacen nativo se copia al del navegador, para que todo lo
   // demas siga funcionando igual (sincrono). La app espera a esta promesa antes de decidir si
   // enseña el Face ID o el formulario.
-  var CLAVES_DURAS = ['castillo_session', 'castillo_creds', 'castillo_lang'];
+  // 'castillo_entreno' = el entreno a medias. Estaba SOLO en localStorage, que iOS borra al
+  // matar la app: el cliente rellenaba 20 series, salia, volvia y lo tenia que repetir todo.
+  var CLAVES_DURAS = ['castillo_session', 'castillo_creds', 'castillo_lang', 'castillo_entreno'];
   // Ademas de la sesion hay que recuperar QUE APPS tiene conectadas (Apple Salud, WHOOP). Vivian
   // solo en el navegador y se borraban en cada actualizacion: al cliente le salia "Conectar"
   // aunque ya lo tuviera conectado, y encima dejabamos de leerle los pasos hasta que lo tocara.
@@ -743,11 +745,32 @@
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
       var campos = { cardio: !!done };
-      // marca MANUAL del cardio → cuenta el objetivo de pasos, pero SOLO si no hay lectura real
       var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
-      var yaReal = (function () { try { var r = (window.__DATA && window.__DATA.logsDia && window.__DATA.logsDia[f]) || null; return r && r.pasosReales; } catch (e) { return false; } })();
-      if (done && !yaReal) campos.pasos = objetivo;
-      return guardaDia(f, campos);
+      // Pasos que YA hay guardados ese dia. Antes se miraba 'logsDia.pasosReales', que no existe
+      // en ningun sitio: salia siempre undefined, asi que marcar el cardio a mano PISABA los
+      // pasos de verdad de Apple Salud y los dejaba en el objetivo.
+      var yaHay = null;
+      try { var r = (window.__DATA && window.__DATA.regByDate && window.__DATA.regByDate[f]) || null;
+            yaHay = r && r.pasos != null ? (parseInt(r.pasos, 10) || 0) : null; } catch (e) {}
+      if (done) {
+        // Solo se rellena con el objetivo si NO hay lectura real (se dejo el movil en casa).
+        if (yaHay == null || yaHay === 0) campos.pasos = objetivo;
+      } else {
+        // Al desmarcar: si lo que hay es EXACTAMENTE lo que pusimos nosotros, se quita, para que
+        // vuelvan a mandar los pasos de Apple Salud. Si es una lectura real, no se toca.
+        if (yaHay === objetivo) campos.pasos = null;
+      }
+      return guardaDia(f, campos).then(function (x) {
+        if (!done) {
+          // OJO: syncSaludPasos lleva un cache para no reescribir lo mismo una y otra vez. Si no
+          // se le borra la entrada de ESE dia, cree que ya lo tiene guardado y NO vuelve a
+          // escribirlo, asi que el dia se quedaba vacio y no habia forma de recuperar el numero
+          // de Apple Salud hasta reiniciar la app. Es justo lo que le pasaba a Eric.
+          try { delete _pasosCache[f]; } catch (e) {}
+          try { syncSaludPasos(); } catch (e) {}
+        }
+        return x;
+      });
     }
   };
   window.CastilloData = CastilloData;

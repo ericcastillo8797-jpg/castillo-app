@@ -1109,6 +1109,12 @@
     var resumenAnios      = periodosDe(12, function (a, b) { return (a.getFullYear() === b.getFullYear() ? String(b.getFullYear()) : (MO3(a) + ' ' + a.getFullYear() + ' – ' + MO3(b) + ' ' + b.getFullYear())); });
 
     return {
+      // regByDate: lo que hay guardado de cada dia (entreno, cardio y pasos). Lo necesita el
+      // marcado manual del cardio para NO pisar los pasos reales de Apple Salud.
+      regByDate: regByDate,
+      // sinPlan: este cliente no tiene ningun entreno asignado. Sin esto la app le enseñaba
+      // la rutina de EJEMPLO que lleva dentro (y encima en ingles) como si fuera suya.
+      sinPlan: !Object.keys(WK || {}).length,
       DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID, resumenMeses: resumenMeses,
       WEIGHTS: WEIGHTS, chartLabels: chartLabels, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
       mealsSel: mealsSel, header: header, logsInit: logsInit, logsByDate: logsByDate, doneByDate: doneByDate, lastByEx: lastByEx, checkinByDate: checkinByDate,
