@@ -3366,9 +3366,23 @@ class Component extends DCLogic {
     const _dd = (window.__DATA) || {};
     const _dayLogs = (_dd.logsByDate && _dd.logsByDate[_f]) || null;
     const _cerrado = !!(_dd.doneByDate && _dd.doneByDate[_f]);
+    // Lo que el cliente dejo a medias en ESTE dia manda sobre lo que haya en el servidor: si no,
+    // abrir el entreno desde la agenda borraba las series que acababa de meter y no habia
+    // guardado todavia. Le pasaba a Eric: marcaba la primera serie, salia, volvia y no habia nada.
+    let _enCurso = null;
+    try {
+      const _raw = localStorage.getItem('castillo_entreno');
+      if (_raw) {
+        const _g = JSON.parse(_raw);
+        if (_g && _g.t && (Date.now() - _g.t) < 48 * 3600000 && _g.fecha === _f && _g.logs && Object.keys(_g.logs).length) _enCurso = _g;
+      }
+    } catch (e) {}
+    const _logsIni = _enCurso
+      ? Object.assign({}, _dayLogs || {}, _enCurso.logs)   // lo de a medias pisa a lo del servidor
+      : (_dayLogs ? JSON.parse(JSON.stringify(_dayLogs)) : {});
     // NO forzar tab:'home' — así al finalizar el entreno vuelves al MISMO sitio desde donde lo abriste (p.ej. Agenda), igual que la nutrición.
     this.setState({ wOpen: true, wIn: false, wWk: (typeof wk === 'string' ? wk : null), wTitle: (typeof title === 'string' ? title : ''),
-      logs: _dayLogs ? JSON.parse(JSON.stringify(_dayLogs)) : {}, wLock: _cerrado });
+      logs: _logsIni, swaps: (_enCurso && _enCurso.swaps) || this.state.swaps || {}, wLock: _cerrado });
     requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ wIn: true })));
   };
   closeWorkout = () => { try { localStorage.removeItem('castillo_entreno'); const dd = window.CastilloData; if (dd && dd.guardaDuro) dd.guardaDuro('castillo_entreno', null); } catch (e) {} this.setState({ wIn: false, wExit: false }); this.later(() => this.setState({ wOpen: false }), 540); };
