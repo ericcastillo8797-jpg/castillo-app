@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 248;
+  var VERSION_ACTUAL = 249;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2334,6 +2334,18 @@ class Component extends DCLogic {
     // Al volver a la app se vuelve a preguntar a Apple Salud, no solo a la base: si ha andado
     // mientras estaba fuera, el numero sube al momento.
     this._visH = () => {
+      // Al IRSE a segundo plano (justo antes de que el cliente mate la app): se fuerza la copia
+      // dura del entreno ya, sin esperar al respiro de los 600 ms.
+      if (document.visibilityState === 'hidden') {
+        try {
+          if (this.state.wOpen) {
+            clearTimeout(this._tGuardaEnt);
+            const dd = window.CastilloData, txt = localStorage.getItem('castillo_entreno');
+            if (dd && dd.guardaDuro && txt) dd.guardaDuro('castillo_entreno', txt);
+          }
+        } catch (e) {}
+        return;
+      }
       if (document.visibilityState !== 'visible' || this.stage !== 'app') return;
       try { this.refreshData(); } catch (e) {}
       try { if (window.CastilloData && window.CastilloData.sincronizaSalud) window.CastilloData.sincronizaSalud(); } catch (e) {}
@@ -3332,6 +3344,10 @@ class Component extends DCLogic {
     try {
       window.__APP_ENTRENO_ABIERTO = !!this.state.wOpen;   // lo mira el actualizador
       const dd = window.CastilloData;
+      // Mientras la app esta arrancando NO se borra nada: _recuperaEntreno corre despues de
+      // cargar los datos y necesita encontrarlo. Sin esto el primer repintado se lo llevaba
+      // por delante y el entreno a medias se perdia SIEMPRE.
+      if (!this._entrenoListo) return;
       if (!this.state.wOpen) {
         localStorage.removeItem('castillo_entreno');
         try { if (dd && dd.guardaDuro) dd.guardaDuro('castillo_entreno', null); } catch (e) {}
@@ -3353,6 +3369,7 @@ class Component extends DCLogic {
     } catch (e) {}
   };
   _recuperaEntreno = () => {
+    this._entrenoListo = true;   // ya se ha intentado recuperar: a partir de aqui si puede limpiar
     try {
       const raw = localStorage.getItem('castillo_entreno'); if (!raw) return;
       const g = JSON.parse(raw); if (!g || !g.t) return;
