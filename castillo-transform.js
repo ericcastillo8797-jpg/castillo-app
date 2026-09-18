@@ -8,6 +8,9 @@
   var WD1 = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
   var WD3 = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
   var MO = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  // Mes ABREVIADO para la fecha larga del día ("Viernes 18 sep."). Con el mes entero, "Miércoles 30
+  // de septiembre" se comía los botones de la cabecera de Nutrición. Abreviado nunca llega a tocarlos.
+  var MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   var DW = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   var ROM = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
   var MEAL_ES = { breakfast: 'Desayuno', morningSnack: 'Media mañana', lunch: 'Comida', snack: 'Merienda', preworkout: 'Pre-entreno', postworkout: 'Post-entreno', dinner: 'Cena' };
@@ -297,7 +300,7 @@
         // Nutrición del programa (con el título TAL CUAL lo puso el entrenador en el CRM, ej. "P.S Alimentación aumento músculo M.1")
         if (nutriItem) acts.push({ type: 'nutricion', label: 'Nutrición', nota: notaDe('Nutrición', nutriItem.title), sub: 'Marca lo que has comido', done: !!nutriItem.done });
         out.push({
-          d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' de ' + MO[dt.getMonth()],
+          d: dt.getDate(), w: WD1[dt.getDay()], long: WD[dt.getDay()] + ' ' + dt.getDate() + ' ' + MES3[dt.getMonth()] + '.',
           rom: ROM[i], t: title, s: status, wk: wkKey, n: nCount, acts: acts,
           wPct: (wkItem && !wkItem.done && _wpD) ? _wpD.pct : (wkItem && wkItem.done ? 100 : 0),
           fecha: dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate()),

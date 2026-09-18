@@ -740,6 +740,8 @@
       });
     });
     Object.keys(MONTHS).forEach(function (k) { out = out.replace(new RegExp('\\b' + k + '\\b', 'gi'), MONTHS[k]); });
+    // En español el mes abreviado lleva punto ("18 sep."); en inglés no ("18 Sep").
+    out = out.replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\./g, '$1');
     out = out.replace(/ de /g, ' ').replace(/\bSemana\b/g, 'Week').replace(/\bsemana\b/g, 'week').replace(/\bdel\b/g, '').replace(/\bal\b/g, 'to').replace(/\s{2,}/g, ' ').trim();
     return out;
   }
