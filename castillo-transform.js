@@ -578,10 +578,25 @@
     var todayKeyReg = now.getFullYear() + '-' + d2(now.getMonth() + 1) + '-' + d2(now.getDate());
     var registro = regList.filter(function (r) { return (r.fecha || '').slice(0, 10) === todayKeyReg; }).slice(-1)[0]
       || regList.slice(-1)[0] || null;
+    // Un ejercicio registrado se busca primero por el ejercicio DEL PLAN ('base'); si el cliente
+    // hizo una variante, el nombre guardado es el de la variante y por ahí no se encontraría.
+    function exDeRegistro(re) {
+      if (!re) return null;
+      var ex = EX.filter(function (e) { return e.n === re.base; })[0] || EX.filter(function (e) { return e.n === re.nombre; })[0];
+      if (ex) return ex;
+      // Registros ANTIGUOS (antes de guardar 'base'): solo tienen el nombre de la variante. Se busca
+      // a qué ejercicio del plan pertenece esa variante para no perder lo que el cliente apuntó.
+      var nk = String(re.nombre || '').toLowerCase().trim();
+      if (!nk) return null;
+      var id = Object.keys(VAR).filter(function (k) {
+        return (VAR[k] || []).some(function (v) { return String(v).split('|')[0].toLowerCase().trim() === nk; });
+      })[0];
+      return id ? EX.filter(function (e) { return e.id === id; })[0] || null : null;
+    }
     var logsInit = {};
     if (registro && Array.isArray(registro.ejercicios)) {
       registro.ejercicios.forEach(function (re) {
-        var ex = EX.filter(function (e) { return e.n === re.nombre; })[0];
+        var ex = exDeRegistro(re);
         if (ex && Array.isArray(re.series)) logsInit[ex.id] = re.series.map(function (s) { return { r: s.reps || '', w: s.peso || '', done: !!s.done }; });
       });
     }
@@ -590,13 +605,16 @@
     // check-ins por fecha (para prerellenar el formulario de CUALQUIER día, no solo hoy)
     var checkinByDate = {};
     chkList.forEach(function (c) { var f = (c.fecha || '').slice(0, 10); if (f) checkinByDate[f] = { valores: c.valores || {}, fotos: c.fotos || {} }; });
-    var logsByDate = {}, doneByDate = {}, lastByEx = {};
+    var logsByDate = {}, doneByDate = {}, lastByEx = {}, swapsByDate = {};
     regList.slice().sort(function (a, b) { return (a.fecha || '') < (b.fecha || '') ? -1 : 1; }).forEach(function (r) {
       var f = (r.fecha || '').slice(0, 10); if (!f || !Array.isArray(r.ejercicios)) return;
       var slot = logsByDate[f] || (logsByDate[f] = {});
       doneByDate[f] = (r.estado === 'completado');
       r.ejercicios.forEach(function (re) {
-        var ex = EX.filter(function (e) { return e.n === re.nombre; })[0];
+        var ex = exDeRegistro(re);
+        // variante que usó ese día, para que al reabrir el entreno siga marcada
+        var _vari = re.variante || (ex && re.nombre && re.nombre !== ex.n ? re.nombre : null);
+        if (ex && _vari) (swapsByDate[f] || (swapsByDate[f] = {}))[ex.id] = _vari;
         if (!ex || !Array.isArray(re.series)) return;
         var series = re.series.map(function (s) { return { r: s.reps || '', w: s.peso || '', done: !!s.done }; });
         slot[ex.id] = series;
@@ -1120,7 +1138,7 @@
       sinPlan: !Object.keys(WK || {}).length,
       DIET: DIET, EX: EX, WK: WK, VAR: VAR, DAYS: DAYS, APPTS: APPTS, MET: MET, VID: VID, resumenMeses: resumenMeses,
       WEIGHTS: WEIGHTS, chartLabels: chartLabels, PHOTOSETS: PHOTOSETS, SHOTS: SHOTS, SESS: SESS, DATES: DATES,
-      mealsSel: mealsSel, header: header, logsInit: logsInit, logsByDate: logsByDate, doneByDate: doneByDate, lastByEx: lastByEx, checkinByDate: checkinByDate,
+      mealsSel: mealsSel, header: header, logsInit: logsInit, logsByDate: logsByDate, doneByDate: doneByDate, lastByEx: lastByEx, swapsByDate: swapsByDate, checkinByDate: checkinByDate,
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary, macros: macros,
       mealsByDate: comByDate, checkinDoneThisWeek: checkinDoneThisWeek, progresoFotos: progresoFotos,
       WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG, pasosObjetivo: pasosObjetivo,

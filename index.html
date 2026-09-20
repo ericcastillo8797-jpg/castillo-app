@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 251;
+  var VERSION_ACTUAL = 252;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -3385,7 +3385,9 @@ class Component extends DCLogic {
       : (_dayLogs ? JSON.parse(JSON.stringify(_dayLogs)) : {});
     // NO forzar tab:'home' — así al finalizar el entreno vuelves al MISMO sitio desde donde lo abriste (p.ej. Agenda), igual que la nutrición.
     this.setState({ wOpen: true, wIn: false, wWk: (typeof wk === 'string' ? wk : null), wTitle: (typeof title === 'string' ? title : ''),
-      logs: _logsIni, swaps: (_enCurso && _enCurso.swaps) || this.state.swaps || {}, wLock: _cerrado });
+      // Variantes: manda lo que dejó a medias; si no, las que YA registró ese día (así al volver a
+      // abrir el entreno sigue viéndose la variante que hizo, con su vídeo y su nombre).
+      logs: _logsIni, swaps: (_enCurso && _enCurso.swaps) || ((_dd.swapsByDate && _dd.swapsByDate[_f]) ? Object.assign({}, _dd.swapsByDate[_f]) : (this.state.swaps || {})), wLock: _cerrado });
     requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ wIn: true })));
   };
   closeWorkout = () => { try { localStorage.removeItem('castillo_entreno'); const dd = window.CastilloData; if (dd && dd.guardaDuro) dd.guardaDuro('castillo_entreno', null); } catch (e) {} this.setState({ wIn: false, wExit: false }); this.later(() => this.setState({ wOpen: false }), 540); };
@@ -3413,7 +3415,10 @@ class Component extends DCLogic {
       const logs = this.state.logs || {}, swaps = this.state.swaps || {};
       // 'plan' = series que TOCABAN en ese ejercicio. Sin esto solo se guardaba lo que el cliente
       // llego a tocar, y luego la app leia "4 de 4 series" en un entreno de 21.
-      const ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, y: e.y, objetivo: e.p,
+      // Si el cliente hizo una VARIANTE, se guardan las dos cosas: el nombre que hizo de verdad
+      // (para el entrenador) y el ejercicio del plan en 'base'. Antes solo se guardaba la variante
+      // y al reabrir el entreno no se encontraba ese ejercicio: parecía que no había registrado nada.
+      const ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, base: e.n, variante: swaps[e.id] || null, y: e.y, objetivo: e.p,
         plan: parseInt(e.s, 10) || 0,
         series: (logs[e.id] || []).slice(0, parseInt(e.s, 10) || 0).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && (l.done || (String(l.r == null ? '' : l.r).trim() && String(l.w == null ? '' : l.w).trim()))) })) }));
       // COMPLETO = todas las series PLANIFICADAS de TODOS los ejercicios, rellenas. Antes se
