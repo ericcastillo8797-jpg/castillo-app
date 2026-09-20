@@ -606,6 +606,30 @@
       }
       return (creds ? passwordLogin(creds.e, creds.p).catch(noSesion) : noSesion());
     },
+    // "¿Has olvidado tu contraseña?": pide a la Edge Function que mande el correo (Resend).
+    // Siempre responde ok, exista o no la cuenta: nadie puede averiguar qué correos hay dados de alta.
+    pedirResetPassword: function (email, lang) {
+      return fetch(SUPA + '/functions/v1/reset-pass', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': ANON },
+        body: JSON.stringify({ email: String(email || '').trim().toLowerCase(), lang: lang || 'es' })
+      }).then(function (r) { return r.json().catch(function () { return { ok: true }; }); });
+    },
+    // El cliente vuelve del correo con los tokens en la dirección (#access_token=…&type=recovery).
+    // Se guarda la sesión y se carga su ficha para que pueda poner la contraseña nueva ya dentro.
+    sesionDesdeEnlace: function () {
+      var h = '';
+      try { h = String(window.location.hash || '').replace(/^#/, ''); } catch (e) { return Promise.reject(new Error('sin enlace')); }
+      if (!h) return Promise.reject(new Error('sin enlace'));
+      var p = new URLSearchParams(h);
+      var at = p.get('access_token'), rt = p.get('refresh_token'), tipo = p.get('type');
+      if (!at || tipo !== 'recovery') return Promise.reject(new Error('sin enlace'));
+      try { window.history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) {}
+      return api('/auth/v1/user', {}, at).then(function (u) {
+        var em = (u && u.email) || '';
+        saveSession({ access_token: at, refresh_token: rt, email: em });
+        return loadData(at, em);
+      });
+    },
     logout: function () { try { guardaDuro(LS, null); guardaDuro(CR, null); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
     registrarComida: registrarComida,
     desregistrarComida: desregistrarComida,
