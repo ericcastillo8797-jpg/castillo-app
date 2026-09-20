@@ -690,6 +690,12 @@
     'El email y la contraseña se gestionan con tu cuenta; para cambiarlos, contacta con tu entrenador.': 'Email and password are managed with your account; to change them, contact your trainer.',
     'Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.': "Your email can't be changed here: it's your account identifier. If you need to, contact your trainer.",
     'Cambiar': 'Change', 'Cambiar contraseña': 'Change password', 'Nueva contraseña': 'New password', 'Repite la contraseña': 'Repeat password', 'Guardar': 'Save',
+    // pantalla de "he olvidado mi contraseña"
+    'Acceso': 'Sign in', 'Mira tu correo': 'Check your email', 'Tu correo': 'Your email',
+    'Enviarme el enlace': 'Send me the link', 'Entendido': 'Got it',
+    'Escribe tu correo y te enviamos un enlace para poner una contraseña nueva.': 'Enter your email and we will send you a link to set a new password.',
+    'Te hemos enviado un enlace. Ábrelo desde este móvil, pon tu contraseña nueva y vuelve a entrar. El enlace vale 1 hora.': 'We sent you a link. Open it on this phone, set your new password and sign in again. The link is valid for 1 hour.',
+    'Pon tu contraseña nueva': 'Set your new password', 'Ese enlace ha caducado. Pide otro.': 'That link has expired. Ask for a new one.',
     'Comida a domicilio, hecha por tus calorías. Solo regístrala.': 'Home-delivered meal, made to your calories. Just log it.',
     'Comida libre': 'Free meal', '¿Comiste fuera? Búscalo y regístralo.': 'Ate out? Search it and log it.', '¿Qué comiste?': 'What did you eat?', 'Buscar alimento…': 'Search food…', 'Buscar': 'Search', 'Buscando…': 'Searching…', 'Añadir': 'Add', 'Sin resultados. Prueba otro nombre.': 'No results. Try another name.', 'Tu comida': 'Your meal', 'Registrar comida libre': 'Log free meal', 'Registrar cheat meal': 'Log cheat meal', 'Resultados': 'Results', 'Recientes': 'Recent',
     'Estás en mitad del entrenamiento': "You're in the middle of a workout",

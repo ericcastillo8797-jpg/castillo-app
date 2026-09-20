@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 254;
+  var VERSION_ACTUAL = 255;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1570,6 +1570,32 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
 </div>
 </sc-if>
 
+<!-- CAPA "he olvidado mi contraseña": pantalla propia con su campo de correo.
+     z-index 22 porque la pantalla de acceso va en 15: con menos, la ventana salía por detrás. -->
+<sc-if value="{{ resetOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:22">
+  <div onClick="{{ closeReset }}" style="position:absolute;inset:0;background:rgba(0,0,0,.5);transition:opacity .46s cubic-bezier(.32,.72,0,1);opacity:{{ resetDim }}"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;background:var(--s4,#111114);border:.5px solid rgba(var(--fgc,255,255,255),.13);border-bottom:none;border-radius:30px 30px 0 0;transition:transform .5s cubic-bezier(.32,.72,0,1);transform:{{ resetY }}">
+    <div onClick="{{ closeReset }}" style="position:absolute;top:12px;right:14px;z-index:3;width:30px;height:30px;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center;cursor:pointer">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l7 7M9 2l-7 7"></path></svg>
+    </div>
+    <div style="padding:11px 0 0;display:flex;justify-content:center;flex:none"><div style="width:38px;height:4.5px;border-radius:4px;background:rgba(var(--fgc,255,255,255),.22)"></div></div>
+    <div style="padding:14px 20px 34px">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ resetLbl }}</div>
+      <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ resetTitulo }}</div>
+      <div style="font-size:13.5px;line-height:1.55;color:rgba(var(--fgc,255,255,255),.55);margin-top:10px">{{ resetTexto }}</div>
+      <sc-if value="{{ resetForm }}" hint-placeholder-val="{{ true }}">
+      <input type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" value="{{ resetEmail }}" onChange="{{ setResetEmail }}" placeholder="{{ resetPh }}" style="width:100%;box-sizing:border-box;margin-top:18px;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.12);border-radius:14px;padding:15px 16px;color:var(--fg,#fff);font-size:15px;outline:none">
+      <div onClick="{{ enviarReset }}" style="margin-top:14px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer">{{ resetBtn }}</div>
+      </sc-if>
+      <sc-if value="{{ resetSent }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeReset }}" style="margin-top:20px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer">{{ resetCerrar }}</div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <!-- CAPA "comida libre / cheat meal": buscador de alimentos USDA -->
 <sc-if value="{{ isCheat }}" hint-placeholder-val="{{ false }}">
 <div style="position:absolute;inset:0;z-index:13">
@@ -2132,6 +2158,7 @@ class Component extends DCLogic {
     email: '', pass: '', scan: 0,
     meals: { m1: 2, m2: 0, m3: 3 },
     sheet: null, sheetIn: false, swap: null, swapIn: false, pwOpen: false, pwIn: false, pwNew: '', pwNew2: '',
+    resetOpen: false, resetIn: false, resetEmail: '', resetSent: false,
     cheat: null, cheatIn: false, cheatQ: '', cheatRes: null, cheatSel: [], cheatBusy: false, cheatRecientes: [], cheatFavs: [],
     mesIdx: 0, periodo: 'mes', mesDetail: null, mesDetailIn: false, resumenOpen: true,
     wOpen: false, wIn: false, exClosed: {},
@@ -2438,24 +2465,24 @@ class Component extends DCLogic {
   // Alta de cliente nuevo: abre el formulario dentro de la app (misma webview). Al terminar vuelve ya logueado.
   goAlta = () => { try { window.location.href = 'alta.html?v=' + Date.now(); } catch (e) {} };   // rompe-cachés: carga SIEMPRE la última versión del formulario
   // "¿Has olvidado tu contraseña?": manda el correo con el enlace para poner una nueva.
+  // "¿Has olvidado tu contraseña?" abre su PROPIA pantalla, con su campo de correo.
   pedirReset = () => {
+    this.setState({ resetOpen: true, resetIn: false, resetSent: false, resetEmail: (this.state.email || '').trim() });
+    requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ resetIn: true })));
+  };
+  closeReset = () => { this.setState({ resetIn: false }); this.later(() => this.setState({ resetOpen: false, resetSent: false }), 420); };
+  setResetEmail = e => this.setState({ resetEmail: (e && e.target) ? e.target.value : e });
+  enviarReset = () => {
     const en = this.state.lang === 'en';
-    let email = (this.state.email || '').trim();
-    // Si entra con Face ID no hay nada escrito arriba: se le pide el correo aquí mismo, en vez de
-    // soltarle un aviso y no hacer nada (que es lo que parecía "no funciona").
-    if (!email) {
-      try { email = String(window.prompt(en ? 'Your email:' : 'Tu correo:', '') || '').trim(); } catch (e) { email = ''; }
-      if (email) this.setState({ email: email });
-    }
-    if (!email) { this.flash(en ? 'Type your email first' : 'Escribe primero tu correo'); return; }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { this.flash(en ? 'That email is not valid' : 'Ese correo no es válido'); return; }
+    const email = (this.state.resetEmail || '').trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { this.flash(en ? 'Write a valid email' : 'Escribe un correo válido'); return; }
     if (!window.CastilloData || !window.CastilloData.pedirResetPassword) { this.flash(en ? 'Loading… try again' : 'Cargando… inténtalo de nuevo'); return; }
     if (this._resetGo) return; this._resetGo = true;
     this.flash(en ? 'Sending…' : 'Enviando…');
     window.CastilloData.pedirResetPassword(email, this.state.lang)
-      .then(() => this.flash(en ? 'Check your email: we sent you a link to set a new password' : 'Mira tu correo: te hemos enviado un enlace para poner una contraseña nueva'),
+      .then(() => this.setState({ resetSent: true }),
             () => this.flash(en ? "Couldn't send the email. Try again in a few minutes." : 'No se pudo enviar el correo. Inténtalo dentro de unos minutos.'))
-      .then(() => { this.later(() => { this._resetGo = false; }, 4000); });
+      .then(() => { this.later(() => { this._resetGo = false; }, 3000); });
   };
   doLogin = () => {
     var email = (this.state.email || '').trim(), pass = this.state.pass || '';
@@ -4640,7 +4667,20 @@ class Component extends DCLogic {
       email: st.email, pass: st.pass,
       setEmail: e => this.setState({ email: e.target.value }),
       setPass: e => this.setState({ pass: e.target.value }),
-      doLogin: this.doLogin, doFaceId: this.doFaceId, pedirReset: this.pedirReset
+      doLogin: this.doLogin, doFaceId: this.doFaceId, pedirReset: this.pedirReset,
+      // Pantalla de "he olvidado mi contraseña"
+      resetOpen: st.resetOpen, resetForm: !st.resetSent, resetSent: !!st.resetSent,
+      resetY: st.resetIn ? 'none' : 'translateY(100%)', resetDim: st.resetIn ? 1 : 0,
+      resetEmail: st.resetEmail || '', setResetEmail: this.setResetEmail,
+      enviarReset: this.enviarReset, closeReset: this.closeReset,
+      resetLbl: T('Acceso'),
+      resetTitulo: st.resetSent ? T('Mira tu correo') : T('Cambiar contraseña'),
+      resetTexto: st.resetSent
+        ? T('Te hemos enviado un enlace. Ábrelo desde este móvil, pon tu contraseña nueva y vuelve a entrar. El enlace vale 1 hora.')
+        : T('Escribe tu correo y te enviamos un enlace para poner una contraseña nueva.'),
+      resetPh: T('Tu correo'),
+      resetBtn: T('Enviarme el enlace'),
+      resetCerrar: T('Entendido')
     };
   }
 }
