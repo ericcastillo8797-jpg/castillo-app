@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 253;
+  var VERSION_ACTUAL = 254;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2440,8 +2440,15 @@ class Component extends DCLogic {
   // "¿Has olvidado tu contraseña?": manda el correo con el enlace para poner una nueva.
   pedirReset = () => {
     const en = this.state.lang === 'en';
-    const email = (this.state.email || '').trim();
+    let email = (this.state.email || '').trim();
+    // Si entra con Face ID no hay nada escrito arriba: se le pide el correo aquí mismo, en vez de
+    // soltarle un aviso y no hacer nada (que es lo que parecía "no funciona").
+    if (!email) {
+      try { email = String(window.prompt(en ? 'Your email:' : 'Tu correo:', '') || '').trim(); } catch (e) { email = ''; }
+      if (email) this.setState({ email: email });
+    }
     if (!email) { this.flash(en ? 'Type your email first' : 'Escribe primero tu correo'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { this.flash(en ? 'That email is not valid' : 'Ese correo no es válido'); return; }
     if (!window.CastilloData || !window.CastilloData.pedirResetPassword) { this.flash(en ? 'Loading… try again' : 'Cargando… inténtalo de nuevo'); return; }
     if (this._resetGo) return; this._resetGo = true;
     this.flash(en ? 'Sending…' : 'Enviando…');
