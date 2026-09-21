@@ -169,8 +169,8 @@
       <div class="card">
         <label id="l_pass">Contraseña</label>
         <input id="password" type="password" autocomplete="new-password" data-ph-es="Mínimo 6 caracteres" data-ph-en="At least 6 characters"/>
-        <label id="l_code" class="mt">Código de tu entrenador</label>
-        <input id="codigo" autocomplete="off" autocapitalize="characters" data-ph-es="El código que te dio Alex" data-ph-en="The code your coach gave you" style="letter-spacing:.12em;text-transform:uppercase"/>
+        <label id="l_code" class="mt">Código de tu entrenador (opcional)</label>
+        <input id="codigo" autocomplete="off" autocapitalize="characters" data-ph-es="Código (si te han dado uno)" data-ph-en="Code (if you were given one)" style="letter-spacing:.12em;text-transform:uppercase"/>
       </div>
       <div class="card">
         <div class="consent">
@@ -236,7 +236,7 @@
       t1:'Tu objetivo', s1:'¿Qué quieres conseguir? Elige la opción que mejor te encaje.', obj1:'Perder peso', obj2:'Quemar grasa y definir músculo', obj3:'Ponerme en forma', obj4:'Ganar músculo (volumen y fuerza)',
       t2:'Tus medidas', s2:'Nos ayuda a ajustar tu plan. Aproximado está bien.', l_peso:'Peso (kg)', l_alt:'Altura (cm)',
       t3:'Estado de salud', s3:'Cuestionario rápido de aptitud física (PAR-Q). Responde con sinceridad.', si:'Sí', no:'No',
-      t4:'Crea tu cuenta', s4:'Con esto entrarás en tu app. El código te lo dio tu entrenador.', l_pass:'Contraseña', l_code:'Código de tu entrenador',
+      t4:'Crea tu cuenta', s4:'Con esto entrarás en tu app. Si tu entrenador te dio un código, ponlo; si no, déjalo en blanco.', l_pass:'Contraseña', l_code:'Código de tu entrenador (opcional)',
       t5:'Un último paso', s5:'Revisa y acepta para terminar.',
       consent:'Acepto que Castillo Private trate mis datos (incluidos los de salud) para mi seguimiento, según los términos y la política de privacidad.',
       verPolitica:'Ver la política de privacidad',
@@ -249,7 +249,7 @@
       t1:'Your goal', s1:'What do you want to achieve? Pick the option that fits you best.', obj1:'Lose weight', obj2:'Burn fat and get defined', obj3:'Get in shape', obj4:'Build muscle (size and strength)',
       t2:'Your measurements', s2:'It helps us tailor your plan. Approximate is fine.', l_peso:'Weight (kg)', l_alt:'Height (cm)',
       t3:'Health', s3:'Quick physical readiness questionnaire (PAR-Q). Please answer honestly.', si:'Yes', no:'No',
-      t4:'Create your account', s4:'This is how you log into your app. Your coach gave you the code.', l_pass:'Password', l_code:'Your coach code',
+      t4:'Create your account', s4:'This is how you will get into your app. If your coach gave you a code, type it; if not, leave it blank.', l_pass:'Password', l_code:'Coach code (optional)',
       t5:'One last step', s5:'Review and accept to finish.',
       consent:'I agree that Castillo Private processes my data (including health data) for my coaching, per the terms and privacy policy.',
       verPolitica:'View the privacy policy',
@@ -407,7 +407,8 @@
       for(var i=0;i<PARQ.length;i++){ if(yn[PARQ[i].k]===undefined){ err(3,t.e_yn); return false; } }
     } else if(n===4){
       if(($('password').value||'').length<6){ err(4,t.e_pass); return false; }
-      if(!$('codigo').value.trim()){ err(4,t.e_code); return false; }
+      // El código ya NO es obligatorio (Eric, 21 sept 2026): quien no lo tenga se registra igual
+      // y queda SIN ASIGNAR en el CRM para que Alex lo enganche.
       if(!consent){ err(4,t.e_consent); return false; }
     }
     err(n,''); return true;
@@ -461,13 +462,20 @@
     var parq={}; PARQ.forEach(function(p){ parq[p.k]={ q:p.es, si:!!yn[p.k] }; });
     var payload={ token:codigo, code:codigo, email:email, password:pass, nombre:$('nombre').value.trim(), apellido:$('apellido').value.trim(),
       telefono:$('telefono').value.trim(), prefix:$('prefijo').value.trim(), genero:choice.genero||null, birthdate:getBirthdate(),
-      objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true, lang:lang, foto:fotoData||null,
+      objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true, lang:lang,
+      // Si la foto sale muy grande (moviles que no dejan reducirla), se va sin ella: el alta es lo
+      // importante y la foto se puede poner luego desde Ajustes.
+      foto:(fotoData && fotoData.length < 300000) ? fotoData : null,
       // Zona horaria del movil: asi la ficha nace con el huso correcto viva donde viva el cliente
       // (Miami, España, China...). No es la ubicacion: es un ajuste del telefono, como el idioma.
       tz:(function(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||''; }catch(e){ return ''; } })() };
     submitting=true; $('nextBtn').disabled=true; $('backBtn').disabled=true; $('nextBtn').textContent=t.creando;
     fetch(SUPA+'/functions/v1/alta-cliente',{ method:'POST', headers:{'apikey':ANON,'Content-Type':'application/json'}, body:JSON.stringify(payload) })
-      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+      // Si el servidor contesta algo que no es JSON (p. ej. la foto hizo la peticion demasiado
+      // grande), antes saltaba al catch y solo ponia "Error de red" sin decir nada mas.
+      .then(function(r){ return r.text().then(function(txt){
+        var j; try { j = txt ? JSON.parse(txt) : {}; } catch(e){ j = { error: (lang==='en'?'Server error':'Fallo del servidor')+' ('+r.status+'). '+(txt||'').slice(0,120) }; }
+        return {ok:r.ok,j:j}; }); })
       .then(function(res){
         if(!res.ok || !res.j.ok){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(4,res.j.error||'Error'); return; }
         saveSessionAndEnter(email, pass).catch(function(){
