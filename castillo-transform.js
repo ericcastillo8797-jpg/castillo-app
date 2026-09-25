@@ -187,12 +187,29 @@
     // ---------- EX (catálogo de ejercicios único por nombre) + WK (por título de workout) ----------
     var EX = [], VID = [], WK = {}, exByName = {}, seenVid = {};
     var exN = 0;
+    // Si el ejercicio del programa no trae vídeo, se busca por NOMBRE: primero en la biblioteca
+    // de ejercicios del CRM y luego en los demás programas. Sin esto la miniatura sale gris y
+    // parece que está rota (Alex, "Sentadilla frontal" de Adrián, 25 sept 2026).
+    function _normNom(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
+    function ytPorNombreDe(name) {
+      var k = String(name || '').toLowerCase().trim(), y = '';
+      var lib = libByName[k];
+      if (lib) y = ytId(lib.video_url || lib.thumbnail_url || '') || '';
+      if (!y && typeof ytPorNombre !== 'undefined') y = ytPorNombre[k] || '';
+      if (!y) {
+        var b = _normNom(name);
+        Object.keys(libByName).some(function (x) { if (_normNom(x) === b) { y = ytId(libByName[x].video_url || libByName[x].thumbnail_url || '') || ''; return !!y; } return false; });
+        if (!y && typeof ytPorNombre !== 'undefined') Object.keys(ytPorNombre).some(function (x) { if (_normNom(x) === b) { y = ytPorNombre[x]; return !!y; } return false; });
+      }
+      return y;
+    }
     function addEx(ex, grupo) {
       var name = ex.name_provisional || ex.name || 'Ejercicio';
       if (exByName[name]) return exByName[name];
       exN++;
       var id = 'e' + exN;
       var y = ytId(ex.url_provisional || ex.thumbnailUrl || '');
+      if (!y) y = ytPorNombreDe(name);
       // OJO: si esto llega como texto ("3"), las sumas del contador se concatenan en vez de sumar
       // y el "X de Y series" y el porcentaje del entreno salen mal. Se fuerza a número.
       var sets = parseInt(ex.sets, 10) || (ex.series && ex.series.length) || 3;
