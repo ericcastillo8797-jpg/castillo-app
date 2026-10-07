@@ -224,7 +224,11 @@
   var _pushInit = false;
   function saveDeviceToken(token) {
     if (!token || !_ctx.email || !_ctx.token) return;
-    var row = { cliente_email: _ctx.email, token: token, platform: 'ios', updated_at: new Date().toISOString() };
+    // La plataforma real del movil: estaba fijo en 'ios' y los Android se guardaban como iPhone,
+    // asi que sus avisos se habrian intentado enviar por Apple y no habrian llegado nunca (4 oct 2026).
+    var _plat = 'ios';
+    try { var _C2 = window.Capacitor; if (_C2 && _C2.getPlatform) _plat = _C2.getPlatform(); } catch (e) {}
+    var row = { cliente_email: _ctx.email, token: token, platform: _plat, updated_at: new Date().toISOString() };
     api('/rest/v1/device_tokens?on_conflict=cliente_email,token', {
       method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
     }, _ctx.token).catch(function () {});
@@ -232,6 +236,10 @@
   function registerPush() {
     var C = window.Capacitor, PN = C && C.Plugins && C.Plugins.PushNotifications;
     if (!PN || !_ctx.email) return;   // en navegador no existe → no-op
+    // En Android las notificaciones van por Firebase: el proyecto es "castillo-private" y la
+    // configuracion esta en android/app/google-services.json (4 oct 2026). Si algun dia faltara
+    // ese archivo, PN.register() cierra la app entera con un fallo nativo que el .catch() de aqui
+    // NO atrapa. En iPhone no aplica: Apple usa su propio sistema.
     if (!_pushInit) {
       _pushInit = true;
       try {
@@ -797,5 +805,11 @@
       });
     }
   };
+  // Marca el documento como Android para que el CSS pueda separar las pestanas de abajo de la
+  // barra del sistema (atras / inicio / apps), que en Android ocupa sitio y las tapaba.
+  try {
+    var _C = window.Capacitor;
+    if (_C && _C.getPlatform && _C.getPlatform() === 'android') document.documentElement.classList.add('es-android');
+  } catch (e) {}
   window.CastilloData = CastilloData;
 })();

@@ -164,13 +164,11 @@
     <!-- PASO 5 · CUENTA + ACEPTAR POLÍTICA (último paso) -->
     <div class="step" data-step="4"><div class="maxw">
       <h1 id="t4">Crea tu cuenta</h1>
-      <p class="sub" id="s4">Con esto entrarás en tu app. El código te lo dio tu entrenador.</p>
+      <p class="sub" id="s4">Con tu email y esta contraseña entrarás en tu app.</p>
       <div class="err" id="err4"></div>
       <div class="card">
         <label id="l_pass">Contraseña</label>
         <input id="password" type="password" autocomplete="new-password" data-ph-es="Mínimo 6 caracteres" data-ph-en="At least 6 characters"/>
-        <label id="l_code" class="mt">Código de tu entrenador (opcional)</label>
-        <input id="codigo" autocomplete="off" autocapitalize="characters" data-ph-es="Código (si te han dado uno)" data-ph-en="Code (if you were given one)" style="letter-spacing:.12em;text-transform:uppercase"/>
       </div>
       <div class="card">
         <div class="consent">
@@ -236,7 +234,7 @@
       t1:'Tu objetivo', s1:'¿Qué quieres conseguir? Elige la opción que mejor te encaje.', obj1:'Perder peso', obj2:'Quemar grasa y definir músculo', obj3:'Ponerme en forma', obj4:'Ganar músculo (volumen y fuerza)',
       t2:'Tus medidas', s2:'Nos ayuda a ajustar tu plan. Aproximado está bien.', l_peso:'Peso (kg)', l_alt:'Altura (cm)',
       t3:'Estado de salud', s3:'Cuestionario rápido de aptitud física (PAR-Q). Responde con sinceridad.', si:'Sí', no:'No',
-      t4:'Crea tu cuenta', s4:'Con esto entrarás en tu app. Si tu entrenador te dio un código, ponlo; si no, déjalo en blanco.', l_pass:'Contraseña', l_code:'Código de tu entrenador (opcional)',
+      t4:'Crea tu cuenta', s4:'Con tu email y esta contraseña entrarás en tu app.', l_pass:'Contraseña', l_code:'Código de tu entrenador (opcional)',
       t5:'Un último paso', s5:'Revisa y acepta para terminar.',
       consent:'Acepto que Castillo Private trate mis datos (incluidos los de salud) para mi seguimiento, según los términos y la política de privacidad.',
       verPolitica:'Ver la política de privacidad',
@@ -249,7 +247,7 @@
       t1:'Your goal', s1:'What do you want to achieve? Pick the option that fits you best.', obj1:'Lose weight', obj2:'Burn fat and get defined', obj3:'Get in shape', obj4:'Build muscle (size and strength)',
       t2:'Your measurements', s2:'It helps us tailor your plan. Approximate is fine.', l_peso:'Weight (kg)', l_alt:'Height (cm)',
       t3:'Health', s3:'Quick physical readiness questionnaire (PAR-Q). Please answer honestly.', si:'Yes', no:'No',
-      t4:'Create your account', s4:'This is how you will get into your app. If your coach gave you a code, type it; if not, leave it blank.', l_pass:'Password', l_code:'Coach code (optional)',
+      t4:'Create your account', s4:'You will get into your app with your email and this password.', l_pass:'Password', l_code:'Coach code (optional)',
       t5:'One last step', s5:'Review and accept to finish.',
       consent:'I agree that Castillo Private processes my data (including health data) for my coaching, per the terms and privacy policy.',
       verPolitica:'View the privacy policy',
@@ -331,7 +329,7 @@
   function applyLang(){
     var t=T[lang]; $('langBtn').textContent=t.btn; document.documentElement.lang=lang;
     ['t0','s0','l_foto','l_nombre','l_apellido','l_email','l_tel','l_bd','l_gen','gen_h','gen_m','gen_x','t1','s1','obj1','obj2','obj3','obj4',
-     't2','s2','l_peso','l_alt','t3','s3','t4','s4','l_pass','l_code','consentTxt:consent','privacyLink:verPolitica','d_title:d_t','d_sub:d_s','dl:dl'].forEach(function(p){
+     't2','s2','l_peso','l_alt','t3','s3','t4','s4','l_pass','consentTxt:consent','privacyLink:verPolitica','d_title:d_t','d_sub:d_s','dl:dl'].forEach(function(p){
       var a=p.split(':'), id=a[0], key=a[1]||a[0]; var el=$(id); if(el) el.textContent=t[key];
     });
     document.querySelectorAll('[data-ph-es]').forEach(function(el){ el.placeholder=el.getAttribute('data-ph-'+lang); });
@@ -458,7 +456,7 @@
 
   function submit(){
     var t=T[lang];
-    var email=$('email').value.trim().toLowerCase(), pass=$('password').value, codigo=$('codigo').value.trim();
+    var email=$('email').value.trim().toLowerCase(), pass=$('password').value, codigo='';   // sin código (7 oct 2026, Alex): el cliente solicita acceso y Alex lo acepta en el CRM
     var parq={}; PARQ.forEach(function(p){ parq[p.k]={ q:p.es, si:!!yn[p.k] }; });
     var payload={ token:codigo, code:codigo, email:email, password:pass, nombre:$('nombre').value.trim(), apellido:$('apellido').value.trim(),
       telefono:$('telefono').value.trim(), prefix:$('prefijo').value.trim(), genero:choice.genero||null, birthdate:getBirthdate(),
@@ -486,8 +484,6 @@
       .catch(function(){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(4,t.e_conn); });
   }
 
-  // arranque: prellena código de ?c= si viene en el enlace
-  var pre=params.get('c')||params.get('token')||''; if(pre) $('codigo').value=pre;
   applyLang(); show(0);
 })();
 
