@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 258;
+  var VERSION_ACTUAL = 259;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -988,11 +988,11 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <sc-for list="{{ e.sets }}" as="s" hint-placeholder-count="4">
             <div style="display:flex;align-items:center;gap:8px">
               <div style="width:46px;font-size:12.5px;font-weight:600;color:{{ s.numFg }}">{{ s.i }}</div>
-              <div onClick="{{ s.editR }}" style="flex:1;height:42px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:{{ s.rBg }};border:1px solid {{ s.rBd }}">
+              <div onClick="{{ s.editR }}" style="touch-action:manipulation;flex:1;height:42px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:{{ s.rBg }};border:1px solid {{ s.rBd }}">
                 <div style="font-size:15px;font-weight:600;color:{{ s.rFg }}">{{ s.r }}</div>
                 <div style="font-size:8.5px;color:rgba(var(--fgc,255,255,255),.26);margin-top:1px">{{ s.lastR }}</div>
               </div>
-              <div onClick="{{ s.editW }}" style="flex:1;height:42px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:{{ s.wBg }};border:1px solid {{ s.wBd }}">
+              <div onClick="{{ s.editW }}" style="touch-action:manipulation;flex:1;height:42px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:{{ s.wBg }};border:1px solid {{ s.wBd }}">
                 <div style="font-size:15px;font-weight:600;color:{{ s.wFg }}">{{ s.w }}</div>
                 <div style="font-size:8.5px;color:rgba(var(--fgc,255,255,255),.26);margin-top:1px">{{ s.lastW }}</div>
               </div>
@@ -1819,11 +1819,11 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           <span style="font-size:13px;color:rgba(var(--fgc,255,255,255),.4)">{{ pad.unit }}</span>
         </div>
       </div>
-      <div onClick="{{ closePad }}" style="padding:10px 18px;border-radius:100px;background:var(--fg,#fff);color:var(--bg,#000);font-size:13px;font-weight:600;cursor:pointer" style-active="transform:scale(.95)">Listo</div>
+      <div onClick="{{ closePad }}" style="touch-action:manipulation;padding:10px 18px;border-radius:100px;background:var(--fg,#fff);color:var(--bg,#000);font-size:13px;font-weight:600;cursor:pointer" style-active="transform:scale(.95)">Listo</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
       <sc-for list="{{ padKeys }}" as="k" hint-placeholder-count="12">
-      <div onClick="{{ k.tap }}" style="height:48px;border-radius:14px;background:rgba(var(--fgc,255,255,255),.09);display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:500;cursor:pointer;transition:all .14s" style-active="background:rgba(var(--fgc,255,255,255),.24);transform:scale(.96)">{{ k.n }}</div>
+      <div onPointerDown="{{ k.tap }}" style="touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;height:48px;border-radius:14px;background:rgba(var(--fgc,255,255,255),.09);display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:500;cursor:pointer;transition:all .14s" style-active="background:rgba(var(--fgc,255,255,255),.24);transform:scale(.96)">{{ k.n }}</div>
       </sc-for>
     </div>
   </div>
@@ -3389,7 +3389,52 @@ class Component extends DCLogic {
 
   // El entreno en curso se guarda en el MÓVIL a cada cambio. Si el cliente sale a contestar un
   // WhatsApp y iOS descarta la app, al volver sigue donde estaba en vez de empezar de cero.
+  // PANTALLA ENCENDIDA mientras hay un entreno abierto (7 oct 2026, Alex: "que no se apague el móvil, como en Harbiz").
+  // 1º la función del propio sistema (Screen Wake Lock). Si el móvil no la tiene o la rechaza, un vídeo
+  // invisible, mudo y en bucle (el truco de NoSleep.js), que también impide que la pantalla se apague.
+  // Al cerrar el entreno se suelta todo y el móvil vuelve a apagarse solo como siempre.
+  _NOSLEEP_MP4 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAa/bW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAfQAAAPoAAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAy10cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAPoAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAD6AAAAAAAABAAAAAAKlbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAAAoAAAAUABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAACUG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAhBzdGJsAAAAuHN0c2QAAAAAAAAAAQAAAKhhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFExhdmM2My4xLjEwMiBsaWJ4MjY0AAAAAAAAAAAAAAAAGP//AAAALmF2Y0MBQsAe/+EAFmdCwB7ZHsBEAAADAAQAAAMAUDxYuSABAAVoy4PEyAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAA0cAAAAAAAAABhzdHRzAAAAAAAAAAEAAAAUAAAEAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAcHN0c2MAAAAAAAAACAAAAAEAAAABAAAAAQAAAAUAAAACAAAAAQAAAAYAAAABAAAAAQAAAAkAAAACAAAAAQAAAAoAAAABAAAAAQAAAAwAAAACAAAAAQAAAA0AAAABAAAAAQAAABAAAAACAAAAAQAAAGRzdHN6AAAAAAAAAAAAAAAUAAAChwAAAAsAAAALAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAABQc3RjbwAAAAAAAAAQAAAHAgAACY0AAAmcAAAJqwAACbkAAAnRAAAJ3wAACe0AAAn7AAAKEwAACiEAAAovAAAKRwAAClUAAApjAAAKcQAAAr10cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAACAAAAAAAAPoAAAAAAAAAAAAAAAAEBAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAD6AAAAEAAABAAAAAAI1bWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAAAfQAAAQoBVxAAAAAAALWhkbHIAAAAAAAAAAHNvdW4AAAAAAAAAAAAAAABTb3VuZEhhbmRsZXIAAAAB4G1pbmYAAAAQc21oZAAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAABpHN0YmwAAAB+c3RzZAAAAAAAAAABAAAAbm1wNGEAAAAAAAAAAQAAAAAAAAAAAAEAEAAAAAAfQAAAAAAANmVzZHMAAAAAA4CAgCUAAgAEgICAF0AVAAAAAAAfQAAAATgFgICABRWIVuUABoCAgAECAAAAFGJ0cnQAAAAAAAAfQAAAATgAAAAgc3R0cwAAAAAAAAACAAAAEAAABAAAAAABAAACgAAAABxzdHNjAAAAAAAAAAEAAAABAAAAAQAAAAEAAABYc3RzegAAAAAAAAAAAAAAEQAAABMAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAAVHN0Y28AAAAAAAAAEQAABu8AAAmJAAAJmAAACacAAAm1AAAJzQAACdsAAAnpAAAJ9wAACg8AAAodAAAKKwAACkMAAApRAAAKXwAACm0AAAqFAAAAGnNncGQBAAAAcm9sbAAAAAIAAAAB//8AAAAcc2JncAAAAAByb2xsAAAAAQAAABEAAAABAAAAYXVkdGEAAABZbWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAsaWxzdAAAACSpdG9vAAAAHGRhdGEAAAABAAAAAExhdmY2My4xLjEwMgAAAAhmcmVlAAADom1kYXTcAExhdmM2My4xLjEwMgACMEAOAAACcwYF//9v3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE2NSByMzIyMiBiMzU2MDVhIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAyNSAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTAgcmVmPTMgZGVibG9jaz0xOi0zOi0zIGFuYWx5c2U9MHgxOjB4MTExIG1lPWhleCBzdWJtZT03IHBzeT0xIHBzeV9yZD0yLjAwOjAuNzAgbWl4ZWRfcmVmPTEgbWVfcmFuZ2U9MTYgY2hyb21hX21lPTEgdHJlbGxpcz0xIDh4OGRjdD0wIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PS00IHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTAgd2VpZ2h0cD0wIGtleWludD0yNTAga2V5aW50X21pbj0xMCBzY2VuZWN1dD00MCBpbnRyYV9yZWZyZXNoPTAgcmNfbG9va2FoZWFkPTQwIHJjPWNyZiBtYnRyZWU9MSBjcmY9MjMuMCBxY29tcD0wLjYwIHFwbWluPTAgcXBtYXg9NjkgcXBzdGVwPTQgaXBfcmF0aW89MS40MCBhcT0xOjEuMjAAgAAAAAxliIQEs5yYoAA4o4ABGCAHAAAAB0GaOAlnOoABGCAHAAAAB0GaVAJZzqABGCAHAAAABkGaYBLOdQEYIAcAAAAGQZqAEs51AAAABkGaoBLOdQEYIAcAAAAGQZrAEs51ARggBwAAAAZBmuASznUBGCAHAAAABkGbABLOdQEYIAcAAAAGQZsgEs51AAAABkGbQBLOdQEYIAcAAAAGQZtgEs51ARggBwAAAAZBm4ASznUBGCAHAAAABkGboBLOdQAAAAZBm8ASznUBGCAHAAAABkGb4BLOdQEYIAcAAAAGQZoAEs51ARggBwAAAAZBmiASznUBGCAHAAAABkGaQBHOdQAAAAZBmmAQznUBGCAH';
+  _pantallaEncendida = (on) => {
+    on = !!on;
+    if (on !== !!this._pantallaOn) {
+      this._pantallaOn = on;
+      if (!this._wlVis) { this._wlVis = () => { if (this._pantallaOn && document.visibilityState === 'visible') { this._wl = null; this._pedirPantalla(); } }; try { document.addEventListener('visibilitychange', this._wlVis); } catch (e) {} }
+      if (!on) {
+        try { if (this._wl) this._wl.release(); } catch (e) {} this._wl = null; this._wlPend = false;
+        try { if (this._nsv) { this._nsv.pause(); this._nsv.removeAttribute('src'); this._nsv.load(); this._nsv.remove(); } } catch (e) {} this._nsv = null;
+        return;
+      }
+    }
+    if (on && !this._wl && !this._wlPend && !(this._nsv && !this._nsv.paused)) this._pedirPantalla();
+  };
+  _pedirPantalla = () => {
+    try {
+      if (navigator.wakeLock && navigator.wakeLock.request) {
+        if (this._wl || this._wlPend) return;
+        this._wlPend = true;
+        navigator.wakeLock.request('screen').then(l => {
+          this._wlPend = false; this._wl = l;
+          try { l.addEventListener('release', () => { if (this._wl === l) this._wl = null; }); } catch (e) {}
+          if (!this._pantallaOn) { try { l.release(); } catch (e) {} this._wl = null; }
+        }, () => { this._wlPend = false; this._videoPantalla(); });
+      } else this._videoPantalla();
+    } catch (e) { this._wlPend = false; this._videoPantalla(); }
+  };
+  _videoPantalla = () => {
+    try {
+      if (!this._pantallaOn) return;
+      if (!this._nsv) {
+        const v = document.createElement('video');
+        v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', ''); v.setAttribute('muted', ''); v.setAttribute('aria-hidden', 'true');
+        v.muted = true; v.loop = true; v.src = this._NOSLEEP_MP4;
+        v.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1';
+        document.body.appendChild(v); this._nsv = v;
+      }
+      const pr = this._nsv.play(); if (pr && pr.catch) pr.catch(() => {});
+    } catch (e) {}
+  };
   _guardaEntreno = () => {
+    try { this._pantallaEncendida(!!this.state.wOpen); } catch (e) {}
     try {
       window.__APP_ENTRENO_ABIERTO = !!this.state.wOpen;   // lo mira el actualizador
       const dd = window.CastilloData;
@@ -3604,8 +3649,7 @@ class Component extends DCLogic {
   descartaPad = () => { this.setState({ padIn: false }); this.later(() => this.setState({ pad: null }), 460); };
   closePad = () => {
     const p = this.state.pad;
-    // Repeticiones con valor + "Listo" → pasa directo al PESO sin cerrar el teclado
-    if (p && p.t === 'set' && p.f === 'r' && String(this.padValue(p)).trim()) { this._padToWeight(p); return; }
+    // "Listo" en repeticiones ya NO pasa al peso (7 oct 2026, Alex): se queda la repetición puesta y se cierra.
     // al registrar el PESO de una serie: se marca hecha y sale el descanso (sin tick)
     if (p && p.t === 'set' && p.f === 'w') {
       const l = (this.state.logs[p.ex] || [])[p.i] || {};
@@ -3629,8 +3673,8 @@ class Component extends DCLogic {
     else if (v.replace(',', '').length < 5) v += k;
     if (p.t === 'set') this.setLog(p.ex, p.i, p.f, v);
     else this.setState(s => ({ ck: Object.assign({}, s.ck, { [p.k]: v }) }));
-    // Repeticiones: máx 2 dígitos (nadie hace >99 reps) → al meter el 2º dígito pasa SOLO al campo de PESO (sin cerrar el teclado)
-    if (p.t === 'set' && p.f === 'r' && k !== '⌫' && k !== ',' && v.replace(/\D/g, '').length >= 2) this._padToWeight(p);
+    // (7 oct 2026, Alex) Ya NO salta solo de repeticiones a peso: él pone primero todas las repeticiones
+    // y luego todos los pesos, y el salto le hacía ir más lento.
   };
 
   // El boton '+' de Evolucion se quito (Eric, 11 sept): las medidas y las fotos se registran
