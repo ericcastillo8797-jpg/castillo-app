@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 259;
+  var VERSION_ACTUAL = 260;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2289,7 +2289,7 @@ class Component extends DCLogic {
       try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {}
       this.setState({ stage: 'scan', scan: 1 });
       window.CastilloData.restoreSession().then(this._enterWith)
-        .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'Vuelve a acceder con tu correo'); });
+        .catch((e) => this._avisoAcceso(e, 'Vuelve a acceder con tu correo'));
     } else if (this.stage === 'splash') { this.runSplash(); }
     if (this.state.tab === 'evo') this.playEvo();
     if (this.state.tab === 'home') this.playHome();
@@ -2499,7 +2499,14 @@ class Component extends DCLogic {
     this.setState({ stage: 'scan', scan: 1 });
     window.CastilloData.loginAndLoad(email, pass)
       .then(this._enterWith)
-      .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'No se pudo entrar'); });
+      .catch((e) => this._avisoAcceso(e, 'No se pudo entrar'));
+  };
+  // No se pudo entrar: vuelve a la pantalla de acceso. Si es una SOLICITUD PENDIENTE (Alex aún no le ha aceptado),
+  // se enseña en una ventana que hay que cerrar, para que el cliente lo lea seguro (8 oct 2026).
+  _avisoAcceso = (e, porDefecto) => {
+    this.setState({ stage: 'lock', scan: 0 });
+    if (e && e.pendiente) { try { window.alert(e.message); } catch (x) { this.flash(e.message); } return; }
+    this.flash(e && e.message ? e.message : porDefecto);
   };
   // Face ID REAL de Apple (plugin nativo). En web / si el plugin no está → pasa directo (no bloquea).
   _bioCheck = () => {
@@ -2524,7 +2531,7 @@ class Component extends DCLogic {
     const C = window.Capacitor, hasBio = !!(C && C.Plugins && C.Plugins.BiometricAuthNative && C.Plugins.BiometricAuthNative.internalAuthenticate);
     const enter = () => window.CastilloData.restoreSession()
       .then(this._enterWith)
-      .catch((e) => { this.setState({ stage: 'lock', scan: 0 }); this.flash(e && e.message ? e.message : 'Vuelve a acceder con tu correo'); });
+      .catch((e) => this._avisoAcceso(e, 'Vuelve a acceder con tu correo'));
     if (hasBio) {
       // Face ID REAL de Apple: SIN la animación falsa. Se queda en el bloqueo mientras sale el prompt de Apple.
       this._bioCheck().then((ok) => { this._bioEnCurso = false; if (ok) enter(); else this.setState({ stage: 'lock', scan: 0 }); });

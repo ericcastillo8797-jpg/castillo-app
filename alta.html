@@ -164,7 +164,7 @@
     <!-- PASO 5 · CUENTA + ACEPTAR POLÍTICA (último paso) -->
     <div class="step" data-step="4"><div class="maxw">
       <h1 id="t4">Crea tu cuenta</h1>
-      <p class="sub" id="s4">Con tu email y esta contraseña entrarás en tu app.</p>
+      <p class="sub" id="s4">Con tu email y esta contraseña entrarás en tu app cuando Alex acepte tu solicitud.</p>
       <div class="err" id="err4"></div>
       <div class="card">
         <label id="l_pass">Contraseña</label>
@@ -182,7 +182,7 @@
     <!-- ÉXITO -->
     <div class="done" id="done">
       <div class="ok-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgb(120,220,150)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-      <h1 id="d_title" style="margin:0 0 8px">¡Cuenta creada!</h1>
+      <h1 id="d_title" style="margin:0 0 8px">¡Solicitud enviada!</h1>
       <p class="sub" id="d_sub" style="margin-bottom:26px">Ya puedes entrar con tu email y tu contraseña.</p>
       <a id="dl" href="index.html" class="btn prim" style="display:block;text-decoration:none;min-width:220px;box-sizing:border-box">Entrar a la app</a>
     </div>
@@ -228,30 +228,30 @@
   ];
 
   var T={
-    es:{ btn:'EN', paso:'Paso', de:'de', siguiente:'Siguiente', atras:'Atrás', finalizar:'Finalizar y entrar', creando:'Creando tu cuenta…',
+    es:{ btn:'EN', paso:'Paso', de:'de', siguiente:'Siguiente', atras:'Atrás', finalizar:'Solicitar acceso', creando:'Enviando tu solicitud…',
       t0:'Tus datos', s0:'Empecemos por lo básico. Al terminar entrarás directo a tu app.',
       l_nombre:'Nombre', l_apellido:'Apellidos', l_email:'Email', l_tel:'Teléfono', l_bd:'Fecha de nacimiento', l_gen:'Género', gen_h:'Hombre', gen_m:'Mujer', gen_x:'Otro', l_foto:'Añade tu foto (opcional)',
       t1:'Tu objetivo', s1:'¿Qué quieres conseguir? Elige la opción que mejor te encaje.', obj1:'Perder peso', obj2:'Quemar grasa y definir músculo', obj3:'Ponerme en forma', obj4:'Ganar músculo (volumen y fuerza)',
       t2:'Tus medidas', s2:'Nos ayuda a ajustar tu plan. Aproximado está bien.', l_peso:'Peso (kg)', l_alt:'Altura (cm)',
       t3:'Estado de salud', s3:'Cuestionario rápido de aptitud física (PAR-Q). Responde con sinceridad.', si:'Sí', no:'No',
-      t4:'Crea tu cuenta', s4:'Con tu email y esta contraseña entrarás en tu app.', l_pass:'Contraseña', l_code:'Código de tu entrenador (opcional)',
+      t4:'Crea tu cuenta', s4:'Con tu email y esta contraseña entrarás en tu app cuando Alex acepte tu solicitud.', l_pass:'Contraseña', l_code:'Código de tu entrenador (opcional)',
       t5:'Un último paso', s5:'Revisa y acepta para terminar.',
       consent:'Acepto que Castillo Private trate mis datos (incluidos los de salud) para mi seguimiento, según los términos y la política de privacidad.',
       verPolitica:'Ver la política de privacidad',
-      d_t:'¡Cuenta creada!', d_s:'Ya puedes entrar con tu email y tu contraseña.', dl:'Entrar a la app',
+      d_t:'¡Solicitud enviada!', d_s:'Alex revisará tu solicitud. En cuanto la acepte podrás entrar en la app con tu email y tu contraseña.', dl:'Entendido',
       e_datos:'Completa nombre, apellidos y un email válido.', e_obj:'Elige tu objetivo.', e_med:'Pon tu peso y tu altura.', e_yn:'Responde todas las preguntas.',
       e_pass:'La contraseña debe tener al menos 6 caracteres.', e_code:'Escribe el código que te dio tu entrenador.', e_consent:'Debes aceptar para continuar.', e_conn:'Error de conexión. Inténtalo de nuevo.' },
-    en:{ btn:'ES', paso:'Step', de:'of', siguiente:'Next', atras:'Back', finalizar:'Finish and enter', creando:'Creating your account…',
+    en:{ btn:'ES', paso:'Step', de:'of', siguiente:'Next', atras:'Back', finalizar:'Request access', creando:'Sending your request…',
       t0:'Your details', s0:'Let’s start with the basics. When you finish you go straight into your app.',
       l_nombre:'First name', l_apellido:'Last name', l_email:'Email', l_tel:'Phone', l_bd:'Date of birth', l_gen:'Gender', gen_h:'Male', gen_m:'Female', gen_x:'Other', l_foto:'Add your photo (optional)',
       t1:'Your goal', s1:'What do you want to achieve? Pick the option that fits you best.', obj1:'Lose weight', obj2:'Burn fat and get defined', obj3:'Get in shape', obj4:'Build muscle (size and strength)',
       t2:'Your measurements', s2:'It helps us tailor your plan. Approximate is fine.', l_peso:'Weight (kg)', l_alt:'Height (cm)',
       t3:'Health', s3:'Quick physical readiness questionnaire (PAR-Q). Please answer honestly.', si:'Yes', no:'No',
-      t4:'Create your account', s4:'You will get into your app with your email and this password.', l_pass:'Password', l_code:'Coach code (optional)',
+      t4:'Create your account', s4:'You will log in with your email and this password once Alex accepts your request.', l_pass:'Password', l_code:'Coach code (optional)',
       t5:'One last step', s5:'Review and accept to finish.',
       consent:'I agree that Castillo Private processes my data (including health data) for my coaching, per the terms and privacy policy.',
       verPolitica:'View the privacy policy',
-      d_t:'Account created!', d_s:'You can now log in with your email and password.', dl:'Enter the app',
+      d_t:'Request sent!', d_s:'Alex will review your request. As soon as he accepts it you can log in to the app with your email and password.', dl:'Got it',
       e_datos:'Please complete first name, last name and a valid email.', e_obj:'Choose your goal.', e_med:'Enter your weight and height.', e_yn:'Please answer all questions.',
       e_pass:'Password must be at least 6 characters.', e_code:'Enter the code your coach gave you.', e_consent:'You must accept to continue.', e_conn:'Connection error. Try again.' }
   };
@@ -476,10 +476,12 @@
         return {ok:r.ok,j:j}; }); })
       .then(function(res){
         if(!res.ok || !res.j.ok){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(4,res.j.error||'Error'); return; }
-        saveSessionAndEnter(email, pass).catch(function(){
-          document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('active'); });
-          $('nav').style.display='none'; $('done').style.display='flex';
-        });
+        // 8 oct 2026 (Alex): ya NO entra directo. Queda PENDIENTE hasta que Alex lo acepte en el CRM: se le dice
+        // "Solicitud enviada" y, al pulsar "Entendido", se guarda su acceso (y el llavero) y va a la app, que le
+        // avisa de que está pendiente; cuando Alex lo acepte, entrará solo al abrirla.
+        document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('active'); });
+        $('nav').style.display='none'; $('done').style.display='flex';
+        var _dl=$('dl'); if(_dl){ _dl.onclick=function(ev){ try{ ev.preventDefault(); }catch(e){} saveSessionAndEnter(email, pass).catch(function(){ window.location.href='index.html'; }); return false; }; }
       })
       .catch(function(){ submitting=false; $('nextBtn').disabled=false; $('backBtn').disabled=false; $('nextBtn').textContent=t.finalizar; err(4,t.e_conn); });
   }

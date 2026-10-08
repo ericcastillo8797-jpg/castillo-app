@@ -163,6 +163,14 @@
       var comAll = res[4] || [], chkAll = res[5] || [];
       var perfilRow = (res[6] && res[6][0]) || null;
       if (!rows.length) throw new Error('No encontramos tu ficha. Avisa a Alex.');
+      // SOLICITUD PENDIENTE (8 oct 2026, Alex): quien se registra queda en "Altas" y NO entra hasta que Alex lo
+      // acepta en el CRM (Altas → Aceptar alta, que lo pasa a 'activo'). Hasta entonces, aviso y se queda fuera.
+      if (String(rows[0].estado || '').toLowerCase() === 'alta') {
+        var _en = false; try { _en = localStorage.getItem('castillo_lang') === 'en'; } catch (e) {}
+        var _pe = new Error(_en ? 'Your access request is pending. Alex will review it soon: you will be able to log in as soon as he accepts it.'
+                                : 'Tu solicitud de acceso está pendiente. Alex la revisará pronto: podrás entrar en cuanto la acepte.');
+        _pe.pendiente = true; throw _pe;
+      }
       if (!window.buildAppData) throw new Error('Falta el transformador de datos');
       // Fotos privadas: firmar las URLs del bucket 'progreso' (checkins + históricas + perfil) ANTES de montar la vista.
       var toSign = [];
@@ -606,13 +614,14 @@
         }).then(function (ns) {
           saveSession(ns);
           return loadData(ns.access_token, (ns.user && ns.user.email) || s.email);
-        }).catch(function () {
+        }).catch(function (err) {
+          if (err && err.pendiente) throw err;   // solicitud pendiente: que la app lo diga tal cual
           // refresh caducado: reentra con las credenciales guardadas; si no hay, pide acceder con correo
-          if (creds) return passwordLogin(creds.e, creds.p).catch(noSesion);
+          if (creds) return passwordLogin(creds.e, creds.p).catch(function (e2) { return (e2 && e2.pendiente) ? Promise.reject(e2) : noSesion(); });
           return noSesion();
         });
       }
-      return (creds ? passwordLogin(creds.e, creds.p).catch(noSesion) : noSesion());
+      return (creds ? passwordLogin(creds.e, creds.p).catch(function (e2) { return (e2 && e2.pendiente) ? Promise.reject(e2) : noSesion(); }) : noSesion());
     },
     // "¿Has olvidado tu contraseña?": pide a la Edge Function que mande el correo (Resend).
     // Siempre responde ok, exista o no la cuenta: nadie puede averiguar qué correos hay dados de alta.
