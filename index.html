@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="./castillo-i18n.js?v=245"></script>
-<script src="./castillo-transform.js?v=245"></script>
+<script src="./castillo-transform.js?v=262"></script>
 <script src="./castillo-equiv.js?v=245"></script>
 <script src="./castillo-data.js?v=245"></script>
 <script src="./support.js"></script>
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 261;
+  var VERSION_ACTUAL = 262;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -537,9 +537,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.34)">{{ L.pesoCorporal }}</div>
           <div style="display:flex;align-items:baseline;gap:7px;margin-top:7px">
             <span style="font-family:'Instrument Serif',serif;font-size:38px;line-height:.9">{{ pesoAnim }}</span>
-            <span style="font-size:13px;color:rgba(var(--fgc,255,255,255),.42)">kg</span>
+            <span style="font-size:13px;color:rgba(var(--fgc,255,255,255),.42)">kg/lbs</span>
           </div>
-          <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:5px">{{ L.empezoEn }} <b style="font-weight:600;color:rgba(var(--fgc,255,255,255),.62)">{{ pesoInicial }} kg</b> · {{ L.ahora }} <b style="font-weight:600;color:rgba(var(--fgc,255,255,255),.62)">{{ pesoAnim }} kg</b></div>
+          <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.42);margin-top:5px">{{ L.empezoEn }} <b style="font-weight:600;color:rgba(var(--fgc,255,255,255),.62)">{{ pesoInicial }} kg/lbs</b> · {{ L.ahora }} <b style="font-weight:600;color:rgba(var(--fgc,255,255,255),.62)">{{ pesoAnim }} kg/lbs</b></div>
         </div>
         <div style="text-align:right">
           <div style="font-size:15px;font-weight:600">{{ pesoDelta }}</div>
@@ -669,7 +669,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           <div style="text-align:right;flex:none">
             <div style="display:flex;align-items:baseline;gap:4px;justify-content:flex-end">
               <span style="font-family:'Instrument Serif',serif;font-size:26px;line-height:.9">{{ e.last }}</span>
-              <span style="font-size:11px;color:rgba(var(--fgc,255,255,255),.42)">kg</span>
+              <span style="font-size:11px;color:rgba(var(--fgc,255,255,255),.42)">kg/lbs</span>
             </div>
             <div style="font-size:11px;font-weight:500;margin-top:3px;color:{{ e.deltaFg }}">{{ e.deltaLabel }}</div>
           </div>
@@ -1455,7 +1455,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="font-size:9px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.32)">{{ L.serieMasPesada }}</div>
             <div style="display:flex;align-items:baseline;gap:6px;margin-top:6px">
               <span style="font-family:'Instrument Serif',serif;font-size:34px;line-height:.9">{{ exhSheet.top }}</span>
-              <span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.42)">kg</span>
+              <span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.42)">kg/lbs</span>
             </div>
           </div>
           <div style="text-align:right">
@@ -2049,7 +2049,7 @@ let APPTS = [
 
 let MET = [
   { g:'Composición', f:[
-    { k:'peso', l:'Peso corporal', u:'kg', v:'84,2', p:'84,9' } ] },
+    { k:'peso', l:'Peso corporal', u:'kg/lbs', v:'84,2', p:'84,9' } ] },
   { g:'Tronco', f:[
     { k:'cuello', l:'Cuello', u:'cm', v:'39,0', p:'39,2' },
     { k:'hombros', l:'Hombros', u:'cm', v:'122,5', p:'121,8' },
@@ -2109,22 +2109,25 @@ let SHOTS = ['Frontal','Lateral','Espalda'];
 let SESS = ['22 jul','15 jul','08 jul','01 jul','24 jun'];
 let DATES = ['24 jul','17 jul','10 jul','03 jul','26 jun','19 jun','12 jun','05 jun','29 may','22 may'];
 let PHOTOSETS = [
-  { w:'Semana 29', date:'24 jul', kg:'84,9 kg' },
-  { w:'Semana 26', date:'03 jul', kg:'85,8 kg' },
-  { w:'Semana 22', date:'05 jun', kg:'86,9 kg' }
+  { w:'Semana 29', date:'24 jul', kg:'84,9 kg/lbs' },
+  { w:'Semana 26', date:'03 jul', kg:'85,8 kg/lbs' },
+  { w:'Semana 22', date:'05 jun', kg:'86,9 kg/lbs' }
 ];
 
 // Lista FIJA de medidas del check-in (siempre las mismas para todos los clientes, se puedan rellenar aunque sea nuevo).
 // MET (arriba) guarda solo los valores YA registrados (para el histórico); esta es la lista de CAMPOS que siempre se muestran.
 // Claves CANÓNICAS (mismas que Harbiz/el CRM, ej. Eric) para que las medidas se vean en la app Y en el CRM.
 var MEAS_GROUPS_DEFAULT = [
-  { g: 'Composición', f: [ { k: 'peso-corporal', l: 'Peso corporal', u: 'kg' }, { k: 'rollitos', l: 'Rollitos', u: 'cm' } ] },
+  { g: 'Composición', f: [ { k: 'peso-corporal', l: 'Peso corporal', u: 'kg/lbs' }, { k: 'rollitos', l: 'Rollitos', u: 'cm' } ] },
   { g: 'Tronco', f: [ { k: 'cuello', l: 'Cuello', u: 'cm' }, { k: 'hombros', l: 'Hombros', u: 'cm' }, { k: 'pecho', l: 'Pecho', u: 'cm' }, { k: 'cintura', l: 'Cintura', u: 'cm' }, { k: 'cadera', l: 'Cadera', u: 'cm' } ] },
   { g: 'Brazos', f: [ { k: 'b-ceps-izquierdo', l: 'Bíceps izquierdo', u: 'cm' }, { k: 'b-ceps-derecho', l: 'Bíceps derecho', u: 'cm' }, { k: 'antebrazo-izquierdo', l: 'Antebrazo izquierdo', u: 'cm' }, { k: 'antebrazo-derecho', l: 'Antebrazo derecho', u: 'cm' } ] },
   { g: 'Piernas', f: [ { k: 'muslo-izquierdo', l: 'Muslo izquierdo', u: 'cm' }, { k: 'muslo-derecho', l: 'Muslo derecho', u: 'cm' }, { k: 'gemelo-izquierdo', l: 'Gemelo izquierdo', u: 'cm' }, { k: 'gemelo-derecho', l: 'Gemelo derecho', u: 'cm' } ] }
 ];
 // MEAS_GROUPS puede venir de la config que edita Alex en el CRM (app_config 'medidas'); si no hay, usa la de por defecto
 var MEAS_GROUPS = MEAS_GROUPS_DEFAULT;
+// Alex (9 oct 2026): unos clientes apuntan en kilos y otros en libras, sin convertir nada.
+// Donde antes ponía «kg» ahora pone «kg/lbs».
+function _uPeso(u) { return /^kg$/i.test(String(u == null ? '' : u).trim()) ? 'kg/lbs' : u; }
 function _measGroupsFromConfig(cfg) {
   try {
     var grupos = cfg && cfg.grupos;
@@ -2132,7 +2135,7 @@ function _measGroupsFromConfig(cfg) {
     var out = grupos.map(function (grp) {
       var f = (grp.f || []).map(function (m) {
         var k = m.key || m.k; var l = m.label || m.l; if (!k || !l) return null;
-        return { k: k, l: l, u: m.unit || m.u || 'cm' };
+        return { k: k, l: l, u: _uPeso(m.unit || m.u || 'cm') };
       }).filter(Boolean);
       return { g: grp.g || '', f: f };
     }).filter(function (grp) { return grp.f.length; });
@@ -2147,7 +2150,7 @@ function applyRealData(d) {
   MEAS_GROUPS = _measGroupsFromConfig(d.medidasConfig) || MEAS_GROUPS_DEFAULT;
   // Métricas PERSONALIZADAS de este cliente (las crea Alex en el CRM) → grupo extra al final del formulario de medidas
   if (d.customMetrics && d.customMetrics.length) {
-    MEAS_GROUPS = MEAS_GROUPS.concat([{ g: 'Personalizadas', f: d.customMetrics.map(function (m) { return { k: m.key, l: m.label, u: m.unit || '' }; }) }]);
+    MEAS_GROUPS = MEAS_GROUPS.concat([{ g: 'Personalizadas', f: d.customMetrics.map(function (m) { return { k: m.key, l: m.label, u: _uPeso(m.unit || '') }; }) }]);
   }
   var nz = function (v) { return v && (v.length || Object.keys(v).length); };
   // DATOS PERSONALES del cliente: SIEMPRE se toman de sus datos reales (vacío si es nuevo) — nunca la demo de diseño.
@@ -2666,7 +2669,7 @@ class Component extends DCLogic {
     const dec = v => { const t = String(v == null ? '' : v); return en ? t.replace(',', '.') : t.replace('.', ','); };
     const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const pct = o => (o && o.total) ? (o.pct + '%') : '—';
-    const kg = v => { const t = dec(String(v == null ? '' : v).trim()); return /kg$/i.test(t) ? t : (t ? t + ' kg' : '—'); };
+    const kg = v => { const t = dec(String(v == null ? '' : v).trim()); return /kg\/lbs$/i.test(t) ? t : /kg$/i.test(t) ? t + '/lbs' : (t ? t + ' kg/lbs' : '—'); };
     const tEjer = n => { try { return (window.I18N && window.I18N.exercise) ? window.I18N.exercise(n, this.state.lang) : n; } catch (er) { return n; } };
     const tOpc  = l => en ? String(l || '').replace(/^Opción/, 'Option').replace(/^Comida libre/, 'Free meal') : l;
     const tCom  = n => { try { return (window.I18N && window.I18N.meal) ? window.I18N.meal(n, this.state.lang) : n; } catch (er) { return n; } };
@@ -2733,7 +2736,7 @@ class Component extends DCLogic {
       + '<div style="font-size:11px;color:#9a9a9a">' + (en ? 'average of training, cardio, nutrition and metrics' : 'media de entrenos, cardio, nutrición y métricas') + '</div>' + barra(m.global, true) + '</div>'
       + '<div style="display:flex;gap:14px;margin-top:14px">'
       + '<div style="flex:1;background:#f2f3f4;border-radius:14px;padding:15px 17px">' + ROT(T('Peso corporal')) + '<div style="font-family:Georgia,serif;font-size:27px">' + kg(m.peso.ini) + ' → ' + kg(m.peso.fin) + '</div>'
-      + '<div style="font-size:11.5px;font-weight:600;margin-top:3px;color:' + (m.peso.delta < 0 ? '#1e7e34' : m.peso.delta > 0 ? '#c0392b' : '#6b6b6b') + '">' + (m.peso.delta > 0 ? '+' : '') + dec(m.peso.delta) + ' kg ' + (en ? 'this month' : 'este mes') + '</div></div>'
+      + '<div style="font-size:11.5px;font-weight:600;margin-top:3px;color:' + (m.peso.delta < 0 ? '#1e7e34' : m.peso.delta > 0 ? '#c0392b' : '#6b6b6b') + '">' + (m.peso.delta > 0 ? '+' : '') + dec(m.peso.delta) + ' kg/lbs ' + (en ? 'this month' : 'este mes') + '</div></div>'
       + '<div style="flex:1;background:#f2f3f4;border-radius:14px;padding:15px 17px">' + ROT(en ? 'Progress photos' : 'Fotos de progreso') + '<div style="font-family:Georgia,serif;font-size:27px">' + m.fotos + '</div>'
       + '<div style="font-size:11px;color:#6b6b6b;margin-top:3px">' + (en ? 'front, side and back' : 'frontal, lateral y espalda') + '</div></div></div>'
       ;
@@ -2776,8 +2779,8 @@ class Component extends DCLogic {
           + (e.y ? '<img src="https://img.youtube.com/vi/' + esc(e.y) + '/mqdefault.jpg" alt="" style="width:52px;height:32px;object-fit:cover;border-radius:5px;flex:none;background:#eee"/>'
                  : '<div style="width:52px;height:32px;border-radius:5px;background:#f0f0f0;flex:none"></div>')
           + '<span>' + esc(tEjer(e.nombre)) + '</span></div></td>'
-          + (e.semanas || []).map(v => '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? (dec(v) + '<span style="font-size:9px;color:#9a9a9a"> kg</span>') : '—') + '</td>').join('')
-          + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + colorDelta(e) + '">' + (e.delta == null ? '—' : ((e.delta > 0 ? '+' : '') + dec(e.delta) + '<span style="font-size:9px;color:#9a9a9a"> kg</span>')) + '</td></tr>').join('')
+          + (e.semanas || []).map(v => '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;color:' + (v ? '#141414' : '#c9c9c9') + '">' + (v ? (dec(v) + '<span style="font-size:9px;color:#9a9a9a"> kg/lbs</span>') : '—') + '</td>').join('')
+          + '<td style="padding:7px 0;border-top:1px solid #eee;text-align:right;font-weight:700;color:' + colorDelta(e) + '">' + (e.delta == null ? '—' : ((e.delta > 0 ? '+' : '') + dec(e.delta) + '<span style="font-size:9px;color:#9a9a9a"> kg/lbs</span>')) + '</td></tr>').join('')
       + '</table>';
     const hojasEj = trozos.map((lista, i) => CAB(2, (en ? 'Progress by exercise' : 'Progreso por ejercicio') + (trozos.length > 1 ? (' · ' + (i + 1) + '/' + trozos.length) : ''))
       + '<div style="height:4px"></div>'
@@ -2876,14 +2879,14 @@ class Component extends DCLogic {
       cks.forEach(c => Object.keys(c.valores || {}).forEach(k => { if (set.indexOf(k) < 0) set.push(k); }));
       return set.sort((a, b) => (/peso/.test(a) ? -1 : /peso/.test(b) ? 1 : 0));
     })();
-    const unidad = k => /peso/.test(k) ? 'kg' : 'cm';
+    const unidad = k => /peso/.test(k) ? 'kg/lbs' : 'cm';
     const cambio = (k) => {
       const vals = cks.map(c => parseFloat(String((c.valores || {})[k] || '').replace(',', '.'))).filter(v => !isNaN(v));
       if (vals.length < 2) return null;
       return Math.round((vals[vals.length - 1] - vals[0]) * 10) / 10;
     };
     const p7 = CAB(6, en ? 'Metrics' : 'Métricas')
-      + '<div style="font-size:12.5px;margin-bottom:14px">' + T('Peso corporal') + ': <b>' + kg(m.peso.ini) + ' → ' + kg(m.peso.fin) + '</b> (' + (m.peso.delta > 0 ? '+' : '') + dec(m.peso.delta) + ' kg ' + (en ? 'this month' : 'en el mes') + ').</div>'
+      + '<div style="font-size:12.5px;margin-bottom:14px">' + T('Peso corporal') + ': <b>' + kg(m.peso.ini) + ' → ' + kg(m.peso.fin) + '</b> (' + (m.peso.delta > 0 ? '+' : '') + dec(m.peso.delta) + ' kg/lbs ' + (en ? 'this month' : 'en el mes') + ').</div>'
       + (claves.length ? ROT(_multi ? (en ? 'Monthly average of each measurement' : 'Media mensual de cada medida') : (en ? 'All measurements, day by day' : 'Todas las medidas, día a día'))
           + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
           + '<tr><td style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a;padding:0 0 6px">' + (en ? 'Measurement' : 'Medida') + '</td>'
@@ -3674,7 +3677,7 @@ class Component extends DCLogic {
     if (el && el.scrollIntoView) { requestAnimationFrame(function () { setTimeout(function () { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }, 60); }); }
   };
   // Pasa el teclado del campo REPETICIONES al de PESO de la misma serie SIN cerrarlo (ahorra un toque). Vibra para que se note el cambio.
-  _padToWeight = p => { this._haptic(); this.setState({ pad: { t: 'set', ex: p.ex, i: p.i, f: 'w', label: 'Peso', unit: 'kg' } }); };
+  _padToWeight = p => { this._haptic(); this.setState({ pad: { t: 'set', ex: p.ex, i: p.i, f: 'w', label: 'Peso', unit: 'kg/lbs' } }); };
   // Cerrar SIN confirmar: se sale del teclado y lo escrito se queda como estaba, sin dar la
   // serie por hecha. Es lo que toca al tocar fuera: el cliente queria irse, no confirmar.
   descartaPad = () => { this.setState({ padIn: false }); this.later(() => this.setState({ pad: null }), 460); };
@@ -3907,14 +3910,14 @@ class Component extends DCLogic {
         { n: T('Métricas'), pct: _rmPct(_rm.metricas), sub: _rmSub(_rm.metricas), c: '#C084FC', open: this.openMesDetail('metricas') }
       ],
       pesoIni: _rm.peso.ini, pesoFin: _rm.peso.fin,
-      pesoDelta: (_rm.peso.delta > 0 ? '+' : '') + String(_rm.peso.delta).replace('.', ',') + ' kg', pesoUp: _rm.peso.delta > 0,
+      pesoDelta: (_rm.peso.delta > 0 ? '+' : '') + String(_rm.peso.delta).replace('.', ',') + ' kg/lbs', pesoUp: _rm.peso.delta > 0,
       fotos: String(_rm.fotos) + ' ' + (this.state.lang === 'en' ? 'photos' : 'fotos')
     } : { hay: false };
     // detalle del cuadro pulsado
     const _det = st.mesDetail;
     const mesDetailSheet = (_det && _rm) ? (() => {
       const base = { title: _rm.label };
-      if (_det === 'entrenos') return Object.assign(base, { kind: 'ent', sub: T('Progresión de peso por ejercicio este mes'), ejercicios: (_rm.ejercicios || []).map(e => ({ nombre: tEx(e.nombre), rango: e.ini + ' → ' + e.fin + ' kg', delta: (e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + ' kg', subio: e.subio, dColor: e.subio ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.5)', ses: e.sesiones + ' ' + (e.sesiones === 1 ? T('sesión') : T('sesiones')) })), vacio: !(_rm.ejercicios || []).length });
+      if (_det === 'entrenos') return Object.assign(base, { kind: 'ent', sub: T('Progresión de peso por ejercicio este mes'), ejercicios: (_rm.ejercicios || []).map(e => ({ nombre: tEx(e.nombre), rango: e.ini + ' → ' + e.fin + ' kg/lbs', delta: (e.delta > 0 ? '+' : '') + String(e.delta).replace('.', ',') + ' kg/lbs', subio: e.subio, dColor: e.subio ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.5)', ses: e.sesiones + ' ' + (e.sesiones === 1 ? T('sesión') : T('sesiones')) })), vacio: !(_rm.ejercicios || []).length });
       if (_det === 'cardio') return Object.assign(base, { kind: 'car', sub: (_rm.cardio.objetivo ? (T('Objetivo') + ': ' + _milesN(_rm.cardio.objetivo) + ' ' + T('pasos')) : (_rm.cardio.done + '/' + _rm.cardio.total + ' ' + T('días'))), media: _milesN(_rm.cardio.media) + ' ' + T('pasos') + (_rm.cardio.totalPasos ? ('  ·  ' + T('total') + ' ' + _milesN(_rm.cardio.totalPasos)) : ''), dias: (_rm.cardio.dias || []).map(d => ({ lbl: d.lbl, done: d.done, ck: d.done ? '#3DD68C' : 'rgba(var(--fgc,255,255,255),.2)', pasos: (d.pasos ? (_milesN(d.pasos) + ' ' + T('pasos')) : (d.done ? '—' : '—')) })), vacio: !(_rm.cardio.dias || []).length });
       if (_det === 'nutricion') return Object.assign(base, { kind: 'nut', sub: T('Qué comió cada día y recuento del mes'), grupos: (_rm.nutricion.conteoGrupos || []).map(g => ({ meal: tMeal(g.meal), opciones: (g.opciones || []).map(o => ({ lbl: o.lbl, veces: o.veces + '×' })) })), dias: (_rm.nutricion.dias || []).map(d => ({ lbl: d.lbl, kcal: (d.kcal || 0) + ' kcal', items: (d.items || []).map(it => ({ meal: tMeal(it.meal), opcion: it.opcion + ' · ' + (it.kcal || 0) + ' kcal' })) })), vacio: !(_rm.nutricion.dias || []).length });
       if (_det === 'metricas') return Object.assign(base, { kind: 'met', sub: T('Check-ins registrados este mes'), checkins: (_rm.metricas.checkins || []).map(c => ({ lbl: c.lbl, peso: c.peso, n: c.n + ' ' + T('medidas') })), vacio: !(_rm.metricas.checkins || []).length });
@@ -4070,7 +4073,7 @@ class Component extends DCLogic {
         if (!con.length) continue;
         let fe = fechas[i];
         try { const pz = String(fe).split('-'); fe = parseInt(pz[2], 10) + ' ' + tD(_MES3ant[parseInt(pz[1], 10) - 1]); } catch (er) {}
-        return { fecha: fe, texto: con.map(x => _fmtW(_numW(x.w))).join('  ·  ') + ' kg' };
+        return { fecha: fe, texto: con.map(x => _fmtW(_numW(x.w))).join('  ·  ') + ' kg/lbs' };
       }
       return null;
     };
@@ -4104,7 +4107,7 @@ class Component extends DCLogic {
             i: i + 1, numFg: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.4)',
             r: l.r || '—', w: tD(l.w || '—'),
             lastR: showLast ? 'ant. ' + e.l[i][0] : '',
-            lastW: showLast ? 'ant. ' + e.l[i][1] + ' kg' : '',
+            lastW: (showLast && String(e.l[i][1] == null ? '' : e.l[i][1]).trim()) ? 'ant. ' + e.l[i][1] + ' kg/lbs' : 'kg/lbs',   // sin peso anterior: solo la unidad
             rBg: done ? 'rgba(var(--fgc,255,255,255),.12)' : 'var(--s3,#151519)',
             wBg: done ? 'rgba(var(--fgc,255,255,255),.12)' : 'var(--s3,#151519)',
             rBd: act && st.pad.f === 'r' ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.08)',
@@ -4115,7 +4118,7 @@ class Component extends DCLogic {
             ckBd: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.2)',
             ckFg: done ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.25)',
             editR: (ev) => this.openPadAt(ev, { t: 'set', ex: e.id, i, f: 'r', label: 'Repeticiones', unit: '' }),
-            editW: (ev) => this.openPadAt(ev, { t: 'set', ex: e.id, i, f: 'w', label: 'Peso', unit: 'kg' }),
+            editW: (ev) => this.openPadAt(ev, { t: 'set', ex: e.id, i, f: 'w', label: 'Peso', unit: 'kg/lbs' }),
             mark: this.markSet(e.id, i)
           };
         })
@@ -4199,7 +4202,7 @@ class Component extends DCLogic {
         last: e.last != null ? String(e.last).replace('.', ',') : '—',
         lastReps: e.lastReps != null ? (e.lastReps + ' reps') : '',
         sessions: e.sessions + ' ' + (e.sessions === 1 ? T('sesión') : T('sesiones')),
-        deltaLabel: (up ? '+' : '') + String(e.delta).replace('.', ',') + ' kg',
+        deltaLabel: (up ? '+' : '') + String(e.delta).replace('.', ',') + ' kg/lbs',
         deltaFg: up ? '#7fd6a3' : (down ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.4)'),
         hasProg: vals.length >= 1,
         ...(function () {
@@ -4266,7 +4269,7 @@ class Component extends DCLogic {
     const pesoDelta = (Math.abs(_wDelta) < 0.05 ? '·' : (_wDelta > 0 ? '+' : '−')) + Math.abs(_wDelta).toFixed(1).replace('.', ',');
     const metGroups = MET.map(g => ({ g: T(g.g), f: g.f.map(f => {
       const d = num(f.v) - num(f.p);
-      return { l: T(f.l), u: f.u, v: dec(f.v), p: f.p + ' ' + f.u, open: this.openMet(f),
+      return { l: T(f.l), u: _uPeso(f.u), v: dec(f.v), p: f.p + ' ' + _uPeso(f.u), open: this.openMet(f),
         dl: (d > 0 ? '↑ ' : d < 0 ? '↓ ' : '· ') + Math.abs(d).toFixed(1).replace('.', ',') };
     }) }));
 
@@ -4332,10 +4335,10 @@ class Component extends DCLogic {
         const series = (_lbd[f] || {})[xe.id] || [];
         const conDato = series.filter(x => num2(x.w) != null);
         if (!conDato.length) return null;
-        const sets = conDato.map(x => ({ raw: num2(x.w), t: fmtW(num2(x.w)) + ' kg  ·  ' + (x.r || '—') + ' reps' }));
+        const sets = conDato.map(x => ({ raw: num2(x.w), t: fmtW(num2(x.w)) + ' kg/lbs  ·  ' + (x.r || '—') + ' reps' }));
         const top = Math.max.apply(null, sets.map(x => x.raw));
         return { date: fecha(f), sets, top,
-                 vol: sets.length + ' ' + (sets.length === 1 ? T('serie') : T('series')) + ' · ' + T('máx') + ' ' + fmtW(top) + ' kg' };
+                 vol: sets.length + ' ' + (sets.length === 1 ? T('serie') : T('series')) + ' · ' + T('máx') + ' ' + fmtW(top) + ' kg/lbs' };
       }).filter(Boolean).slice(0, 12);
 
       if (!rows.length) {
@@ -4352,7 +4355,7 @@ class Component extends DCLogic {
         const d = rows[0].top - rows[rows.length - 1].top;
         exhSheet = { n: xe.n, rows, hay: true, vacio: false, top: fmtW(rows[0].top),
           sesiones: rows.length + ' ' + (rows.length === 1 ? T('sesión') : T('sesiones')),
-          delta: rows.length < 2 ? '—' : ((d > 0 ? '+' : d < 0 ? '−' : '') + fmtW(Math.abs(d)) + ' kg'),
+          delta: rows.length < 2 ? '—' : ((d > 0 ? '+' : d < 0 ? '−' : '') + fmtW(Math.abs(d)) + ' kg/lbs'),
           line: pp.map(p => p[0] + ',' + p[1]).join(' '), lx: pp[pp.length - 1][0], ly: pp[pp.length - 1][1] };
       }
     }
@@ -4387,7 +4390,7 @@ class Component extends DCLogic {
         verFecha: (i % salto === 0) || i === orden.length - 1, f: r.dia || ''
       }));
       const pares = orden.map((r, i) => pctX(i).toFixed(2) + ',' + pctY(r.raw).toFixed(2));
-      metSheet = { l: T(mf.l), u: mf.u, v: mf.v, rows,
+      metSheet = { l: T(mf.l), u: _uPeso(mf.u), v: mf.v, rows,
         gH: '120px', ejeY,
         puntos, fechasEje: puntos.filter(p => p.verFecha).map(p => ({ left: p.left, t: p.f })),
         line: pares.join(' '),

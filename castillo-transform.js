@@ -3,6 +3,9 @@
    Sin dependencias. Válido en navegador y en Node. */
 (function (root) {
   'use strict';
+  // Alex (9 oct 2026): unos clientes apuntan en kilos y otros en libras, sin convertir nada.
+  // Donde antes ponía «kg» ahora pone «kg/lbs».
+  function _uPesoT(u) { return /^kg$/i.test(String(u == null ? '' : u).trim()) ? 'kg/lbs' : u; }
 
   var WD = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   var WD1 = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
@@ -430,7 +433,7 @@
       var seen = {}, hist = [];
       pts.forEach(function (p) { var dt = new Date(p.t); var wk = isoWeek(dt); if (seen[wk]) return; seen[wk] = 1; hist.push({ v: comma(p.y), raw: parseFloat(String(p.y).replace(',', '.')), weekLabel: 'Semana ' + wk, range: weekRange(dt), dia: ddmm(dt) }); });
       hist = hist.slice(0, 12);
-      return { k: slug(m.name), l: m.name, u: m.unit || '', v: comma(metVal(m)), p: comma(metPrev(m)), hist: hist };
+      return { k: slug(m.name), l: m.name, u: _uPesoT(m.unit || ''), v: comma(metVal(m)), p: comma(metPrev(m)), hist: hist };
     });
     var MET = fields.length ? [{ g: 'Composición y medidas', f: fields }] : [];
 
@@ -510,7 +513,7 @@
       var cv = metVal(m); if (cv != null && cv !== '') pts.push({ t: now.getTime(), y: cv });
       var ck = chkByKey[sg]; if (ck) ck.forEach(function (pt) { var d = dtOf2(pt.fecha); if (!isNaN(d)) pts.push({ t: d.getTime(), y: pt.val }); });
       pts = pts.filter(function (p) { var n = valNum(p.y); return p.t != null && !isNaN(p.t) && !isNaN(n) && n > 0; }).sort(function (a, b) { return a.t - b.t; }); // sin valores 0/vacíos
-      return { label: m.name, esPeso: esPeso, unit: m.unit || (esPeso ? 'kg' : 'cm'), pts: pts };
+      return { label: m.name, esPeso: esPeso, unit: _uPesoT(m.unit || (esPeso ? 'kg' : 'cm')), pts: pts };
     }).filter(function (s) { return s.pts.length; });
     // medidas que el cliente apunta en sus check-ins y que NO existen como métrica de Harbiz
     Object.keys(chkByKey).forEach(function (sg) {
@@ -519,7 +522,7 @@
       var pts = chkByKey[sg].map(function (pt) { var d = dtOf2(pt.fecha); return { t: d.getTime(), y: pt.val }; })
         .filter(function (p) { var n = valNum(p.y); return !isNaN(p.t) && !isNaN(n) && n > 0; }).sort(function (a, b) { return a.t - b.t; });
       var _cm = customByKey[sg];
-      if (pts.length) _metSeries.push({ label: _cm ? _cm.label : unslug(sg), esPeso: esPeso, unit: _cm ? (_cm.unit || '') : (esPeso ? 'kg' : 'cm'), pts: pts });
+      if (pts.length) _metSeries.push({ label: _cm ? _cm.label : unslug(sg), esPeso: esPeso, unit: _uPesoT(_cm ? (_cm.unit || '') : (esPeso ? 'kg' : 'cm')), pts: pts });
     });
     _metSeries.sort(function (a, b) { return (b.esPeso ? 1 : 0) - (a.esPeso ? 1 : 0); }); // peso primero
     // devuelve el valor de cada medida en la fecha de la foto: mismo día exacto → el más reciente hasta esa
@@ -535,11 +538,11 @@
         return hit ? { label: s.label, valor: comma(hit.y) + ' ' + s.unit } : null;
       }).filter(Boolean);
     }
-    function pesoEnFecha(t) { var m = medidasEnFecha(t).filter(function (x) { return /kg$/.test(x.valor); })[0]; return m ? m.valor : ''; }
+    function pesoEnFecha(t) { var m = medidasEnFecha(t).filter(function (x) { return /kg(\/lbs)?$/.test(x.valor); })[0]; return m ? m.valor : ''; }
     var setsClient = chkList.filter(function (c) { return c.fotos && Object.keys(c.fotos).length; }).map(function (c) {
       var dt = dtOf2(c.fecha);
       var pw = (c.valores && (c.valores['peso-corporal'] || c.valores['peso'] || c.valores['peso_corporal'])) || '';
-      return { key: (c.fecha || '').slice(0, 10), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pw ? comma(pw) + ' kg' : pesoEnFecha(dt.getTime()), fotos: c.fotos, medidas: medidasEnFecha(dt.getTime()) };
+      return { key: (c.fecha || '').slice(0, 10), t: dt.getTime(), w: 'Semana ' + isoWeek(dt), date: d2(dt.getDate()) + ' ' + MO[dt.getMonth()].slice(0, 3), kg: pw ? comma(pw) + ' kg/lbs' : pesoEnFecha(dt.getTime()), fotos: c.fotos, medidas: medidasEnFecha(dt.getTime()) };
     });
     var setsHarbiz = ((row.evolution && row.evolution.photos) || []).filter(function (p) { return p.front_url || p.side_url || p.back_url; }).map(function (p) {
       var dt = new Date(ms(p.date));
@@ -978,7 +981,7 @@
         var dt = new Date((c.fecha || '').slice(0, 10) + 'T00:00:00');
         var pw = (c.valores && (c.valores['peso-corporal'] || c.valores['peso'])) || '';
         // se guarda la fecha real para poder agrupar por meses en los informes largos
-        return { fecha: (c.fecha || '').slice(0, 10), lbl: (isNaN(dt) ? (c.fecha || '') : (dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3))), peso: pw ? (comma(pw) + ' kg') : '', n: c.valores ? Object.keys(c.valores).length : 0, valores: c.valores || {} };
+        return { fecha: (c.fecha || '').slice(0, 10), lbl: (isNaN(dt) ? (c.fecha || '') : (dt.getDate() + ' ' + MO[dt.getMonth()].slice(0, 3))), peso: pw ? (comma(pw) + ' kg/lbs') : '', n: c.valores ? Object.keys(c.valores).length : 0, valores: c.valores || {} };
       }).reverse();
       // peso inicio/fin del mes
       var _firstT = new Date(yr, mo, 1).getTime(), _lastT = new Date(yr, mo, lastDay).getTime();
