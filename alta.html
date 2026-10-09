@@ -298,9 +298,11 @@
   function openPrivacy(){
     var p=PRIVACY[lang]||PRIVACY.en;
     $('privacyTitle').textContent=p.title;
-    var html='<div style="font-size:11.5px;color:rgba(255,255,255,.4);margin-bottom:14px">'+escHtml(p.updated)+'</div>';
-    p.sections.forEach(function(sec){ html+='<div style="font-weight:600;color:#fff;margin:14px 0 4px">'+escHtml(sec[0])+'</div><div>'+escHtml(sec[1])+'</div>'; });
-    $('privacyBody').innerHTML=html;
+    // Google Play (9 oct 2026) exige que la app enseñe la política COMPLETA (datos de salud, Health
+    // Connect, cuánto se guardan los datos). Se carga privacidad.html del propio paquete, en el idioma
+    // del alta y en oscuro. El texto corto de PRIVACY queda solo para el título.
+    var b=$('privacyBody'); b.style.padding='0';
+    b.innerHTML='<iframe src="privacidad.html?lang='+lang+'&tema=oscuro" title="'+escHtml(p.title)+'" style="display:block;width:100%;height:calc(88vh - 66px);border:0;background:#0b0b0b"></iframe>';
     $('privacyModal').style.display='flex';
   }
   function closePrivacy(){ $('privacyModal').style.display='none'; }

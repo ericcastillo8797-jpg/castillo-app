@@ -6,7 +6,9 @@
 <title>Privacy Policy · Castillo Private App</title>
 <style>
   :root { color-scheme: light dark; --bg:#fff; --fg:#111; --mut:#666; --line:#e6e6e6; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#0b0b0b; --fg:#f2f2f2; --mut:#9a9a9a; --line:#242424; } }
+  @media (prefers-color-scheme: dark) { :root:not(.claro) { --bg:#0b0b0b; --fg:#f2f2f2; --mut:#9a9a9a; --line:#242424; } }
+  :root.oscuro { color-scheme: dark; --bg:#0b0b0b; --fg:#f2f2f2; --mut:#9a9a9a; --line:#242424; }
+  :root.claro { color-scheme: light; }
   * { box-sizing:border-box }
   body { margin:0; background:var(--bg); color:var(--fg);
     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
@@ -20,28 +22,45 @@
   a { color:inherit }
   hr.big { border:0; border-top:1px solid var(--line); margin:70px 0 40px }
   .lang { font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--mut); margin-bottom:28px }
+  /* Dentro de la app (?lang=es|en) se ve solo un idioma y sin el selector */
+  html.solo-en #es, html.solo-es #en, html.solo-en hr.big, html.solo-es hr.big, html.solo-en .lang, html.solo-es .lang { display:none }
+  html.en-app main { padding-top:22px }
 </style>
+<script>
+  // Dentro de la app: privacidad.html?lang=es&tema=oscuro → solo ese idioma y con el tema de la app.
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search), r = document.documentElement;
+      var l = q.get('lang'); if (l === 'es' || l === 'en') { r.classList.add('solo-' + l, 'en-app'); r.lang = l; }
+      var t = q.get('tema'); if (t === 'oscuro' || t === 'claro') r.classList.add(t);
+    } catch (e) {}
+  })();
+</script>
 </head>
 <body>
 <main>
 
+<section id="en">
 <div class="lang">English · <a href="#es">Español</a></div>
 
 <h1>Privacy Policy</h1>
-<p class="mut">Castillo Private app (iOS) · Alex Fitness Solutions LLC · Last updated: 29 August 2026</p>
+<p class="mut">Castillo Private app (iOS and Android) · Alex Fitness Solutions LLC · Last updated: 9 October 2026</p>
 
-<p>This policy explains what the <strong>Castillo Private</strong> app collects, why, and what your
-rights are. The app is a private tool for clients of Castillo Private: it is not a public service and
-you can only use it if your coach has created an account for you.</p>
+<p>This policy explains what the <strong>Castillo Private</strong> app collects, how it accesses and uses
+that data (including health data), who can see it, how long we keep it and what your rights are. The app is
+a private tool for clients of Castillo Private: you can request access from the app, and you can only use it
+once your coach has accepted your request.</p>
 
 <h2>Who we are</h2>
 <p>Alex Fitness Solutions LLC (“Castillo Private”, “we”), 176 NW 25th St, Miami, Florida 33127, United
 States. Contact: <a href="mailto:info@castilloprivate.com">info@castilloprivate.com</a>.</p>
 
 <h2>What we collect</h2>
-<h3>Account data</h3>
+<h3>Account and sign-up data</h3>
 <ul>
-  <li>Name, surname, email address and phone number.</li>
+  <li>Name, surname, email address, phone number, date of birth, gender and, if you add one, a profile photo.</li>
+  <li>When you request access: your goal, your weight and height, and your answers to a short physical
+      readiness questionnaire (PAR-Q).</li>
   <li>Your password is never visible to us: sign-in is handled by our authentication provider.</li>
 </ul>
 <h3>Training and health data you enter</h3>
@@ -49,22 +68,43 @@ States. Contact: <a href="mailto:info@castilloprivate.com">info@castilloprivate.
   <li>Workouts completed, exercises, sets, repetitions and weights used.</li>
   <li>Cardio sessions and daily steps.</li>
   <li>Body weight, body measurements and any custom metric your coach sets up.</li>
-  <li>Meals logged and daily calories and macros.</li>
+  <li>Meals logged, food swaps, favourite foods, and daily calories and macros.</li>
   <li>Progress photos you choose to take or upload.</li>
   <li>Check-in answers and notes you send to your coach.</li>
 </ul>
-<h3>Data from Apple Health</h3>
-<p>If you grant permission, we read <strong>your step count only</strong> from Apple Health, so the app
-can mark your daily cardio as completed automatically. We do not read any other health category and
-we never write data into Apple Health. You can revoke this permission at any time in
-iOS Settings → Privacy &amp; Security → Health.</p>
+
+<h2>Health data from Apple Health and Health Connect (Android)</h2>
+<p>The app can read data from <strong>Apple Health</strong> (iPhone) and <strong>Health Connect</strong>
+(Android) only if you choose to connect it and grant permission. This is how it works:</p>
+<ul>
+  <li><strong>What we access:</strong> your <strong>daily step count only</strong> (on Android, the
+      “Steps” permission). We do not read any other health category, and we never write, change or delete
+      data in Apple Health or Health Connect.</li>
+  <li><strong>How we access it:</strong> nothing is read until you tap “Connect” in the app and accept the
+      permission screen of your phone. After that, each time you open the app it reads your steps for recent
+      days: the first time up to the last 180 days, and then the last 30 days.</li>
+  <li><strong>What we store:</strong> one number per day (your total steps for that day), saved in your
+      account on our servers so it appears in your history.</li>
+  <li><strong>How we use it:</strong> to mark your daily cardio as completed automatically, to show your
+      steps and your progress, and so your coach can review your activity and adjust your plan. Nothing else.</li>
+  <li><strong>Sharing:</strong> step data is never sold, never shared with advertisers or data brokers, and
+      never used for advertising, marketing or any purpose other than your coaching.</li>
+  <li><strong>How to stop it:</strong> you can revoke access at any time. On iPhone: Settings → Privacy &amp;
+      Security → Health → Castillo Private. On Android: Settings → Health Connect (or the Health Connect app)
+      → App permissions → Castillo Private. From then on no new data is read.</li>
+</ul>
+<p>Castillo Private's use of information received from Health Connect adheres to the
+<a href="https://support.google.com/googleplay/android-developer/answer/12991134" target="_blank" rel="noopener">Health Connect Permissions policy</a>,
+including the Limited Use requirements.</p>
+
 <h3>Data from WHOOP</h3>
 <p>If you connect your WHOOP account, we read your recovery, sleep, strain, resting heart rate and
 workouts so your coach can adjust your training. You can disconnect WHOOP from the app at any time,
 and from your WHOOP account settings.</p>
 <h3>Technical data</h3>
-<p>Basic error information so we can fix problems. The app contains no advertising, no advertising
-identifiers and no third-party analytics or tracking.</p>
+<p>A device token to send you notifications (only if you allow them) and basic error information so we can
+fix problems. The app contains no advertising, no advertising identifiers and no third-party analytics or
+tracking.</p>
 
 <h2>How we use it</h2>
 <ul>
@@ -80,23 +120,38 @@ data for advertising, marketing or any purpose other than your coaching.</strong
 <ul>
   <li><strong>You</strong>, in the app.</li>
   <li><strong>Your coach at Castillo Private</strong>, so they can do their job.</li>
-  <li><strong>Our hosting provider (Supabase, servers in the United States)</strong>, which stores the
-      data on our behalf. Other clients cannot see your data: access is restricted at database level
-      so each account can only read its own records.</li>
+  <li><strong>Service providers that run the app on our behalf</strong>: our hosting and database provider
+      (Supabase, servers in the United States) and the Apple and Google notification services, which only
+      receive the device token needed to deliver notifications. They cannot use your data for their own purposes.</li>
+  <li>Other clients cannot see your data: access is restricted at database level so each account can only
+      read its own records.</li>
+  <li>We may disclose data if the law requires it.</li>
 </ul>
-<p>We may disclose data if the law requires it.</p>
 
-<h2>How long we keep it</h2>
-<p>While you are a client, and for as long as your account exists. If you delete your account, your
-data is deleted as described below.</p>
+<h2>How long we keep your data (retention)</h2>
+<ul>
+  <li><strong>While your account exists:</strong> we keep your data so that you and your coach can see your
+      history and progress.</li>
+  <li><strong>If you delete your account in the app:</strong> your data is deleted immediately and
+      permanently (see below).</li>
+  <li><strong>If you ask us by email:</strong> we delete your account and your data within 30 days of your request.</li>
+  <li><strong>Backups:</strong> copies that may remain in our hosting provider's backups are removed
+      automatically within 30 days.</li>
+  <li>After that, we do not keep any of your health or training data.</li>
+  <li>Invoices and payment records of the coaching service are not part of the app and are kept only for as
+      long as tax law requires.</li>
+</ul>
 
 <h2>Deleting your account</h2>
-<p>You can delete your account and all of your data from inside the app:
-<strong>Settings → Delete account</strong>. You will be asked to type your email address to confirm.
-This is permanent and immediate: it deletes your progress photos, your workout and nutrition history,
-your measurements, your check-ins and your login. It cannot be undone.</p>
-<p>You can also request deletion by writing to
-<a href="mailto:info@castilloprivate.com">info@castilloprivate.com</a>.</p>
+<p>You can delete your account and your data from inside the app:
+<strong>Settings → Delete my account</strong>. You will be asked to type your email address to confirm.
+This is permanent and immediate: it deletes your progress photos, your workout, steps and nutrition history,
+your measurements, your check-ins, your profile, your WHOOP connection and your login. It cannot be undone.
+The only thing this button does not remove is your list of favourite foods (food names and calories, no health
+data): if you want it removed too, write to us and we will delete it within 30 days.</p>
+<p>You can also request deletion of your account and all of your data by writing to
+<a href="mailto:info@castilloprivate.com">info@castilloprivate.com</a>, or at
+<a href="https://castilloprivate.com/delete-account" target="_blank" rel="noopener">castilloprivate.com/delete-account</a>.</p>
 
 <h2>Your rights</h2>
 <p>You can ask us to access, correct, export or delete your data, and to stop processing it, by
@@ -104,34 +159,39 @@ writing to <a href="mailto:info@castilloprivate.com">info@castilloprivate.com</a
 30 days.</p>
 
 <h2>Children</h2>
-<p>The app is not intended for people under 16. We do not knowingly create accounts for minors.</p>
+<p>The app is not intended for people under 18. We do not knowingly create accounts for minors.</p>
 
 <h2>Security</h2>
 <p>Data travels encrypted (HTTPS) and is stored on servers with access control. Access to the app is
-protected by your password and, if you enable it, by Face ID on your device.</p>
+protected by your password and, if you enable it, by Face ID or your fingerprint on your device.</p>
 
 <h2>Changes</h2>
 <p>If we change this policy we will update the date at the top of this page.</p>
+</section>
 
 <hr class="big">
 
-<div class="lang" id="es"><a href="#">English</a> · Español</div>
+<section id="es">
+<div class="lang"><a href="#">English</a> · Español</div>
 
 <h1>Política de Privacidad</h1>
-<p class="mut">App Castillo Private (iOS) · Alex Fitness Solutions LLC · Última actualización: 29 de agosto de 2026</p>
+<p class="mut">App Castillo Private (iOS y Android) · Alex Fitness Solutions LLC · Última actualización: 9 de octubre de 2026</p>
 
-<p>Esta política explica qué recoge la app <strong>Castillo Private</strong>, para qué, y cuáles son
-tus derechos. La app es una herramienta privada para clientes de Castillo Private: no es un servicio
-abierto al público y solo puedes usarla si tu entrenador te ha creado una cuenta.</p>
+<p>Esta política explica qué recoge la app <strong>Castillo Private</strong>, cómo accede a esos datos y
+cómo los usa (incluidos los datos de salud), quién puede verlos, cuánto tiempo los guardamos y cuáles son tus
+derechos. La app es una herramienta privada para clientes de Castillo Private: puedes solicitar el acceso
+desde la app, y solo podrás usarla cuando tu entrenador haya aceptado tu solicitud.</p>
 
 <h2>Quiénes somos</h2>
 <p>Alex Fitness Solutions LLC (“Castillo Private”, “nosotros”), 176 NW 25th St, Miami, Florida 33127,
 Estados Unidos. Contacto: <a href="mailto:info@castilloprivate.com">info@castilloprivate.com</a>.</p>
 
 <h2>Qué recogemos</h2>
-<h3>Datos de la cuenta</h3>
+<h3>Datos de la cuenta y del alta</h3>
 <ul>
-  <li>Nombre, apellidos, correo electrónico y teléfono.</li>
+  <li>Nombre, apellidos, correo electrónico, teléfono, fecha de nacimiento, género y, si la añades, una foto de perfil.</li>
+  <li>Al solicitar el acceso: tu objetivo, tu peso y tu altura, y tus respuestas a un breve cuestionario de
+      aptitud física (PAR-Q).</li>
   <li>Tu contraseña nunca es visible para nosotros: el acceso lo gestiona nuestro proveedor de autenticación.</li>
 </ul>
 <h3>Datos de entrenamiento y salud que tú introduces</h3>
@@ -139,22 +199,44 @@ Estados Unidos. Contacto: <a href="mailto:info@castilloprivate.com">info@castill
   <li>Entrenamientos completados, ejercicios, series, repeticiones y pesos utilizados.</li>
   <li>Sesiones de cardio y pasos diarios.</li>
   <li>Peso corporal, medidas y cualquier métrica personalizada que configure tu entrenador.</li>
-  <li>Comidas registradas y calorías y macros del día.</li>
+  <li>Comidas registradas, sustituciones de alimentos, alimentos favoritos, y calorías y macros del día.</li>
   <li>Fotos de progreso que decidas hacer o subir.</li>
   <li>Respuestas de los check-ins y notas que envías a tu entrenador.</li>
 </ul>
-<h3>Datos de Apple Salud</h3>
-<p>Si das permiso, leemos <strong>únicamente tu número de pasos</strong> de Apple Salud, para que la
-app pueda marcar tu cardio del día como completado automáticamente. No leemos ninguna otra categoría
-de salud y nunca escribimos datos en Apple Salud. Puedes retirar este permiso cuando quieras en
-Ajustes de iOS → Privacidad y seguridad → Salud.</p>
+
+<h2>Datos de salud de Apple Salud y Health Connect (Android)</h2>
+<p>La app puede leer datos de <strong>Apple Salud</strong> (iPhone) y de <strong>Health Connect</strong>
+(Android) solo si tú decides conectarlo y das permiso. Funciona así:</p>
+<ul>
+  <li><strong>A qué accedemos:</strong> <strong>únicamente a tu número de pasos diarios</strong> (en
+      Android, el permiso «Pasos»). No leemos ninguna otra categoría de salud, y nunca escribimos, cambiamos
+      ni borramos datos en Apple Salud ni en Health Connect.</li>
+  <li><strong>Cómo accedemos:</strong> no se lee nada hasta que pulsas «Conectar» en la app y aceptas la
+      pantalla de permisos de tu teléfono. A partir de ahí, cada vez que abres la app lee tus pasos de los
+      últimos días: la primera vez, hasta los últimos 180 días; después, los últimos 30 días.</li>
+  <li><strong>Qué guardamos:</strong> un número por día (el total de pasos de ese día), guardado en tu cuenta
+      en nuestros servidores para que aparezca en tu historial.</li>
+  <li><strong>Para qué lo usamos:</strong> para marcar automáticamente tu cardio del día como hecho, para
+      enseñarte tus pasos y tu progreso, y para que tu entrenador revise tu actividad y ajuste tu plan. Nada más.</li>
+  <li><strong>Con quién lo compartimos:</strong> los datos de pasos nunca se venden, nunca se comparten con
+      anunciantes ni intermediarios de datos, y nunca se usan para publicidad, marketing ni ninguna finalidad
+      distinta de tu seguimiento.</li>
+  <li><strong>Cómo retirarlo:</strong> puedes quitar el permiso cuando quieras. En iPhone: Ajustes →
+      Privacidad y seguridad → Salud → Castillo Private. En Android: Ajustes → Health Connect (o la app Health
+      Connect) → Permisos de apps → Castillo Private. Desde ese momento no se lee ningún dato nuevo.</li>
+</ul>
+<p>El uso que Castillo Private hace de la información recibida de Health Connect cumple la
+<a href="https://support.google.com/googleplay/android-developer/answer/12991134" target="_blank" rel="noopener">política de permisos de Health Connect</a>,
+incluidos los requisitos de uso limitado.</p>
+
 <h3>Datos de WHOOP</h3>
 <p>Si conectas tu cuenta de WHOOP, leemos tu recuperación, sueño, esfuerzo, pulsaciones en reposo y
 entrenamientos para que tu entrenador ajuste tu plan. Puedes desconectar WHOOP desde la app cuando
 quieras, y también desde los ajustes de tu cuenta WHOOP.</p>
 <h3>Datos técnicos</h3>
-<p>Información básica de errores para poder arreglar problemas. La app no tiene publicidad, ni
-identificadores publicitarios, ni analítica o rastreo de terceros.</p>
+<p>Un identificador del dispositivo para enviarte avisos (solo si los permites) e información básica de
+errores para poder arreglar problemas. La app no tiene publicidad, ni identificadores publicitarios, ni
+analítica o rastreo de terceros.</p>
 
 <h2>Para qué lo usamos</h2>
 <ul>
@@ -170,23 +252,40 @@ publicidad, marketing ni ninguna finalidad distinta de tu seguimiento deportivo.
 <ul>
   <li><strong>Tú</strong>, en la app.</li>
   <li><strong>Tu entrenador de Castillo Private</strong>, para poder hacer su trabajo.</li>
-  <li><strong>Nuestro proveedor de alojamiento (Supabase, servidores en Estados Unidos)</strong>, que
-      guarda los datos por cuenta nuestra. Otros clientes no pueden ver tus datos: el acceso está
-      restringido a nivel de base de datos para que cada cuenta solo lea sus propios registros.</li>
+  <li><strong>Los proveedores que hacen funcionar la app por cuenta nuestra</strong>: nuestro proveedor de
+      alojamiento y base de datos (Supabase, servidores en Estados Unidos) y los servicios de avisos de Apple y
+      Google, que solo reciben el identificador del dispositivo necesario para entregar los avisos. No pueden
+      usar tus datos para sus propios fines.</li>
+  <li>Otros clientes no pueden ver tus datos: el acceso está restringido a nivel de base de datos para que
+      cada cuenta solo lea sus propios registros.</li>
+  <li>Podremos comunicar datos si la ley lo exige.</li>
 </ul>
-<p>Podremos comunicar datos si la ley lo exige.</p>
 
-<h2>Cuánto tiempo los guardamos</h2>
-<p>Mientras seas cliente y mientras exista tu cuenta. Si borras tu cuenta, tus datos se eliminan como
-se describe a continuación.</p>
+<h2>Cuánto tiempo guardamos tus datos (retención)</h2>
+<ul>
+  <li><strong>Mientras exista tu cuenta:</strong> guardamos tus datos para que tú y tu entrenador podáis ver
+      tu historial y tu progreso.</li>
+  <li><strong>Si borras tu cuenta desde la app:</strong> tus datos se eliminan al momento y para siempre
+      (ver más abajo).</li>
+  <li><strong>Si nos lo pides por correo:</strong> borramos tu cuenta y tus datos en un plazo máximo de 30 días
+      desde tu solicitud.</li>
+  <li><strong>Copias de seguridad:</strong> las copias que puedan quedar en las copias de seguridad de nuestro
+      proveedor de alojamiento se eliminan automáticamente en un plazo máximo de 30 días.</li>
+  <li>Pasado ese plazo, no conservamos ninguno de tus datos de salud ni de entrenamiento.</li>
+  <li>Las facturas y los registros de pago del servicio de entrenamiento no forman parte de la app y se guardan
+      solo el tiempo que exige la ley fiscal.</li>
+</ul>
 
 <h2>Borrar tu cuenta</h2>
-<p>Puedes borrar tu cuenta y todos tus datos desde dentro de la app:
-<strong>Ajustes → Borrar cuenta</strong>. Se te pedirá escribir tu correo electrónico para confirmar.
-Es permanente e inmediato: elimina tus fotos de progreso, tu historial de entrenamientos y nutrición,
-tus medidas, tus check-ins y tu acceso. No se puede deshacer.</p>
-<p>También puedes solicitar el borrado escribiendo a
-<a href="mailto:info@castilloprivate.com">info@castilloprivate.com</a>.</p>
+<p>Puedes borrar tu cuenta y tus datos desde dentro de la app:
+<strong>Ajustes → Borrar mi cuenta</strong>. Se te pedirá escribir tu correo electrónico para confirmar.
+Es permanente e inmediato: elimina tus fotos de progreso, tu historial de entrenamientos, pasos y nutrición,
+tus medidas, tus check-ins, tu perfil, tu conexión con WHOOP y tu acceso. No se puede deshacer.
+Lo único que este botón no elimina es tu lista de alimentos favoritos (nombres de alimentos y calorías, sin
+datos de salud): si quieres que también se borre, escríbenos y la eliminaremos en un plazo máximo de 30 días.</p>
+<p>También puedes pedir que borremos tu cuenta y todos tus datos escribiendo a
+<a href="mailto:info@castilloprivate.com">info@castilloprivate.com</a>, o en
+<a href="https://castilloprivate.com/delete-account" target="_blank" rel="noopener">castilloprivate.com/delete-account</a>.</p>
 
 <h2>Tus derechos</h2>
 <p>Puedes pedirnos acceder, corregir, exportar o borrar tus datos, y que dejemos de tratarlos,
@@ -194,14 +293,15 @@ escribiendo a <a href="mailto:info@castilloprivate.com">info@castilloprivate.com
 un plazo de 30 días.</p>
 
 <h2>Menores</h2>
-<p>La app no está dirigida a menores de 16 años. No creamos cuentas a menores de forma consciente.</p>
+<p>La app no está dirigida a menores de 18 años. No creamos cuentas a menores de forma consciente.</p>
 
 <h2>Seguridad</h2>
 <p>Los datos viajan cifrados (HTTPS) y se almacenan en servidores con control de acceso. El acceso a
-la app está protegido por tu contraseña y, si lo activas, por Face ID en tu dispositivo.</p>
+la app está protegido por tu contraseña y, si lo activas, por Face ID o tu huella en tu dispositivo.</p>
 
 <h2>Cambios</h2>
 <p>Si cambiamos esta política, actualizaremos la fecha del encabezado de esta página.</p>
+</section>
 
 </main>
 </body>

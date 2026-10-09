@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 260;
+  var VERSION_ACTUAL = 261;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -840,7 +840,15 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <div onClick="{{ pickEn }}" style="flex:1;text-align:center;padding:14px 0;border-radius:16px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .3s cubic-bezier(.32,.72,0,1);background:{{ langEnBg }};color:{{ langEnFg }};border:1px solid {{ langEnBd }}" style-active="transform:scale(.97)">{{ L.ingles }}</div>
       </div>
 
+      <!-- Política de privacidad: Google Play exige poder verla dentro de la app (9 oct 2026) -->
       <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden;margin-top:22px">
+        <div onClick="{{ abrirPriv }}" style="display:flex;align-items:center;padding:14px 16px;cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
+          <div style="flex:1;font-size:13.5px;font-weight:500">{{ L.privacidad }}</div>
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" opacity=".3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5 7.5 6 4 9.5"></path></svg>
+        </div>
+      </div>
+
+      <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;overflow:hidden;margin-top:12px">
         <div onClick="{{ logout }}" style="display:flex;align-items:center;padding:14px 16px;cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
           <div style="flex:1;font-size:13.5px;font-weight:600;color:#ff453a">{{ L.cerrarSesion }}</div>
         </div>
@@ -1056,6 +1064,19 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </sc-if>
     <div onClick="{{ confirmarBorrar }}" style="margin-top:15px;background:{{ borrarBtnBg }};color:{{ borrarBtnFg }};border-radius:100px;padding:15px;text-align:center;font-size:14.5px;font-weight:700;cursor:{{ borrarBtnCur }}" style-active="transform:scale(.97)">{{ borrarBtnTxt }}</div>
     <div onClick="{{ cerrarBorrar }}" style="margin-top:9px;border:.5px solid rgba(var(--fgc,255,255,255),.18);border-radius:100px;padding:14px;text-align:center;font-size:14px;font-weight:600;cursor:pointer" style-active="transform:scale(.97)">{{ L.cancelar }}</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ privOpen }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Política de privacidad" style="position:absolute;inset:0;z-index:14;display:flex;align-items:flex-end;justify-content:center">
+  <div onClick="{{ cerrarPriv }}" style="position:absolute;inset:0;background:rgba(0,0,0,.6);animation:cFade .3s both"></div>
+  <div style="position:relative;width:100%;max-width:560px;height:calc(100% - 54px - env(safe-area-inset-top));background:var(--s4,#141418);border:.5px solid rgba(var(--fgc,255,255,255),.14);border-bottom:0;border-radius:26px 26px 0 0;overflow:hidden;display:flex;flex-direction:column;animation:cFade .3s both">
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.1)">
+      <div style="flex:1;font-size:16px;font-weight:600">{{ L.privacidad }}</div>
+      <div onClick="{{ cerrarPriv }}" style="width:32px;height:32px;border-radius:50%;background:rgba(var(--fgc,255,255,255),.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px">✕</div>
+    </div>
+    <iframe src="{{ privSrc }}" title="{{ L.privacidad }}" style="flex:1;width:100%;border:0;display:block"></iframe>
   </div>
 </div>
 </sc-if>
@@ -2169,7 +2190,7 @@ class Component extends DCLogic {
     wOpen: false, wIn: false, exClosed: {},
     logs: {}, wLock: false, pad: null, padIn: false,
     rest: 0, restMax: 90,
-    borrarOpen: false, borrarTxt: '', borrarErr: '', borrando: false,
+    borrarOpen: false, borrarTxt: '', borrarErr: '', borrando: false, privOpen: false,
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, whoop: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
@@ -3218,6 +3239,9 @@ class Component extends DCLogic {
   // Obligatorio para la App Store. El borrado real lo hace la función 'borrar-cuenta' del servidor,
   // que saca el email del propio JWT: desde aquí NO se manda a quién borrar, solo la confirmación.
   abrirBorrar = () => this.setState({ borrarOpen: true, borrarTxt: '', borrarErr: '', borrando: false });
+  // Política de privacidad (Ajustes): la del propio paquete, en el idioma y el tema de la app
+  abrirPriv = () => this.setState({ privOpen: true });
+  cerrarPriv = () => this.setState({ privOpen: false });
   cerrarBorrar = () => { if (this.state.borrando) return; this.setState({ borrarOpen: false, borrarTxt: '', borrarErr: '' }); };
   setBorrarTxt = e => this.setState({ borrarTxt: (e && e.target ? e.target.value : e) || '', borrarErr: '' });
   confirmarBorrar = async () => {
@@ -4445,6 +4469,7 @@ class Component extends DCLogic {
         faceIdBtn: T('Acceder con Face ID'), primeraVez: T('¿Primera vez?'), dateAlta: T('Date de alta'),
         accediendo: T('Accediendo…'),
         borrarCuenta: T('Borrar mi cuenta'), cancelar: T('Cancelar'), cerrar: T('Cerrar'),
+        privacidad: isEN ? 'Privacy policy' : 'Política de privacidad',
         borrarAviso: T('Esto borra tu cuenta y todo lo que has registrado. No se puede deshacer ni recuperar.'),
         borrarP1: T('Tus entrenos, dietas, medidas y fotos de progreso'),
         borrarP2: T('Tu acceso a la app: no podrás volver a entrar con este correo'),
@@ -4652,6 +4677,8 @@ class Component extends DCLogic {
       versionTxt: 'v' + (window.__APP_VERSION || '?') + (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() ? '' : ' · web'),
       logout: this.logout,
       abrirBorrar: this.abrirBorrar, cerrarBorrar: this.cerrarBorrar, confirmarBorrar: this.confirmarBorrar,
+      abrirPriv: this.abrirPriv, cerrarPriv: this.cerrarPriv, privOpen: !!st.privOpen,
+      privSrc: 'privacidad.html?lang=' + (isEN ? 'en' : 'es') + '&tema=' + (theme === 'light' ? 'claro' : 'oscuro'),
       setBorrarTxt: this.setBorrarTxt, borrarOpen: !!st.borrarOpen, borrarTxt: st.borrarTxt || '', borrarErr: st.borrarErr || '',
       borrarMail: (window.CastilloData && window.CastilloData.miEmail && window.CastilloData.miEmail()) || 'tu@correo.com',
       borrarBtnTxt: st.borrando ? T('Borrando…') : T('Borrar mi cuenta para siempre'),
