@@ -657,6 +657,12 @@
     'Muslo izquierdo': 'Left thigh', 'Muslo derecho': 'Right thigh', 'Gemelo': 'Calf', 'Abdomen': 'Abdomen',
     'Peso': 'Weight', 'Rollitos': 'Love handles', 'Gemelo derecho': 'Right calf', 'Gemelo izquierdo': 'Left calf',
     'Antebrazo derecho': 'Right forearm', 'Antebrazo izquierdo': 'Left forearm',
+    // Hoja de medidas en inglés (Alex, 10 oct 2026): los grupos, «ant.» y las medidas habituales que aún no estaban.
+    'Composición': 'Composition', 'Tronco': 'Torso', 'Brazos': 'Arms', 'Piernas': 'Legs', 'Personalizadas': 'Custom',
+    'ant.': 'prev.', 'Glúteo': 'Glutes', 'Glúteos': 'Glutes', 'Espalda alta': 'Upper back', 'Muñeca': 'Wrist', 'Tobillo': 'Ankle',
+    'Gemelos': 'Calves', 'Bíceps': 'Biceps', 'Antebrazo': 'Forearm', 'Muslo': 'Thigh', 'Brazo': 'Arm', 'Pierna': 'Leg',
+    'Torso': 'Torso', 'Tórax': 'Chest', 'Abdomen bajo': 'Lower abdomen', 'Abdomen alto': 'Upper abdomen',
+    'Masa muscular': 'Muscle mass', 'Altura': 'Height', 'IMC': 'BMI',
     'Progreso en el ejercicio': 'Exercise progress',
     'Aún no hay entrenos registrados.': 'No workouts logged yet.',
     'Cuando su entrenador registre las series y cargas, verá aquí su progreso en cada ejercicio.': "When your coach logs your sets and loads, you'll see your progress for each exercise here.",
