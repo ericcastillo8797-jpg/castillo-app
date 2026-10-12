@@ -86,7 +86,10 @@
   // enseña el Face ID o el formulario.
   // 'castillo_entreno' = el entreno a medias. Estaba SOLO en localStorage, que iOS borra al
   // matar la app: el cliente rellenaba 20 series, salia, volvia y lo tenia que repetir todo.
-  var CLAVES_DURAS = ['castillo_session', 'castillo_creds', 'castillo_lang', 'castillo_entreno'];
+  // 'castillo_pendientes' = lo que quedo sin enviar (un entreno guardado sin cobertura, p. ej.). Se escribia en el
+  // almacen nativo pero al arrancar NO se recuperaba: si iOS habia vaciado el del navegador, se perdia sin avisar
+  // (12 oct 2026).
+  var CLAVES_DURAS = ['castillo_session', 'castillo_creds', 'castillo_lang', 'castillo_entreno', 'castillo_pendientes'];
   // Ademas de la sesion hay que recuperar QUE APPS tiene conectadas (Apple Salud, WHOOP). Vivian
   // solo en el navegador y se borraban en cada actualizacion: al cliente le salia "Conectar"
   // aunque ya lo tuviera conectado, y encima dejabamos de leerle los pasos hasta que lo tocara.
@@ -95,7 +98,7 @@
     return P.keys().then(function (r) {
       var todas = CLAVES_DURAS.slice();
       ((r && r.keys) || []).forEach(function (k) {
-        if (todas.indexOf(k) < 0 && (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0)) todas.push(k);
+        if (todas.indexOf(k) < 0 && (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0 || k.indexOf('salud_backfill') === 0)) todas.push(k);
       });
       return todas;
     }).catch(function () { return CLAVES_DURAS.slice(); });
@@ -263,6 +266,8 @@
         // un entreno sin cobertura, entra ahora.
         try { vaciaCola().then(function (n) { if (n && typeof _avisaCola === 'function') _avisaCola(n); }); } catch (e) {}
         try { syncZonaHoraria(); } catch (e) {}  // el movil dice en que zona horaria esta el cliente
+        // Los pasos que el servidor YA tiene de cada dia (recien cargados): esos dias no hace falta volver a escribirlos.
+        try { _pasosBD = {}; (registros || []).forEach(function (r) { var k = String((r && r.fecha) || '').slice(0, 10); if (k) _pasosBD[k] = { pasos: r.pasos, cardio: !!r.cardio }; }); } catch (e) {}
         try { syncSaludPasos(); } catch (e) {}   // lee pasos de Apple Salud → marca cardio (solo app nativa)
         return data;
       });
@@ -328,12 +333,25 @@
   // que se repinte. El cache evita reescribir lo mismo y evita recargar en bucle: en la segunda
   // pasada los numeros ya coinciden y no se avisa.
   var _pasosCache = {};
+  var _pasosBD = {};   // { 'aaaa-mm-dd': { pasos, cardio } } = lo que tiene el servidor, de la ultima carga
   var _avisaSalud = null;
   var _avisaCola = null;
+  // Una sola lectura a la vez. Al volver a la app se lanzaban dos (al recargar los datos y al reintentar) y se
+  // escribia todo doble. Si llega otra peticion mientras hay una en marcha, se repite UNA vez al terminar.
+  var _sincSalud = null, _sincOtra = false;
   function syncSaludPasos() {
+    if (_sincSalud) { _sincOtra = true; return _sincSalud; }
+    var fin = function () { _sincSalud = null; if (_sincOtra) { _sincOtra = false; return syncSaludPasos(); } };
+    _sincSalud = Promise.resolve().then(_leeYGuardaPasos).then(fin, fin);
+    return _sincSalud;
+  }
+  function _leeYGuardaPasos() {
     var C = window.Capacitor, H = C && C.Plugins && C.Plugins.HealthPlugin;
     if (!H || !_ctx.email || !_ctx.token) return Promise.resolve();
     if (!saludConectado()) return Promise.resolve();   // solo lee pasos si el cliente YA conectó Apple Salud (no auto-conecta ni pregunta al entrar)
+    // La marca de «ya se han leido los 180 dias». Estaba declarada DENTRO de un paso y se usaba en el siguiente, donde
+    // no existia: nunca llegaba a guardarse y la app leia (y reescribia) 180 dias en CADA arranque.
+    var claveBF = 'salud_backfill_' + (_ctx.email || '');
     return (H.isHealthAvailable ? H.isHealthAvailable() : Promise.resolve({ available: true })).then(function (a) {
       if (a && a.available === false) return;
       return H.requestHealthPermissions({ permissions: ['READ_STEPS'] }).catch(function () {}).then(function () {
@@ -341,7 +359,6 @@
         // semana. La primera vez se recuperan 180 días hacia atrás (rellena todo lo que el cliente
         // caminó antes de instalar la app); después, 30 días en cada arranque.
         var now = new Date();
-        var claveBF = 'salud_backfill_' + (_ctx.email || '');
         var yaHecho = false; try { yaHecho = localStorage.getItem(claveBF) === '1'; } catch (e) {}
         var dias = yaHecho ? 30 : 180;
         var desde = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (dias - 1)).toISOString();
@@ -370,18 +387,29 @@
         // uno a uno y fusionando: así no se pisa el entreno que el cliente ya guardó ese día
         // Uno a uno y fusionando: así no se pisa el entreno que el cliente ya guardó ese día,
         // y si un día falla no se lleva por delante a los demás (antes iba todo en un solo envío).
-        var nuevos = conPasos.filter(function (k) { return _pasosCache[k] !== porDia[k]; });
-        if (!nuevos.length) { try { localStorage.setItem(claveBF, '1'); } catch (e) {} return; }
-        return nuevos.reduce(function (p2, k) {
+        // Alex, 12 oct 2026 (movil de Shane): «abres la aplicacion y los pasos no estan actualizados; tarda». En cada
+        // arranque se reescribian UNO A UNO los 30 dias (o los 180), aunque no hubieran cambiado, y el de HOY iba el
+        // ultimo: el numero bueno tardaba de 10 segundos a 2 minutos en salir. Ahora:
+        //   · lo que el servidor ya tiene igual NO se vuelve a escribir (en un arranque normal solo cambia hoy);
+        //   · se escribe HOY primero y luego de lo mas reciente a lo mas antiguo;
+        //   · la pantalla se repinta en cuanto entra el de hoy, sin esperar al resto.
+        var yaEsta = function (k) { var r = _pasosBD[k]; return !!r && r.pasos != null && Number(r.pasos) === porDia[k] && (porDia[k] < objetivo || !!r.cardio); };
+        conPasos.forEach(function (k) { if (_pasosCache[k] == null && yaEsta(k)) _pasosCache[k] = porDia[k]; });
+        var nuevos = conPasos.filter(function (k) { return _pasosCache[k] !== porDia[k]; }).sort().reverse();
+        if (!nuevos.length) { try { guardaDuro(claveBF, '1'); } catch (e) {} return; }
+        var avisa = function () { try { if (typeof _avisaSalud === 'function') _avisaSalud(); } catch (e) {} };
+        return nuevos.reduce(function (p2, k, i) {
           return p2.then(function () {
             var campos = { pasos: porDia[k] };
             if (porDia[k] >= objetivo) campos.cardio = true;
-            return guardaDia(k, campos).then(function () { _pasosCache[k] = porDia[k]; }).catch(function () {});
+            return guardaDia(k, campos).then(function () {
+              _pasosCache[k] = porDia[k]; _pasosBD[k] = { pasos: porDia[k], cardio: !!campos.cardio || !!(_pasosBD[k] && _pasosBD[k].cardio) };
+              if (i === 0) avisa();   // el mas reciente (hoy) ya esta guardado: que se vea ya
+            }).catch(function () {});
           });
         }, Promise.resolve()).then(function () {
-          try { localStorage.setItem(claveBF, '1'); } catch (e) {}
-          // algo ha cambiado de verdad: que la app se repinte con los pasos de ahora mismo
-          try { if (typeof _avisaSalud === 'function') _avisaSalud(); } catch (e) {}
+          try { guardaDuro(claveBF, '1'); } catch (e) {}
+          if (nuevos.length > 1) avisa();   // y otra vez al acabar, por si tambien han cambiado dias anteriores
         });
       });
     }).catch(function () {});
@@ -857,7 +885,7 @@
           // se le borra la entrada de ESE dia, cree que ya lo tiene guardado y NO vuelve a
           // escribirlo, asi que el dia se quedaba vacio y no habia forma de recuperar el numero
           // de Apple Salud hasta reiniciar la app. Es justo lo que le pasaba a Eric.
-          try { delete _pasosCache[f]; } catch (e) {}
+          try { delete _pasosCache[f]; delete _pasosBD[f]; } catch (e) {}
           try { syncSaludPasos(); } catch (e) {}
         }
         return x;
