@@ -11,6 +11,7 @@
     var h = opts.headers || {};
     h['apikey'] = ANON;
     h['Content-Type'] = 'application/json';
+    if (token) token = _vigente(token);   // quien aun lleva una llave ya renovada usa la nueva sin tener que fallar antes
     if (token) h['Authorization'] = 'Bearer ' + token;
     opts.headers = h;
     return fetch(SUPA + path, opts).then(function (r) {
@@ -18,11 +19,52 @@
         var body; try { body = t ? JSON.parse(t) : null; } catch (e) { body = t; }
         if (!r.ok) {
           var msg = (body && (body.error_description || body.msg || body.message)) || ('Error ' + r.status);
-          var err = new Error(msg); err.status = r.status; throw err;
+          var err = new Error(msg); err.status = r.status;
+          // Llave de la sesion caducada: se pide una nueva y se repite la peticion UNA vez (ver renuevaSesion).
+          if (r.status === 401 && token && !opts._renovada && path.indexOf('/auth/v1/token') !== 0) {
+            return renuevaSesion().then(function (nueva) {
+              var o2 = {}; for (var k in opts) o2[k] = opts[k];
+              o2.headers = Object.assign({}, opts.headers); o2._renovada = true;
+              return api(path, o2, nueva);
+            }, function () { throw err; });
+          }
+          throw err;
         }
         return body;
       });
     });
+  }
+
+  // ── LA SESION SE RENUEVA SOLA ────────────────────────────────────────────────────────────
+  // La llave de la sesion dura UNA HORA y solo se renovaba al arrancar la app. Con la app abierta
+  // mas de una hora (una sesion de entreno entera, con la pantalla encendida) el servidor rechazaba
+  // todo lo que se guardaba: se quedaba en la cola del movil hasta cerrar la app del todo y volver
+  // a abrirla, y mientras tanto la app tampoco podia leer nada nuevo. Le paso a Ben el 12 oct 2026:
+  // Adrian le apunto el entreno entero, pulso Finalizar y no aparecia guardado en ningun sitio.
+  // Ahora, si el servidor rechaza la llave (401), se pide una nueva y se repite la peticion.
+  var _renovando = null;
+  var _relevo = {};   // llave caducada -> la que la sustituye (para quien todavia lleva la vieja en la mano)
+  function _vigente(t) { var n = 0; while (_relevo[t] && _relevo[t] !== t && n++ < 50) t = _relevo[t]; return t; }
+  function _pideLlave(tipo, cuerpo) {
+    return fetch(SUPA + '/auth/v1/token?grant_type=' + tipo, { method: 'POST', headers: { 'apikey': ANON, 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.access_token) throw new Error('no renovada'); return j; }); });
+  }
+  function renuevaSesion() {
+    if (_renovando) return _renovando;   // varias peticiones rechazadas a la vez: una sola renovacion para todas
+    var s = readSession(), creds = readCreds(), vieja = _ctx.token, viejaGuardada = s && s.access_token;
+    var p = (s && s.refresh_token) ? _pideLlave('refresh_token', { refresh_token: s.refresh_token }) : Promise.reject(new Error('sin sesion'));
+    _renovando = p.catch(function (e) {
+      // el relevo tambien ha caducado: se entra con el acceso guardado en ESTE movil (el del Face ID)
+      if (creds) return _pideLlave('password', { email: creds.e, password: creds.p });
+      throw e;
+    }).then(function (j) {
+      saveSession(j.user ? j : Object.assign({ email: _ctx.email }, j));
+      if (vieja && vieja !== j.access_token) _relevo[vieja] = j.access_token;
+      if (viejaGuardada && viejaGuardada !== j.access_token) _relevo[viejaGuardada] = j.access_token;
+      _ctx.token = j.access_token; _renovando = null;
+      return j.access_token;
+    }, function (e) { _renovando = null; throw e; });
+    return _renovando;
   }
 
   // ── DONDE SE GUARDA LA SESION ────────────────────────────────────────────────────────────
@@ -205,7 +247,8 @@
           merged.foto = pr.foto || null; merged.nombre_publico = pr.nombre_publico || '';
           data.perfil = merged;
         })();
-        _ctx.token = token; _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr; _ctx.tz = _tz;
+        _ctx.token = _vigente(token);   // si la llave se renovo mientras se cargaba, vale la nueva
+        _ctx.email = String(email).toLowerCase(); _ctx.hoy = hoyStr; _ctx.tz = _tz;
         // Sincroniza el estado "WHOOP conectado" con la tabla real (por si conectó/desconectó en otro sitio)
         api('/rest/v1/whoop_tokens?select=cliente_email&limit=1&cliente_email=ilike.' + encodeURIComponent(_ctx.email), {}, token)
           .then(function (rows) { try { var k = 'app_con_' + _ctx.email + '_WHOOP'; if (rows && rows.length) localStorage.setItem(k, '1'); else localStorage.removeItem(k); } catch (e) {} })
@@ -405,15 +448,22 @@
     return Promise.reject(new Error('tipo desconocido'));
   }
   // Devuelve cuantos se han guardado por fin, para poder avisar al cliente.
+  var _vaciando = null;   // al volver a la app se pedia dos veces a la vez (al recargar y al reintentar) y se mandaba todo doble
   function vaciaCola() {
+    if (_vaciando) return _vaciando;
     var a = leeCola();
     if (!a.length || !_ctx.token || !_ctx.email) return Promise.resolve(0);
     var quedan = [], hechos = 0;
-    return a.reduce(function (p, it) {
+    _vaciando = a.reduce(function (p, it) {
       return p.then(function () {
         return aplicaPendiente(it).then(function () { hechos++; }, function () { quedan.push(it); });
       });
-    }, Promise.resolve()).then(function () { escribeCola(quedan); return hechos; });
+    }, Promise.resolve()).then(function () {
+      // lo que se haya encolado MIENTRAS se reintentaba no se pierde: se conserva junto a lo que ha vuelto a fallar
+      var ahora = leeCola().filter(function (x) { return !a.some(function (y) { return y.t === x.t && y.k === x.k && y.f === x.f; }); });
+      escribeCola(quedan.concat(ahora)); _vaciando = null; return hechos;
+    }, function (e) { _vaciando = null; throw e; });
+    return _vaciando;
   }
 
   // 'sinCola' evita que un reintento que vuelve a fallar se encole otra vez y se duplique.
