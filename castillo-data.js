@@ -454,10 +454,29 @@
   var COLA = 'castillo_pendientes';
   function leeCola() { try { return JSON.parse(localStorage.getItem(COLA) || '[]') || []; } catch (e) { return []; } }
   function escribeCola(a) { guardaDuro(COLA, JSON.stringify(a || [])); }
+  // ¿Dos pendientes son "lo mismo" (y entonces vale el ultimo)? Antes bastaba con que fueran del mismo tipo y del
+  // mismo dia, y eso borraba cosas distintas: dos comidas del mismo dia, o las medidas y las fotos.
+  function _mismoPendiente(x, y) {
+    if (x.k !== y.k || x.f !== y.f) return false;
+    if (x.k === 'comida' || x.k === 'descomida') return x.mealId === y.mealId;
+    if (x.k === 'libre') return x.comida === y.comida;
+    if (x.k === 'sustitucion') return x.comida === y.comida && x.original === y.original;
+    if (x.k === 'checkin') return x.mode === y.mode;
+    return true;
+  }
   function encola(item) {
     var a = leeCola();
-    // si ya habia algo pendiente del MISMO dia y del mismo tipo, se sustituye: vale lo ultimo
-    a = a.filter(function (x) { return !(x.k === item.k && x.f === item.f); });
+    // Lo del DIA (entreno, pasos, cardio) va todo en la misma fila y cada cosa manda solo sus columnas. Si ya habia
+    // algo pendiente de ese dia se JUNTA con lo nuevo, columna a columna. Antes lo nuevo sustituia a lo anterior: un
+    // entreno entero que esperaba cobertura desaparecia del movil en cuanto quedaban pendientes los pasos o el
+    // cardio de ese mismo dia, y al volver la conexion solo se enviaban los pasos. Le paso a Ben el 12 oct 2026.
+    if (item.k === 'dia') {
+      var previo = a.filter(function (x) { return x.k === 'dia' && x.f === item.f; })[0];
+      if (previo) item = Object.assign({}, item, { campos: Object.assign({}, previo.campos || {}, item.campos || {}) });
+    }
+    // marcar y desmarcar la misma comida: vale lo ultimo que hizo
+    if (item.k === 'comida' || item.k === 'descomida') a = a.filter(function (x) { return !((x.k === 'comida' || x.k === 'descomida') && x.f === item.f && x.mealId === item.mealId); });
+    a = a.filter(function (x) { return !_mismoPendiente(x, item); });
     a.push(Object.assign({ t: Date.now() }, item));
     if (a.length > 60) a = a.slice(-60);
     escribeCola(a);
@@ -795,9 +814,16 @@
     },
     // guarda el entreno de HOY que apunta el cliente en su app (mismo sitio que el CRM: entreno_registros)
     registrarEntreno: function (titulo, ejercicios, completo, fecha) {
-      if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+      var campos = { titulo: titulo || 'Entrenamiento', ejercicios: ejercicios || [], estado: completo ? 'completado' : 'en_progreso' };
+      if (!_ctx.token || !_ctx.email) {
+        // La sesion aun no esta lista (la app esta arrancando o reconectando): el entreno NO se tira, queda pendiente
+        // en el movil y se envia solo. Antes se rechazaba sin guardarlo en ningun sitio.
+        var f0 = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+        if (f0) encola({ k: 'dia', f: f0, campos: Object.assign({}, campos, { updated_at: new Date().toISOString() }) });
+        return Promise.reject(new Error('sin sesión'));
+      }
       var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
-      return guardaDia(f, { titulo: titulo || 'Entrenamiento', ejercicios: ejercicios || [], estado: completo ? 'completado' : 'en_progreso' });
+      return guardaDia(f, campos);
     },
     // guarda el check-in de HOY (peso, medidas y fotos) que apunta el cliente
     // mode: 'medidas' (solo valores) | 'fotos' (solo fotos) | 'both'. SIEMPRE fusiona con lo ya guardado
