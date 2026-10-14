@@ -148,7 +148,7 @@
       <div class="card">
         <div class="grid2">
           <div><label id="l_peso">Peso (kg/lbs)</label><input id="peso" type="number" inputmode="decimal" data-ph-es="Ej: 78" data-ph-en="e.g. 78"/></div>
-          <div><label id="l_alt">Altura (cm)</label><input id="altura" type="number" inputmode="numeric" data-ph-es="Ej: 178" data-ph-en="e.g. 178"/></div>
+          <div><label id="l_alt">Altura (cm/ft)</label><input id="altura" type="text" inputmode="decimal" maxlength="5" autocomplete="off" data-ph-es="Ej: 178 o 5.9" data-ph-en="e.g. 178 or 5.9"/></div>
         </div>
       </div>
     </div></div>
@@ -232,7 +232,7 @@
       t0:'Tus datos', s0:'Empecemos por lo básico. Al terminar entrarás directo a tu app.',
       l_nombre:'Nombre', l_apellido:'Apellidos', l_email:'Email', l_tel:'Teléfono', l_bd:'Fecha de nacimiento', l_gen:'Género', gen_h:'Hombre', gen_m:'Mujer', gen_x:'Otro', l_foto:'Añade tu foto (opcional)',
       t1:'Tu objetivo', s1:'¿Qué quieres conseguir? Elige la opción que mejor te encaje.', obj1:'Perder peso', obj2:'Quemar grasa y definir músculo', obj3:'Ponerme en forma', obj4:'Ganar músculo (volumen y fuerza)',
-      t2:'Tus medidas', s2:'Nos ayuda a ajustar tu plan. Aproximado está bien.', l_peso:'Peso (kg/lbs)', l_alt:'Altura (cm)',
+      t2:'Tus medidas', s2:'Nos ayuda a ajustar tu plan. Aproximado está bien.', l_peso:'Peso (kg/lbs)', l_alt:'Altura (cm/ft)',
       t3:'Estado de salud', s3:'Cuestionario rápido de aptitud física (PAR-Q). Responde con sinceridad.', si:'Sí', no:'No',
       t4:'Crea tu cuenta', s4:'Con tu email y esta contraseña entrarás en tu app cuando Alex acepte tu solicitud.', l_pass:'Contraseña', l_code:'Código de tu entrenador (opcional)',
       t5:'Un último paso', s5:'Revisa y acepta para terminar.',
@@ -245,7 +245,7 @@
       t0:'Your details', s0:'Let’s start with the basics. When you finish you go straight into your app.',
       l_nombre:'First name', l_apellido:'Last name', l_email:'Email', l_tel:'Phone', l_bd:'Date of birth', l_gen:'Gender', gen_h:'Male', gen_m:'Female', gen_x:'Other', l_foto:'Add your photo (optional)',
       t1:'Your goal', s1:'What do you want to achieve? Pick the option that fits you best.', obj1:'Lose weight', obj2:'Burn fat and get defined', obj3:'Get in shape', obj4:'Build muscle (size and strength)',
-      t2:'Your measurements', s2:'It helps us tailor your plan. Approximate is fine.', l_peso:'Weight (kg/lbs)', l_alt:'Height (cm)',
+      t2:'Your measurements', s2:'It helps us tailor your plan. Approximate is fine.', l_peso:'Weight (kg/lbs)', l_alt:'Height (cm/ft)',
       t3:'Health', s3:'Quick physical readiness questionnaire (PAR-Q). Please answer honestly.', si:'Yes', no:'No',
       t4:'Create your account', s4:'You will log in with your email and this password once Alex accepts your request.', l_pass:'Password', l_code:'Coach code (optional)',
       t5:'One last step', s5:'Review and accept to finish.',
@@ -257,6 +257,9 @@
   };
 
   function $(id){ return document.getElementById(id); }
+  // Altura: quien la pone en pies escribe 5.4 (Alex, 14 oct 2026). Antes el teclado no tenia punto.
+  // El teclado del iPhone saca punto o coma segun la region del movil; el servidor solo entiende el punto.
+  function numTxt(v){ v=String(v||'').replace(/,/g,'.').replace(/[^0-9.]/g,''); var i=v.indexOf('.'); if(i>=0) v=v.slice(0,i+1)+v.slice(i+1).replace(/\./g,''); return v; }
   function err(n,m){ var e=$('err'+n); if(!e) return; if(m){ e.textContent=m; e.style.display='block'; } else { e.style.display='none'; } }
 
   function renderParq(){
@@ -402,7 +405,7 @@
     } else if(n===1){
       if(!choice.objetivo){ err(1,t.e_obj); return false; }
     } else if(n===2){
-      if(!$('peso').value.trim() || !$('altura').value.trim()){ err(2,t.e_med); return false; }
+      if(!$('peso').value.trim() || !/\d/.test(numTxt($('altura').value))){ err(2,t.e_med); return false; }
     } else if(n===3){
       for(var i=0;i<PARQ.length;i++){ if(yn[PARQ[i].k]===undefined){ err(3,t.e_yn); return false; } }
     } else if(n===4){
@@ -462,7 +465,7 @@
     var parq={}; PARQ.forEach(function(p){ parq[p.k]={ q:p.es, si:!!yn[p.k] }; });
     var payload={ token:codigo, code:codigo, email:email, password:pass, nombre:$('nombre').value.trim(), apellido:$('apellido').value.trim(),
       telefono:$('telefono').value.trim(), prefix:$('prefijo').value.trim(), genero:choice.genero||null, birthdate:getBirthdate(),
-      objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:$('altura').value||null, parq:parq, consent:true, lang:lang,
+      objetivo:choice.objetivo||null, peso:$('peso').value||null, altura:numTxt($('altura').value)||null, parq:parq, consent:true, lang:lang,
       // Si la foto sale muy grande (moviles que no dejan reducirla), se va sin ella: el alta es lo
       // importante y la foto se puede poner luego desde Ajustes.
       foto:(fotoData && fotoData.length < 300000) ? fotoData : null,
