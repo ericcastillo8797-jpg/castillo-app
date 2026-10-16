@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 267;
+  var VERSION_ACTUAL = 268;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1254,17 +1254,36 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <div style="display:flex;align-items:center;gap:10px;margin:6px 0 12px">
           <div style="font-size:17px;font-weight:700">{{ dietDaySheet.meal.n }}</div>
           <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.08)"></div>
+          <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.34)">{{ dietDaySheet.meal.lockNote }}</div>
         </div>
-        <!-- SOLO LECTURA: sin botón Registrar ni ⇄ cambiar alimento (es solo para ver la dieta asignada) -->
+        <!-- Alex (16 oct 2026): aquí también se elige la opción y se cambian alimentos, igual que en la pauta del día (registra en HOY) -->
         <sc-for list="{{ dietDaySheet.meal.opts }}" as="o" hint-placeholder-count="2">
-        <div style="border-radius:18px;padding:14px 15px;margin-bottom:9px;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.07)">
+        <div style="border-radius:18px;padding:14px 15px;margin-bottom:9px;transition:all .28s cubic-bezier(.32,.72,0,1);background:{{ o.bg }};border:1px solid {{ o.bd }}">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
-            <div style="font-family:'Instrument Serif',serif;font-size:12px;letter-spacing:.2em;color:rgba(var(--fgc,255,255,255),.45)">{{ o.rom }}</div>
+            <div style="font-family:'Instrument Serif',serif;font-size:12px;letter-spacing:.2em;color:{{ o.numFg }}">{{ o.rom }}</div>
             <div style="flex:1;height:.5px;background:rgba(var(--fgc,255,255,255),.1)"></div>
+            <div onClick="{{ o.pick }}" style="flex:none;padding:6px 13px;border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;background:{{ o.selBg }};color:{{ o.selFg }};border:1px solid {{ o.selBd }};transition:all .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.94)">{{ o.pickLabel }}</div>
           </div>
+          <sc-if value="{{ o.isSpecial }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:12.5px;line-height:1.5;color:rgba(var(--fgc,255,255,255),.5)">{{ o.sub }}</div>
+          <sc-if value="{{ o.showTotal }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:.5px solid rgba(var(--fgc,255,255,255),.1)">
+            <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
+            <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
+          </div>
+          </sc-if>
+          </sc-if>
+          <sc-if value="{{ o.normal }}" hint-placeholder-val="{{ true }}">
           <sc-for list="{{ o.foods }}" as="f" hint-placeholder-count="3">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0">
-            <div style="flex:1;min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }}</div>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:7px">
+              <sc-if value="{{ f.canSwap }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ f.openSwap }}" style="width:23px;height:23px;flex:none;border-radius:7px;background:rgba(var(--fgc,255,255,255),.09);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.88)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--fgc,255,255,255),.72)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 4 7l3 3M4 7h13M17 20l3-3-3-3M20 17H7"></path></svg>
+              </div>
+              </sc-if>
+              <div style="min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }}</div>
+            </div>
             <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:56px;text-align:right">{{ f.q }}</div>
             <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:62px;text-align:right">{{ f.kcalLabel }}</div>
           </div>
@@ -1273,6 +1292,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
             <div style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ L.total }}</div>
             <div style="font-size:14px;font-weight:600">{{ o.kcalTotal }}</div>
           </div>
+          </sc-if>
         </div>
         </sc-for>
       </div>
@@ -3317,6 +3337,7 @@ class Component extends DCLogic {
     return null;
   };
   pickMeal = (id, i) => () => {
+    const T = s => (window.I18N ? window.I18N.t(s, this.state.lang) : s);   // sin esto el aviso «Comida registrada» fallaba y no salía
     const dd = this._selDay();
     const fecha = dd.fecha;
     // Alex 2026-08-17: el cliente puede registrar cualquier día (sin bloqueo de futuro)
@@ -3335,7 +3356,7 @@ class Component extends DCLogic {
     }
     this.setState({});   // refresco inmediato (registrarComida ya actualizó __DATA.mealsByDate)
     const sk = (this.state.sheet || {}).k;
-    if (sk === 'dietday') {
+    if (sk === 'dietday' || sk === 'dietall') {
       // menú de TODAS las comidas: no cerrar; solo se cierra solo cuando ya están todas marcadas
       const dm = (window.__DATA && window.__DATA.mealsByDate && window.__DATA.mealsByDate[fecha]) || {};
       const now = Object.assign({}, dm, { [id]: i });
@@ -4715,7 +4736,7 @@ class Component extends DCLogic {
       toast: st.toast,
       sheet: st.sheet, sheetDim: dim, sheetY: st.sheetIn ? 'none' : 'translateY(100%)', closeSheet: this.closeSheet,
       isMealSheet: sh.k === 'meal', mealSheet, isVideoSheet: sh.k === 'vid', videoSheet,
-      isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => { this.setState({ dietMealIdx: 0 }); this.openSheet({ k: 'dietall' }); },
+      isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => { const _hoy = (DAYS.find(x => x.today) || {}).fecha; const _loc = _hoy ? this._locByFecha(_hoy) : null; this.setState(Object.assign({ dietMealIdx: 0 }, _loc ? { day: _loc.day, weekIdx: _loc.weekIdx } : {})); this.openSheet({ k: 'dietall' }); },
       isDietDaySheet: sh.k === 'dietday', dietDaySheet,
       isFoodSwapSheet: !!st.swap, closeSwap: this.closeSwap,
       swapY: st.swapIn ? 'none' : 'translateY(100%)', swapDim: st.swapIn ? 1 : 0,
