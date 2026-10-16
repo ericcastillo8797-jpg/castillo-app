@@ -119,9 +119,9 @@
       var guardados = (reg && reg.ejercicios) || [];
       var hechas = 0, totales = 0, ejHechos = 0;
       lista.forEach(function (linea, i) {
-        var nombre = String(linea).split('|')[0];
+        var _pz = String(linea).split('|'), nombre = _pz[0];
         var rec = exByName[nombre];
-        var plan = rec ? (parseInt(rec.s, 10) || 0) : 0;
+        var plan = parseInt(_pz[2], 10) || (rec ? (parseInt(rec.s, 10) || 0) : 0);   // las series de ESTE entreno
         totales += plan;
         var ser = (guardados[i] && guardados[i].series) || [];
         var h = 0;
@@ -226,10 +226,20 @@
       if (y && !seenVid[y]) { seenVid[y] = 1; VID.push({ t: name, g: grupo || 'Entreno', y: y }); }
       return rec;
     }
+    // Martín (16 oct 2026): cada entreno lleva SUS series, reps y descanso de cada ejercicio. El catálogo EX tiene
+    // un registro por nombre (con los datos del primer entreno donde sale, y así siguen cuadrando lo apuntado y el
+    // historial); lo propio de ESTE entreno va en su línea: «nombre|series × reps|series|descanso|reps|notas».
+    function lineaWK(rec, ex) {
+      var sets = parseInt(ex.sets, 10) || (ex.series && ex.series.length) || 3;
+      var target = String(ex.target || (ex.reps ? ex.reps + ' reps' : ''));
+      var reps = (target.match(/\d+([-–]\d+)?/) || ['—'])[0];
+      var rest = ex.rest ? (String(ex.rest).replace(/[^0-9]/g, '') + ' s') : '—';
+      return rec.n + '|' + sets + ' × ' + (target.replace(/\s*reps?/i, '') || reps) + '|' + sets + '|' + rest + '|' + reps + '|' + encodeURIComponent(ex.notes || '');
+    }
     Object.keys(workoutByTitle).forEach(function (title) {
       WK[slug(title)] = workoutByTitle[title].map(function (ex) {
         var rec = addEx(ex, title);
-        return rec.n + '|' + rec.p;
+        return lineaWK(rec, ex);
       });
     });
     WK['descanso'] = [];
@@ -377,7 +387,30 @@
       });
     });
     var plan = null;
-    if (nutriTitle) plan = plans.filter(function (p) { return p.name === nutriTitle; })[0];
+    // Martín (16 oct 2026): la dieta que ve el cliente es la que tiene AGENDADA en el calendario para hoy,
+    // o si hoy no hay ninguna, la última agendada antes de hoy. Antes se elegía por la fecha de edición y a
+    // varios clientes les salía una dieta vieja (Arnau tenía la M.6 agendada hasta el 31 oct y veía la M.5).
+    // Si no hay ninguna dieta agendada (o no está en sus planes), se sigue como antes.
+    (function () {
+      function _k(t) { var d = new Date(t); return d.getFullYear() + '-' + d2(d.getMonth() + 1) + '-' + d2(d.getDate()); }
+      var _hoyK = now.getFullYear() + '-' + d2(now.getMonth() + 1) + '-' + d2(now.getDate());
+      var _nev = [];
+      [[row.calendario_eventos, 1], [row.calendario_asignado, 0]].forEach(function (par) {
+        (Array.isArray(par[0]) ? par[0] : []).forEach(function (e) {
+          if (!e || e.removed || !e.title || (e.type !== 'nutritionPlan' && e.type !== 'nutrition')) return;
+          var t = new Date(ms(e.date)).getTime(); if (isNaN(t)) return;
+          _nev.push({ t: e.title, k: _k(t), nuevo: par[1], c: new Date(ms(e.createdAt) || 0).getTime() || 0 });
+        });
+      });
+      // el mismo día: manda lo agendado desde el CRM y, dentro de eso, lo último que se agendó
+      _nev.sort(function (a, b) { return a.k < b.k ? 1 : a.k > b.k ? -1 : (b.nuevo - a.nuevo) || (b.c - a.c); });
+      var _cand = _nev.filter(function (x) { return x.k <= _hoyK; });
+      for (var i = 0; i < _cand.length && !plan; i++) {
+        var _mismo = plans.filter(function (p) { return p && p.name === _cand[i].t; });
+        if (_mismo.length) plan = _mismo.slice().sort(function (a, b) { return new Date(ms(b.updatedAt) || 0).getTime() - new Date(ms(a.updatedAt) || 0).getTime(); })[0];
+      }
+    })();
+    if (!plan && nutriTitle) plan = plans.filter(function (p) { return p.name === nutriTitle; })[0];
     if (!plan) plan = plans.slice().sort(function (a, b) { return ms(b.updatedAt || 0) - ms(a.updatedAt || 0); })[0];
     var DIET = [], mealsSel = {};
     if (plan && Array.isArray(plan.meals)) {

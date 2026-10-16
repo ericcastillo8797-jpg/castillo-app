@@ -11,9 +11,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="./castillo-i18n.js?v=245"></script>
-<script src="./castillo-transform.js?v=262"></script>
+<script src="./castillo-transform.js?v=269"></script>
 <script src="./castillo-equiv.js?v=245"></script>
-<script src="./castillo-data.js?v=245"></script>
+<script src="./castillo-data.js?v=269"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 268;
+  var VERSION_ACTUAL = 269;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2063,6 +2063,17 @@ let DAYS = [
 
 let WEEKS = [];
 let EXPROG = [];
+// Martín (16 oct 2026): el ejercicio con las series, reps y descanso de ESTE entreno (van en su línea de WK:
+// «nombre|series × reps|series|descanso|reps|notas»). Antes salían las del primer entreno donde aparecía.
+// Mismo id que en el catálogo, así que lo apuntado, la sesión anterior y las variantes siguen igual.
+function exDeWK(x) {
+  const p = String(x || '').split('|'); const ex = EX.find(e => e.n === p[0]);
+  if (!ex || p.length < 5) return ex;
+  const s = parseInt(p[2], 10) || ex.s, reps = p[4] || '—', l = [];
+  for (let i = 0; i < s; i++) l.push([reps, '']);
+  let notas = ex.notes; if (p.length > 5) { try { notas = decodeURIComponent(p[5]); } catch (e) {} }
+  return Object.assign({}, ex, { p: p[1] || ex.p, s: s, rest: p[3] || ex.rest, l: l, notes: notas });
+}
 
 let APPTS = [
   { w:'MIÉ', d:'29', t:'Sesión de entrenamiento', sub:'Alex Castillo · Su domicilio', h:'' },
@@ -3586,7 +3597,7 @@ class Component extends DCLogic {
       // Usa el entreno que el cliente ABRIÓ (wWk/wTitle), no el recalculado del día, para no perder los ejercicios rellenados.
       const wk = this.state.wWk || dS.wk;
       title = this.state.wTitle || dS.t || 'Entrenamiento';
-      const list = (WK[wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
+      const list = (WK[wk] || []).map(exDeWK).filter(Boolean);
       const logs = this.state.logs || {}, swaps = this.state.swaps || {};
       // 'plan' = series que TOCABAN en ese ejercicio. Sin esto solo se guardaba lo que el cliente
       // llego a tocar, y luego la app leia "4 de 4 series" en un entreno de 21.
@@ -3653,11 +3664,14 @@ class Component extends DCLogic {
   markSet = (ex, i) => () => {
     const cur = ((this.state.logs[ex] || [])[i]) || {};
     const done = !cur.done;
-    const e = EX.find(x => x.id === ex);
+    // el ejercicio tal como está en el entreno ABIERTO (sus series y reps), no el del catálogo
+    const _wkA = this.state.wWk || ((DAYS.find(d => d.d === this.state.day) || DAYS[2] || {}).wk);
+    const e = (WK[_wkA] || []).map(exDeWK).filter(Boolean).find(x => x.id === ex) || EX.find(x => x.id === ex);
+    const _tpl = (e && e.l && e.l[i]) || ['', ''];
     this.setLog(ex, i, 'done', done);
     if (done) {
-      if (!cur.r) this.setLog(ex, i, 'r', e.l[i][0]);
-      if (!cur.w) this.setLog(ex, i, 'w', e.l[i][1]);
+      if (!cur.r) this.setLog(ex, i, 'r', _tpl[0]);
+      if (!cur.w) this.setLog(ex, i, 'w', _tpl[1]);
       this.startRest();
     }
   };
@@ -3834,7 +3848,7 @@ class Component extends DCLogic {
     const _wkDay = DAYS.find(d => d.d === st.day) || DAYS[2];
     // el entreno abierto es el del día que se tocó (st.wWk), no el de la semana de hoy
     const _wk = st.wWk || _wkDay.wk;
-    const workoutEx = (WK[_wk] || []).map(x => { const nm = x.split('|')[0]; return EX.find(e => e.n === nm); }).filter(Boolean);
+    const workoutEx = (WK[_wk] || []).map(exDeWK).filter(Boolean);
     const woTitle = T(st.wTitle || _wkDay.t || 'Entrenamiento');
     // Una serie cuenta como hecha si el cliente la ha rellenado (reps + peso) o si pulsó el tic.
     // Antes solo contaba el tic, así que el contador y el porcentaje se quedaban en cero.
@@ -3857,7 +3871,7 @@ class Component extends DCLogic {
     const _realToday = DAYS.find(d => d.today) || DAYS.find(d => d.d === st.day) || DAYS[2];
     const _heroList = (WK[_realToday.wk] || []);
     let _heroSeries = 0;
-    _heroList.forEach(x => { const nm = x.split('|')[0]; const ex = EX.find(e => e.n === nm); _heroSeries += ex ? ex.s : 3; });
+    _heroList.forEach(x => { const ex = exDeWK(x); _heroSeries += ex ? ex.s : 3; });
     const heroRom = _realToday.rom, heroTitle = _realToday.t;
     const heroMeta = _heroList.length ? (_heroList.length + ' ejercicios · ' + _heroSeries + ' series · ' + Math.max(20, Math.round(_heroSeries * 2.2)) + ' min') : 'Día de descanso';
     const headLine = tD(_hdr ? (_hdr.weekday + ' · Semana ' + _hdr.week) : 'Miércoles · Semana 30');
@@ -4182,7 +4196,7 @@ class Component extends DCLogic {
       // cardio: EDITABLE — al pulsar se marca/desmarca (por si el cliente se equivoca)
       else if (a.type === 'cardio') open = this.toggleMark(dS.fecha, 'cardio', 'Cardio marcado');
       // entreno: EDITABLE — se puede reabrir aunque esté hecho, para corregir reps/pesos
-      else { open = () => this.startWorkout(a.wk, a.label); const first = (WK[a.wk] || [])[0]; const exr = first ? EX.find(e => e.n === first.split('|')[0]) : null; thumb = (exr && exr.y) ? THUMB(exr.y) : ''; }
+      else { open = () => this.startWorkout(a.wk, a.label); const first = (WK[a.wk] || [])[0]; const exr = first ? exDeWK(first) : null; thumb = (exr && exr.y) ? THUMB(exr.y) : ''; }
       // día futuro → no se puede registrar; solo avisar
       if (_dayFuturo && !done) open = () => this.flash(st.lang === 'en' ? "It's not that day yet" : 'Aún no es ese día');
       const _c = taskColor(a.type);

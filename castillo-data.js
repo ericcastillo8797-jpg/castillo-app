@@ -171,6 +171,16 @@
     try { return new Intl.DateTimeFormat('en-CA', { timeZone: tz || 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
     catch (e) { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   }
+  // Los workouts del CRM con forma de programa, DETRÁS de los programas de verdad: si un título está
+  // en los dos, manda el del programa (como hasta ahora). El transformador no cambia.
+  function workoutsComoPrograma(rows) {
+    var tasks = (Array.isArray(rows) ? rows : []).filter(function (w) { return w && String(w.nombre || '').trim() && Array.isArray(w.ejercicios); }).map(function (w) {
+      return { type: 'workout', title: w.nombre, workout: { exercises: w.ejercicios.map(function (x) {
+        return { name: x.nombre || x.name || 'Ejercicio', sets: x.sets, target: x.reps ? String(x.reps) : '', rest: x.rest, notes: x.notes || '', url_provisional: x.url || '', exerciseId: x.exerciseId };
+      }) } };
+    });
+    return { nombre: 'Workouts', contenido: { weeks: [{ weekDays: [{ dayTasks: tasks }] }] } };
+  }
   // fetch ficha del cliente + programas -> data del diseño
   function loadData(token, email) {
     var e = encodeURIComponent(String(email).toLowerCase());
@@ -178,6 +188,9 @@
     var pProg = api('/rest/v1/programs?select=nombre,contenido&activo=eq.true', {}, token)
       .catch(function () { return api('/rest/v1/programs?select=nombre,contenido', {}, token); });
     var pEx = api('/rest/v1/ejercicios?select=id,nombre,categoria_biblio,variantes,video_url&activo=eq.true', {}, token)
+      .catch(function () { return []; });
+    // entrenos creados en el CRM (Librería → Workouts): se asignan por título y no están en ningún programa (Martín, 16 oct 2026)
+    var pWk = api('/rest/v1/workouts?select=nombre,ejercicios&activo=eq.true', {}, token)
       .catch(function () { return []; });
     var pReg = api('/rest/v1/entreno_registros?select=*&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
       .catch(function () { return []; });
@@ -203,8 +216,8 @@
     // set de medidas PROPIO de este cliente (si Alex se lo ha personalizado); si no hay, se usa la base global
     var pMedC = api('/rest/v1/medidas_cliente_cfg?select=grupos&cliente_email=ilike.' + e + '&limit=1', {}, token)
       .catch(function () { return []; });
-    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre, pCfg, pMet, pMedC]).then(function (res) {
-      var rows = res[0] || [], programs = res[1] || [], ejercicios = res[2] || [], registros = res[3] || [];
+    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre, pCfg, pMet, pMedC, pWk]).then(function (res) {
+      var rows = res[0] || [], programs = (res[1] || []).concat([workoutsComoPrograma(res[11] || [])]), ejercicios = res[2] || [], registros = res[3] || [];
       var comAll = res[4] || [], chkAll = res[5] || [];
       var perfilRow = (res[6] && res[6][0]) || null;
       if (!rows.length) throw new Error('No encontramos tu ficha. Avisa a Alex.');
