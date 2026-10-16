@@ -137,6 +137,8 @@
     if (typeof u !== 'string') return null;
     var marks = ['/object/public/progreso/', '/object/sign/progreso/'];
     for (var m = 0; m < marks.length; m++) { var i = u.indexOf(marks[m]); if (i >= 0) { var p = u.slice(i + marks[m].length); var q = p.indexOf('?'); if (q >= 0) p = p.slice(0, q); return decodeURIComponent(p); } }
+    // ruta suelta «carpeta/archivo.jpg»: así guardaba el CRM las fotos de revisión hasta el 16 oct 2026
+    if (u.indexOf('://') < 0 && !/^(data|blob):/i.test(u) && u.indexOf('/') > 0) return u.replace(/^\/+/, '');
     return null;
   }
   // Firma URLs del bucket privado 'progreso' → enlaces firmados temporales (7 días). Las externas se dejan igual.
