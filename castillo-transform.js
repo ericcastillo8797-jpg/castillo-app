@@ -252,7 +252,22 @@
       var dt = new Date(ms(e.date));
       var key = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
       var slot = byDay[key] || (byDay[key] = { date: dt, items: [] });
-      slot.items.push({ type: e.type, title: e.title, done: !!e.completed, dt: dt, config: e.config, cardioText: e.cardioText });
+      slot.items.push({ type: e.type, title: e.title, done: !!e.completed, dt: dt, config: e.config, cardioText: e.cardioText, pers: (e.type === 'workout' && e.personalizado && e.workout && Array.isArray(e.workout.exercises) && e.workout.exercises.length) ? e.workout.exercises : null });
+    });
+
+    // Martín (20 oct 2026): un entreno editado SOLO para este cliente lleva sus ejercicios en la tarea (personalizado).
+    // Va con su propia clave en WK; los demás días y clientes con ese título siguen con la rutina general.
+    var _persK = {}, _persN = 0;
+    Object.keys(byDay).forEach(function (k) {
+      (byDay[k].items || []).forEach(function (it) {
+        if (it.type !== 'workout' || !it.pers) return;
+        var firma = (it.title || '') + '|' + JSON.stringify(it.pers), key = _persK[firma];
+        if (!key) {
+          key = _persK[firma] = 'p' + (++_persN) + '-' + slug(it.title || 'entreno');
+          WK[key] = it.pers.map(function (ex) { return lineaWK(addEx(ex, it.title), ex); });
+        }
+        it.wkKey = key;
+      });
     });
     // Adrián (20 oct 2026): las dietas agendadas en Harbiz están en calendario_asignado y la tarea «Nutrición»
     // del día no le salía al cliente (solo se miraba lo agendado desde el CRM). Se añaden aquí, solo los días
@@ -310,7 +325,7 @@
         if (wkItem && regDay.workout) wkItem.done = true;
         if (cardio && regDay.cardio) cardio.done = true;
         var isToday = key === todayKey;
-        var wkKey = wkItem ? slug(wkItem.title) : 'descanso';
+        var wkKey = wkItem ? (wkItem.wkKey || slug(wkItem.title)) : 'descanso';
         var title = wkItem ? wkItem.title : (cardio ? cardio.title : 'Descanso');
         var status = isToday ? 'Hoy' : (dt < startOfDay(now) ? (wkItem && wkItem.done ? 'Completado' : (wkItem ? 'No realizado' : 'Descanso')) : 'Programado');
         // Cuenta REAL de ejercicios del dia. Antes solo decia "7 de 7" si estaba completado y
@@ -761,7 +776,8 @@
       // Si lo dejo a medias, la ficha lo dice: "4 de 21 series" en vez de un texto generico, y
       // la app pinta el circulo con la parte que lleva en vez del tic de completado.
       var _wTit = (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title;
-      var _wp = (regToday.wReg && _wTit) ? progresoEntreno(regToday.wReg, slug(_wTit)) : null;
+      var _wKeyHoy = (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).wkKey || slug(_wTit || '');
+      var _wp = (regToday.wReg && _wTit) ? progresoEntreno(regToday.wReg, _wKeyHoy) : null;
       todayTasks.push({ key: 'entreno', label: 'Entrenamiento',
         nota: notaDe('Entrenamiento', (todayItems.filter(function (x) { return x.type === 'workout'; })[0] || {}).title),
         sub: (_wp && !entrenoHecho) ? (miles(_wp.hechas) + ' ' + TXT.de + ' ' + miles(_wp.totales) + ' ' + TXT.series) : 'Marca tus series y pesos',
