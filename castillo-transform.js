@@ -254,6 +254,21 @@
       var slot = byDay[key] || (byDay[key] = { date: dt, items: [] });
       slot.items.push({ type: e.type, title: e.title, done: !!e.completed, dt: dt, config: e.config, cardioText: e.cardioText });
     });
+    // Adrián (20 oct 2026): las dietas agendadas en Harbiz están en calendario_asignado y la tarea «Nutrición»
+    // del día no le salía al cliente (solo se miraba lo agendado desde el CRM). Se añaden aquí, solo los días
+    // que no tengan ya una dieta del CRM (el CRM manda). Las que en Harbiz estaban ocultas al cliente no salen.
+    (Array.isArray(row.calendario_asignado) ? row.calendario_asignado : []).forEach(function (e) {
+      if (!e || e.removed || e.userVisibility === false || !e.title || (e.type !== 'nutritionPlan' && e.type !== 'nutrition')) return;
+      var dt = new Date(ms(e.date)); if (isNaN(dt.getTime())) return;
+      var key = dt.getFullYear() + '-' + d2(dt.getMonth() + 1) + '-' + d2(dt.getDate());
+      var slot = byDay[key] || (byDay[key] = { date: dt, items: [] });
+      var c = new Date(ms(e.createdAt) || 0).getTime() || 0;
+      var ya = slot.items.filter(function (x) { return x.type === 'nutritionPlan' || x.type === 'nutrition'; })[0];
+      if (ya && !ya.harbiz) return;            // ese día ya hay dieta del CRM
+      if (ya && ya.c >= c) return;             // dos de Harbiz el mismo día: la última que se agendó
+      if (ya) slot.items.splice(slot.items.indexOf(ya), 1);
+      slot.items.push({ type: e.type, title: e.title, done: !!e.completed, dt: dt, harbiz: true, c: c });
+    });
 
     // ---------- REGISTROS DEL CLIENTE por fecha (lo que él marca en la app: entreno / cardio) ----------
     var regByDate = {};
