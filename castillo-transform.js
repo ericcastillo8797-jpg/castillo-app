@@ -376,17 +376,27 @@
     }
     var DAYS = buildWeek(mon).days;
     // rango de semanas: desde el lunes del evento más antiguo al del más nuevo, unido a semana actual ±1, con tope
-    var evMondays = events.filter(function (e) { return !e.removed && e.date; }).map(function (e) { return mondayOf(new Date(ms(e.date))).getTime(); });
-    var minMon = mon.getTime(), maxMon = mon.getTime();
-    evMondays.forEach(function (t) { if (t < minMon) minMon = t; if (t > maxMon) maxMon = t; });
-    var oneWk = 7 * 86400000;
-    minMon = Math.min(minMon, mon.getTime() - oneWk);
-    maxMon = Math.max(maxMon, mon.getTime() + oneWk);
-    var WEEKS = [], curWeekIdx = 0, guard = 0;
-    for (var wt = minMon; wt <= maxMon && guard < 40; wt += oneWk, guard++) {
-      var wobj = buildWeek(new Date(wt));
-      if (wt === mon.getTime()) curWeekIdx = WEEKS.length;
-      WEEKS.push(wobj);
+    // Alex (21 oct 2026): las semanas se cuentan por días del calendario. Antes se sumaban 7×24 h y, pasado el cambio
+    // de hora, el lunes caía a la 1:00 y nunca coincidía con el de hoy: Registrar entreno y la Agenda abrían en la
+    // primera semana (a Reinaldo, en enero, con sus entrenos viejos). Y el tope va alrededor de HOY (un año atrás y
+    // uno adelante): antes eran 40 semanas desde el evento más antiguo y, a quien llevaba más, la de hoy se quedaba fuera.
+    function _lunesMas(d, n) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + 7 * n); return x; }
+    function _claveDia(d) { return d.getFullYear() + '-' + d2(d.getMonth() + 1) + '-' + d2(d.getDate()); }
+    var minD = _lunesMas(mon, -1), maxD = _lunesMas(mon, 1);
+    events.forEach(function (e) {
+      if (e.removed || !e.date) return;
+      var m = mondayOf(new Date(ms(e.date)));
+      if (isNaN(m.getTime())) return;
+      if (m < minD) minD = m;
+      if (m > maxD) maxD = m;
+    });
+    var _topeAtras = _lunesMas(mon, -52), _topeDelante = _lunesMas(mon, 52);
+    if (minD < _topeAtras) minD = _topeAtras;
+    if (maxD > _topeDelante) maxD = _topeDelante;
+    var WEEKS = [], curWeekIdx = 0, _monClave = _claveDia(mon), _maxClave = _claveDia(maxD);
+    for (var wd = _lunesMas(minD, 0), guard = 0; _claveDia(wd) <= _maxClave && guard < 110; wd = _lunesMas(wd, 1), guard++) {
+      if (_claveDia(wd) === _monClave) curWeekIdx = WEEKS.length;
+      WEEKS.push(buildWeek(new Date(wd)));
     }
     // Si la semana actual está vacía (aún no empieza el plan), abre la agenda en la primera semana CON tareas
     // (así el cliente ve el programa que le acaban de asignar aunque empiece en unos días).
