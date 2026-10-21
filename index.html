@@ -11,9 +11,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="./castillo-i18n.js?v=245"></script>
-<script src="./castillo-transform.js?v=272"></script>
+<script src="./castillo-transform.js?v=273"></script>
 <script src="./castillo-equiv.js?v=245"></script>
-<script src="./castillo-data.js?v=272"></script>
+<script src="./castillo-data.js?v=273"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 272;
+  var VERSION_ACTUAL = 273;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -51,6 +51,8 @@
           // apunte se queda ahi cuando la app se mata a mitad — con lo cual la app no volvia
           // a actualizarse NUNCA. Era el motivo de que los arreglos no llegaran.
           try { if (window.__APP_ENTRENO_ABIERTO) return; } catch (e) {}
+          // ni con la hoja de fotos abierta o una foto subiendose (21 oct 2026): al recargar se perdian.
+          try { if (window.__APP_FOTOS_ABIERTO) return; } catch (e) {}
           if (CU) {
             if (bajando || !j.url) return;
             bajando = true;
@@ -64,7 +66,7 @@
                 var dentro = !!window.__APP_DENTRO;
                 // La descarga tarda: el entreno se ha podido ABRIR mientras tanto. Arriba solo se miraba
                 // antes de empezar a bajarla, y al terminar se recargaba la app en mitad del entreno.
-                var entrenando = false; try { entrenando = !!window.__APP_ENTRENO_ABIERTO; } catch (e) {}
+                var entrenando = false; try { entrenando = !!window.__APP_ENTRENO_ABIERTO || !!window.__APP_FOTOS_ABIERTO; } catch (e) {}
                 return (dentro && !entrenando) ? CU.set(b) : CU.next({ id: b.id });
               })
               .catch(function () { bajando = false; });
@@ -2240,7 +2242,7 @@ class Component extends DCLogic {
     day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, whoop: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
-    ck: {}, ckPhotos: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
+    ck: {}, ckPhotos: {}, ckPreview: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
     // Si el cliente aun no ha elegido idioma, se arranca con el DEL TELEFONO. La mayoria de
     // los clientes de Alex son de Miami y solo hablan ingles: forzar espanol les dejaba la
     // pantalla de acceso en un idioma que no entienden.
@@ -2309,7 +2311,9 @@ class Component extends DCLogic {
     try { if (this.stage === 'app') localStorage.setItem('castillo_ultimo_uso', String(Date.now())); } catch (e) {}
     // Le dice al actualizador si puede recargar sin molestar: solo dentro de la app y fuera de
     // un entreno abierto (recargar en mitad de un entreno le borraria las series al cliente).
-    try { window.__APP_DENTRO = (this.stage === 'app' && !this.state.wOpen); } catch (e) {}
+    // Tampoco con la hoja de fotos abierta o una foto subiendose (21 oct 2026, Carlos Martins): se perdian las fotos.
+    try { window.__APP_FOTOS_ABIERTO = !!(this.state.sheet && this.state.sheet.k === 'ck') || !!(this.state.ckUploading && Object.keys(this.state.ckUploading).length); } catch (e) {}
+    try { window.__APP_DENTRO = (this.stage === 'app' && !this.state.wOpen && !window.__APP_FOTOS_ABIERTO); } catch (e) {}
   };
   // ¿Salió solo un momento (a un WhatsApp, una llamada) y volvió? Entonces no se le enseña otra vez
   // la animación de entrada ni el Face ID: se entra directo donde estaba.
@@ -2443,6 +2447,8 @@ class Component extends DCLogic {
         return;
       }
       if (document.visibilityState !== 'visible' || this.stage !== 'app') return;
+      // foto elegida pero el iPhone no aviso del cambio: se recoge al volver (ver tapPhoto)
+      try { const inp = this._inpFoto; if (inp && inp._coger) setTimeout(() => { try { inp._coger(); } catch (e) {} }, 400); } catch (e) {}
       try { this.refreshData(); } catch (e) {}
       try { if (window.CastilloData && window.CastilloData.sincronizaSalud) window.CastilloData.sincronizaSalud(); } catch (e) {}
       try { this._tickRest(); } catch (e) {}   // el descanso ha seguido corriendo mientras estaba fuera
@@ -3321,8 +3327,11 @@ class Component extends DCLogic {
         const lk = Object.assign({}, this.state.mealsLocked); Object.keys(d.mealsReg).forEach(k => { lk[k] = true; }); patch.mealsLocked = lk;
       }
       if (d && d.logsInit && Object.keys(d.logsInit).length) patch.logs = Object.assign({}, this.state.logs, d.logsInit);
-      if (d && d.checkinHoy && Object.keys(d.checkinHoy).length) patch.ck = Object.assign({}, this.state.ck, d.checkinHoy);
-      if (d && d.checkinFotosHoy && Object.keys(d.checkinFotosHoy).length) patch.ckPhotos = Object.assign({}, this.state.ckPhotos, d.checkinFotosHoy);
+      // Con la hoja de medidas/fotos ABIERTA no se toca lo que tiene en pantalla (21 oct 2026): al volver del
+      // selector de fotos se recargan los datos y eso volvia a poner la foto vieja de hoy encima de la nueva.
+      const _ckAbierta = !!(this.state.sheet && this.state.sheet.k === 'ck');
+      if (!_ckAbierta && d && d.checkinHoy && Object.keys(d.checkinHoy).length) patch.ck = Object.assign({}, this.state.ck, d.checkinHoy);
+      if (!_ckAbierta && d && d.checkinFotosHoy && Object.keys(d.checkinFotosHoy).length) patch.ckPhotos = Object.assign({}, this.state.ckPhotos, d.checkinFotosHoy);
       this.setState(patch);
     }, () => {});
   };
@@ -3778,25 +3787,92 @@ class Component extends DCLogic {
     const _f = fok || _today;
     const _d = (window.__DATA && window.__DATA.checkinByDate && window.__DATA.checkinByDate[_f]) || { valores: {}, fotos: {} };
     const _ph = {}; Object.keys(_d.fotos || {}).forEach(k => { if (_d.fotos[k]) _ph[k] = _d.fotos[k]; });
-    this.setState({ ck: Object.assign({}, _d.valores || {}), ckPhotos: _ph });
+    // fotos que ya subio ese dia pero sin llegar a «Guardar» (la app se cerro o se recargo): vuelven a su hueco
+    const _bf = this._leeBorradorFotos(_f);
+    Object.keys(_bf).forEach(k => { _ph[k] = _bf[k]; });
+    this.setState({ ck: Object.assign({}, _d.valores || {}), ckPhotos: _ph, ckPreview: {} });
+    // las del borrador que no llegaron a firmarse no se verian (almacen privado): se firman ahora
+    Object.keys(_bf).forEach(k => {
+      if (!/\/object\/public\//.test(_bf[k]) || !(window.CastilloData && window.CastilloData.reSignPhoto)) return;
+      window.CastilloData.reSignPhoto(_bf[k]).then(u => { if (u && this.state.ckPhotos[k] === _bf[k]) this.setState(s => ({ ckPhotos: Object.assign({}, s.ckPhotos, { [k]: u }) })); }, () => {});
+    });
     this.openSheet({ k: 'ck', mode: (mode === 'medidas' || mode === 'fotos') ? mode : 'both', fecha: fok });
   };
+  // ── BORRADOR DE FOTOS (21 oct 2026, Carlos Martins) ──────────────────────────────────────
+  // Cada foto que sube se apunta en el movil hasta que pulsa «Guardar». Si la app se cierra o se
+  // recarga mientras elige las demas (el iPhone lo hace a veces al abrir la camara o la fototeca),
+  // al volver a abrir las fotos de ese dia siguen en su hueco. Un solo borrador: el del ultimo dia.
+  _leeBorradorFotos = (fecha) => {
+    try {
+      const b = JSON.parse(localStorage.getItem('castillo_fotos_borrador') || 'null');
+      const em = (window.CastilloData && window.CastilloData.emailActual) ? window.CastilloData.emailActual() : '';
+      if (!b || !b.fotos || b.fecha !== fecha || !em || b.email !== em || !(Date.now() - (b.ts || 0) < 3 * 86400000)) return {};
+      return b.fotos;
+    } catch (e) { return {}; }
+  };
+  _escribeBorradorFotos = (fecha, cambia) => {
+    try {
+      const em = (window.CastilloData && window.CastilloData.emailActual) ? window.CastilloData.emailActual() : '';
+      if (!fecha || !em) return;
+      const fotos = Object.assign({}, this._leeBorradorFotos(fecha)); cambia(fotos);
+      const v = Object.keys(fotos).length ? JSON.stringify({ email: em, fecha, fotos, ts: Date.now() }) : null;
+      const cd = window.CastilloData;
+      if (cd && cd.guardaDuro) cd.guardaDuro('castillo_fotos_borrador', v);
+      else if (v) localStorage.setItem('castillo_fotos_borrador', v); else localStorage.removeItem('castillo_fotos_borrador');
+    } catch (e) {}
+  };
+  _fechaHojaFotos = () => (this.state.sheet && this.state.sheet.fecha) || (DAYS.find(d => d.today) || {}).fecha;
   tapPhoto = id => () => {
     // ya subida: permite quitarla
-    if (this.state.ckPhotos[id]) { this.setState(s => { const p = Object.assign({}, s.ckPhotos); delete p[id]; return { ckPhotos: p }; }); return; }
+    if (this.state.ckPhotos[id]) {
+      const _fq = this._fechaHojaFotos();
+      this.setState(s => { const p = Object.assign({}, s.ckPhotos); delete p[id]; const pv = Object.assign({}, s.ckPreview); delete pv[id]; return { ckPhotos: p, ckPreview: pv }; });
+      this._escribeBorradorFotos(_fq, f => { delete f[id]; });
+      return;
+    }
+    if (this.state.ckUploading && this.state.ckUploading[id]) return;   // ya se esta subiendo esa
+    // (21 oct 2026, Carlos Martins: «a veces se suben y a veces no») El selector se creaba SUELTO, fuera de
+    // la pagina. En iPhone, si el cliente tarda en elegir o usa la camara, el sistema lo puede tirar y la
+    // foto elegida se pierde sin avisar: vuelve a la app y no pasa nada. Ahora va DENTRO de la pagina
+    // (escondido) hasta que se recoge la foto, y si el aviso no llega se recoge al volver a la app.
+    try { const v = this._inpFoto; if (v && v.parentNode) v.parentNode.removeChild(v); } catch (e) {}
     const inp = document.createElement('input');
     inp.type = 'file'; inp.accept = 'image/*'; // sin 'capture': el móvil deja elegir cámara o galería/fototeca
-    inp.onchange = () => {
-      const f = inp.files && inp.files[0]; if (!f) return;
-      this.setState(s => ({ ckUploading: Object.assign({}, s.ckUploading, { [id]: true }) }));   // "Cargando…" hasta que suba
-      if (window.CastilloData && window.CastilloData.subirFotoProgreso) {
-        window.CastilloData.subirFotoProgreso(f, id).then(url => {
-          this.setState(s => { const up = Object.assign({}, s.ckUploading); delete up[id]; return { ckPhotos: Object.assign({}, s.ckPhotos, { [id]: url }), ckUploading: up }; });
-          this.flash('Foto añadida');
-        }, () => { this.setState(s => { const up = Object.assign({}, s.ckUploading); delete up[id]; return { ckUploading: up }; }); this.flash(this.state.lang === 'en' ? 'Could not upload the photo. Please try again.' : 'No se pudo subir la foto. Inténtalo otra vez.'); });
-      }
+    inp.tabIndex = -1; inp.setAttribute('aria-hidden', 'true');
+    inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+    const fecha = this._fechaHojaFotos();
+    let recogida = false;
+    inp._coger = () => {
+      const f = inp.files && inp.files[0]; if (!f || recogida) return;
+      recogida = true;
+      try { if (inp.parentNode) inp.parentNode.removeChild(inp); } catch (e) {}
+      if (this._inpFoto === inp) this._inpFoto = null;
+      this._subeFoto(id, f, fecha);
     };
+    inp.addEventListener('change', inp._coger);
+    inp.addEventListener('input', inp._coger);
+    document.body.appendChild(inp);
+    this._inpFoto = inp;
     inp.click();
+  };
+  _subeFoto = (id, f, fecha) => {
+    if (!(window.CastilloData && window.CastilloData.subirFotoProgreso)) return;
+    this.setState(s => ({ ckUploading: Object.assign({}, s.ckUploading, { [id]: true }) }));   // "Cargando…" hasta que suba
+    const enHoja = () => !!(this.state.sheet && this.state.sheet.k === 'ck' && this._fechaHojaFotos() === fecha);
+    window.CastilloData.subirFotoProgreso(f, id, (normal) => {
+      // ya esta en el servidor: se apunta en el borrador antes de firmar el enlace
+      this._escribeBorradorFotos(fecha, b => { b[id] = normal; });
+    }).then(url => {
+      this._escribeBorradorFotos(fecha, b => { b[id] = url; });
+      // si la firma no llego, el enlace no se ve (almacen privado): se enseña la foto del propio movil
+      let pv = null; if (/\/object\/public\//.test(url)) { try { pv = URL.createObjectURL(f); } catch (e) {} }
+      this.setState(s => {
+        const up = Object.assign({}, s.ckUploading); delete up[id];
+        if (!enHoja()) return { ckUploading: up };   // cerro la hoja: queda en el borrador para cuando la abra
+        return { ckPhotos: Object.assign({}, s.ckPhotos, { [id]: url }), ckPreview: Object.assign({}, s.ckPreview, { [id]: pv }), ckUploading: up };
+      });
+      this.flash(this.state.lang === 'en' ? 'Photo added' : 'Foto añadida');
+    }, () => { this.setState(s => { const up = Object.assign({}, s.ckUploading); delete up[id]; return { ckUploading: up }; }); this.flash(this.state.lang === 'en' ? 'Could not upload the photo. Please try again.' : 'No se pudo subir la foto. Inténtalo otra vez.'); });
   };
   submitCheckin = () => {
     const T = s => (window.I18N ? window.I18N.t(s, this.state.lang) : s);   // sin esto fallaba el aviso «Guardado» y la pantalla no se actualizaba al guardar
@@ -3805,6 +3881,8 @@ class Component extends DCLogic {
     Object.keys(src).forEach(k => { if (src[k] != null && String(src[k]).trim() !== '') vals[k] = src[k]; });
     const fotos = {}; const cp = this.state.ckPhotos || {};
     Object.keys(cp).forEach(k => { if (cp[k]) fotos[k] = cp[k]; });   // solo las que son URL (subidas)
+    // con una foto todavia subiendose no se cierra: se perderia (21 oct 2026)
+    if (mode !== 'medidas' && this.state.ckUploading && Object.keys(this.state.ckUploading).length) { this.flash(this.state.lang === 'en' ? 'Wait for the photo to finish uploading' : 'Espera a que termine de subir la foto'); return; }
     if (mode === 'medidas' && !Object.keys(vals).length) { this.flash('Escribe alguna medida'); return; }
     else if (mode === 'fotos' && !Object.keys(fotos).length) { this.flash('Añade al menos una foto'); return; }
     else if (mode === 'both' && !Object.keys(vals).length && !Object.keys(fotos).length) { this.flash('Escribe algún dato o añade una foto'); return; }
@@ -3816,6 +3894,8 @@ class Component extends DCLogic {
       if (Object.keys(fotos).length) { _mks[_tf + '|fotos'] = true; _mks[_tf + '|metricas'] = true; }
       this.setState(s => ({ marks: Object.assign({}, s.marks, _mks) }));
     }
+    // Las fotos ya van en el guardado (y si no hay cobertura, en la cola del movil): fuera el borrador de ese dia.
+    if (mode !== 'medidas') this._escribeBorradorFotos(sh.fecha || _tf, b => { Object.keys(b).forEach(k => { delete b[k]; }); });
     // Se envían medidas Y fotos del estado (ya trae lo existente de hoy), así guardar una no borra la otra.
     if (window.CastilloData && window.CastilloData.registrarCheckin) {
       window.CastilloData.registrarCheckin(vals, fotos, sh.fecha, mode).then(() => { this.flash(T('Guardado')); this.refreshData(); }, () => this.flash(this.state.lang === 'en' ? 'Saved on your phone. It will sync when you have signal.' : 'Guardado en tu móvil. Se enviará cuando tengas cobertura.'));
@@ -4469,8 +4549,9 @@ class Component extends DCLogic {
       const url = st.ckPhotos[n];
       const uploading = !!(st.ckUploading && st.ckUploading[n]);
       const done = !!url && !uploading;
+      const ver = (st.ckPreview && st.ckPreview[n]) || url;   // copia del movil si el enlace no llego a firmarse
       return { n, ld: T('Cargando…'), done, uploading, pending: !url && !uploading, tap: this.tapPhoto(n),
-        bg: done ? ('center/cover no-repeat url("' + url + '")') : 'var(--s2,#121215)',
+        bg: done ? ('center/cover no-repeat url("' + ver + '")') : 'var(--s2,#121215)',
         bd: done ? 'rgba(var(--fgc,255,255,255),.45)' : 'rgba(var(--fgc,255,255,255),.09)',
         fg: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.3)' };
     });

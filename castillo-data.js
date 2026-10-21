@@ -89,7 +89,9 @@
   // 'castillo_pendientes' = lo que quedo sin enviar (un entreno guardado sin cobertura, p. ej.). Se escribia en el
   // almacen nativo pero al arrancar NO se recuperaba: si iOS habia vaciado el del navegador, se perdia sin avisar
   // (12 oct 2026).
-  var CLAVES_DURAS = ['castillo_session', 'castillo_creds', 'castillo_lang', 'castillo_entreno', 'castillo_pendientes'];
+  // 'castillo_fotos_borrador' = fotos de progreso ya subidas pero aun sin pulsar «Guardar» (21 oct 2026): si la app
+  // se cierra o se recarga mientras el cliente elige las demas, al volver siguen en su hueco.
+  var CLAVES_DURAS = ['castillo_session', 'castillo_creds', 'castillo_lang', 'castillo_entreno', 'castillo_pendientes', 'castillo_fotos_borrador'];
   // Ademas de la sesion hay que recuperar QUE APPS tiene conectadas (Apple Salud, WHOOP). Vivian
   // solo en el navegador y se borraban en cada actualizacion: al cliente le salia "Conectar"
   // aunque ya lo tuviera conectado, y encima dejabamos de leerle los pasos hasta que lo tocara.
@@ -713,6 +715,7 @@
     hayPendientes: function () { try { return leeCola().length; } catch (e) { return 0; } },
     sincronizaSalud: function () { try { return syncSaludPasos(); } catch (e) { return Promise.resolve(); } },
     guardaDuro: guardaDuro,       // para el idioma, que lo escribe la pantalla de Ajustes
+    emailActual: function () { return _ctx.email || ''; },   // para el borrador de fotos (que no se mezclen dos cuentas en un movil)
     loginAndLoad: function (email, pass) {
       return passwordLogin(email, pass).catch(function (e) { e.message = friendly(e.message || ''); throw e; });
     },
@@ -759,7 +762,7 @@
         return loadData(at, em);
       });
     },
-    logout: function () { try { guardaDuro(LS, null); guardaDuro(CR, null); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
+    logout: function () { try { guardaDuro(LS, null); guardaDuro(CR, null); guardaDuro('castillo_fotos_borrador', null); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
     registrarComida: registrarComida,
     desregistrarComida: desregistrarComida,
     guardarPerfil: guardarPerfil, guardaIdioma: guardaIdioma,
@@ -880,24 +883,55 @@
       });
     },
     // sube una FOTO de progreso al almacenamiento (bucket 'progreso') y devuelve su URL pública
-    subirFotoProgreso: function (file, slot) {
+    // (21 oct 2026, Carlos Martins: «a veces se suben y a veces no»). Antes, si la conexion se quedaba
+    // colgada, la foto se quedaba en «Cargando…» para siempre; si la sesion habia caducado fallaba sin
+    // renovarla; y si la foto SI subia pero la firma del enlace no llegaba, se daba por no subida.
+    // Ahora: espera maxima, dos reintentos si se corta, llave nueva si caduco la sesion, y si la firma
+    // no llega la foto vale igual (se usa el enlace normal, que la app firma al cargar).
+    // alSubir(url): se llama en cuanto la foto esta en el servidor, antes de la firma (borrador del movil).
+    subirFotoProgreso: function (file, slot, alSubir) {
       if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
       var safe = ((file && file.name) || 'foto').replace(/[^a-zA-Z0-9._-]/g, '_');
       var carpeta = _ctx.email.replace(/[^a-z0-9]/gi, '_');
       var path = carpeta + '/' + _ctx.hoy + '-' + (slot || 'foto') + '-' + Date.now() + '-' + safe;
-      return fetch(SUPA + '/storage/v1/object/progreso/' + encodeURI(path), {
-        method: 'POST',
-        headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': (file && file.type) || 'application/octet-stream', 'x-upsert': 'true' },
-        body: file
-      }).then(function (r) {
-        if (!r.ok) throw new Error('No se pudo subir la foto');
-        // bucket privado: devolver enlace FIRMADO para que se vea al instante (re-firmable después)
-        return fetch(SUPA + '/storage/v1/object/sign/progreso/' + encodeURI(path), {
-          method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _ctx.token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ expiresIn: 604800 })
-        }).then(function (s) { return s.ok ? s.json() : null; }).then(function (j) {
-          return (j && j.signedURL) ? (SUPA + '/storage/v1' + j.signedURL) : (SUPA + '/storage/v1/object/public/progreso/' + encodeURI(path));
+      var normal = SUPA + '/storage/v1/object/public/progreso/' + encodeURI(path);
+      function conEspera(url, opts, ms) {
+        var ctl = null; try { ctl = new AbortController(); opts.signal = ctl.signal; } catch (e) {}
+        var reloj;
+        return Promise.race([
+          fetch(url, opts),
+          new Promise(function (_, mal) { reloj = setTimeout(function () { try { if (ctl) ctl.abort(); } catch (e) {} mal(new Error('tarda demasiado')); }, ms); })
+        ]).then(function (r) { clearTimeout(reloj); return r; }, function (e) { clearTimeout(reloj); throw e; });
+      }
+      function sube(intento, renovada) {
+        return conEspera(SUPA + '/storage/v1/object/progreso/' + encodeURI(path), {
+          method: 'POST',
+          headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _vigente(_ctx.token), 'Content-Type': (file && file.type) || 'application/octet-stream', 'x-upsert': 'true' },
+          body: file
+        }, 120000).then(function (r) {
+          if (r.ok) return true;
+          return r.text().catch(function () { return ''; }).then(function (txt) {
+            // sesion caducada: el almacen contesta 400/401/403 («exp», «jwt»…). Llave nueva y otra vez.
+            if (!renovada && (r.status === 401 || r.status === 403 || (r.status === 400 && /exp|jwt|token|unauthori/i.test(txt)))) {
+              return renuevaSesion().then(function () { return sube(intento, true); });
+            }
+            var e = new Error('No se pudo subir la foto'); e.status = r.status; e.respuesta = true; throw e;
+          });
+        }, function (err) {
+          // se corto la conexion o tardo demasiado: se reintenta (misma ruta, x-upsert: no se duplica)
+          if (intento < 2) return new Promise(function (ya) { setTimeout(ya, 1500); }).then(function () { return sube(intento + 1, renovada); });
+          throw err;
         });
+      }
+      return sube(0, false).then(function () {
+        try { if (alSubir) alSubir(normal); } catch (e) {}
+        // bucket privado: devolver enlace FIRMADO para que se vea al instante (re-firmable después)
+        return conEspera(SUPA + '/storage/v1/object/sign/progreso/' + encodeURI(path), {
+          method: 'POST', headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + _vigente(_ctx.token), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expiresIn: 604800 })
+        }, 12000).then(function (s) { return s.ok ? s.json() : null; }).then(function (j) {
+          return (j && j.signedURL) ? (SUPA + '/storage/v1' + j.signedURL) : normal;
+        }, function () { return normal; });
       });
     },
     // marca/desmarca el cardio de un día (se guarda en la MISMA fila diaria de entreno_registros, columna cardio)
