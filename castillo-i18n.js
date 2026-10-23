@@ -722,7 +722,7 @@
     'Recuperación': 'Recovery', 'Sueño': 'Sleep', 'Esfuerzo': 'Strain', 'Pulso en reposo': 'Resting HR',
     'Últimos entrenos': 'Latest workouts', 'últimos 7 días': 'last 7 days', 'esfuerzo': 'strain',
     // bloque del reloj (Apple Salud / Health Connect), 23 oct 2026
-    'Calorías activas': 'Active calories', 'kcal/día': 'kcal/day', 'h/noche': 'h/night', 'lpm': 'bpm',
+    'Calorías activas': 'Active calories', 'Calorías totales': 'Total calories', 'kcal/día': 'kcal/day', 'h/noche': 'h/night', 'lpm': 'bpm',
     'Cerrar': 'Close', 'Resumen': 'Summary', 'Mes': 'Month', 'Trimestre': 'Quarter', 'Semestre': 'Half-year', 'Año': 'Year',
     'Resumen del trimestre': 'Quarterly summary', 'Resumen del semestre': 'Half-year summary', 'Resumen del año': 'Yearly summary',
     'Favoritos': 'Favourites',

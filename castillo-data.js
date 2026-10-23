@@ -387,7 +387,9 @@
     if (!forzar && Date.now() - _fondoUlt < 60000) return Promise.resolve(null);   // al volver a la app se pide dos veces seguidas
     var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
     _fondoEnMarcha = Promise.resolve(P.estado ? P.estado() : null).catch(function () { return null; }).then(function (e) {
-      var yaListo = e && e.activo && String(e.email || '').toLowerCase() === _ctx.email;
+      // permisosPedidos=false: la app instalada pide algo nuevo desde la última vez (p. ej. las calorías totales): se vuelve a
+      // activar para que el teléfono enseñe la ventana con lo que falta (una sola vez)
+      var yaListo = e && e.activo && String(e.email || '').toLowerCase() === _ctx.email && e.permisosPedidos !== false;
       if (yaListo && !forzar) return P.sincronizar({ objetivo: objetivo });
       return _pideLlaveSalud().then(function (llave) {
         return P.activar({ llave: llave, url: SUPA + '/functions/v1/salud-sync', apikey: ANON, email: _ctx.email, objetivo: objetivo, forzar: !!forzar });
@@ -868,12 +870,12 @@
         method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + _ctx.token }, body: cuerpo
       }).then(function (r) { return r.json(); }).catch(function () { return null; });
     },
-    // Lo del reloj (Apple Salud / Health Connect): calorías activas, pulso en reposo, sueño y entrenos, un día por
+    // Lo del reloj (Apple Salud / Health Connect): calorías totales y activas, pulso en reposo, sueño y entrenos, un día por
     // fila (tabla salud_dia, la escribe el móvil por su cuenta). Con (desde, hasta) AAAA-MM-DD. Si aún no hay nada
     // (o la tabla no existe todavía) devuelve una lista vacía.
     saludDatos: function (desde, hasta) {
       if (!_ctx.token || !_ctx.email) return Promise.resolve([]);
-      var q = '/rest/v1/salud_dia?select=fecha,kcal_activas,pulso_reposo,sueno_min,entrenos,origen&cliente_email=eq.' + encodeURIComponent(_ctx.email) + '&order=fecha.asc';
+      var q = '/rest/v1/salud_dia?select=*&cliente_email=eq.' + encodeURIComponent(_ctx.email) + '&order=fecha.asc';
       if (desde) q += '&fecha=gte.' + desde;
       if (hasta) q += '&fecha=lte.' + hasta;
       return api(q, {}, _ctx.token).then(function (r) { return Array.isArray(r) ? r : []; }).catch(function () { return []; });

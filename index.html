@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=275"></script>
+<script src="./castillo-i18n.js?v=276"></script>
 <script src="./castillo-transform.js?v=274"></script>
 <script src="./castillo-equiv.js?v=245"></script>
-<script src="./castillo-data.js?v=275"></script>
+<script src="./castillo-data.js?v=276"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 275;
+  var VERSION_ACTUAL = 276;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -769,8 +769,12 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <div style="flex:1;font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ reloj.titulo }}</div>
         <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3)">{{ reloj.cuando }}</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 11px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 13px">
+          <div style="font-size:9.5px;color:rgba(var(--fgc,255,255,255),.4);text-transform:uppercase;letter-spacing:.06em">{{ L.caloriasTotales }}</div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-top:3px"><span style="font-family:'Instrument Serif',serif;font-size:27px">{{ reloj.kcalTot }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.4)">{{ L.kcalDia }}</span></div>
+        </div>
+        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 13px">
           <div style="font-size:9.5px;color:rgba(var(--fgc,255,255,255),.4);text-transform:uppercase;letter-spacing:.06em">{{ L.caloriasActivas }}</div>
           <div style="display:flex;align-items:baseline;gap:4px;margin-top:3px"><span style="font-family:'Instrument Serif',serif;font-size:27px">{{ reloj.kcal }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.4)">{{ L.kcalDia }}</span></div>
         </div>
@@ -1346,6 +1350,27 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
         </sc-for>
       </div>
+    </div>
+    </sc-if>
+
+    <!-- CONECTAR SALUD al entrar (Alex, 23 oct 2026): «que nada más entrar le salte el mensaje para conectar la
+         app con el Salud, y lo conecte al momento; si no, tengo que coger yo su teléfono». Sale mientras no esté
+         conectado; «Ahora no» lo deja para el día siguiente. -->
+    <sc-if value="{{ isSaludSheet }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Conectar salud" style="padding:22px 22px 34px;text-align:center">
+      <sc-if value="{{ saludSheet.hayLogo }}" hint-placeholder-val="{{ true }}">
+      <img src="logos-app/apple-salud.webp" alt="" style="width:62px;height:62px;border-radius:15px;display:block;margin:4px auto 0" />
+      </sc-if>
+      <sc-if value="{{ saludSheet.sinLogo }}" hint-placeholder-val="{{ false }}">
+      <div style="width:62px;height:62px;border-radius:15px;margin:4px auto 0;background:var(--s2,#17171B);display:flex;align-items:center;justify-content:center;color:#ff5a6e">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.1 4.3 2.4.7-1.3 2.2-2.4 4.3-2.4 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"></path></svg>
+      </div>
+      </sc-if>
+      <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.15;margin-top:16px">{{ saludSheet.titulo }}</div>
+      <div style="font-size:14px;line-height:1.55;color:rgba(var(--fgc,255,255,255),.66);margin:12px auto 0;max-width:330px;text-wrap:pretty">{{ saludSheet.texto }}</div>
+      <div onClick="{{ saludSheet.conectar }}" style="margin-top:24px;height:50px;border-radius:25px;background:var(--fg,#fff);color:var(--bg,#000);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;cursor:pointer" style-active="transform:scale(.98)">{{ saludSheet.botonSi }}</div>
+      <div onClick="{{ saludSheet.ahoraNo }}" style="margin-top:10px;height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;color:rgba(var(--fgc,255,255,255),.5);cursor:pointer">{{ saludSheet.botonNo }}</div>
+      <div style="font-size:11.5px;line-height:1.5;color:rgba(var(--fgc,255,255,255),.36);margin:8px auto 0;max-width:320px">{{ saludSheet.nota }}</div>
     </div>
     </sc-if>
 
@@ -2577,6 +2602,8 @@ class Component extends DCLogic {
     // Antes había 900 ms de espera decorativa aquí. Los datos ya están cargados en este punto,
     // así que se entra en el siguiente frame: se nota mucho más rápido y no se pierde nada.
     requestAnimationFrame(() => { this.setState({ stage: 'app', tab: 'home' }); this.playHome(); this._recuperaEntreno(); });
+    // si aún no tiene conectado el Salud, se le pide nada más entrar (Alex, 23 oct 2026)
+    this.later(() => this._avisoSalud(), 1600);
     // WHOOP: si el cliente lo tiene conectado, se bajan sus datos en segundo plano
     try { const cd = window.CastilloData;
       if (cd && cd.whoopDatos) cd.whoopDatos().then(w => { if (w && w.ok && w.conectado) this.setState({ whoop: w }); }, () => {});
@@ -3072,12 +3099,12 @@ class Component extends DCLogic {
     // sueño, los entrenamientos… que en el informe final de mes el cliente lo pueda ver». Lo manda el móvil por su
     // cuenta. Solo sale si hay días con datos en el periodo; nunca se inventa nada.
     let pReloj = '';
-    const relRows = (rel || []).filter(r => r && (r.kcal_activas != null || r.pulso_reposo != null || r.sueno_min != null || (r.entrenos || []).length));
+    const relRows = (rel || []).filter(r => r && (r.kcal_activas != null || r.kcal_totales != null || r.pulso_reposo != null || r.sueno_min != null || (r.entrenos || []).length));
     if (relRows.length) {
       const android = relRows.some(r => r.origen === 'android');
       const fuente = android ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud');
       const mediaR = k => { const v = relRows.map(r => r[k]).filter(x => x != null && x > 0); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
-      const kcM = mediaR('kcal_activas'), suM = mediaR('sueno_min'), prM = mediaR('pulso_reposo');
+      const kcM = mediaR('kcal_activas'), suM = mediaR('sueno_min'), prM = mediaR('pulso_reposo'), ktM = mediaR('kcal_totales');
       const entR = [];
       relRows.forEach(r => (r.entrenos || []).forEach(e => entR.push(Object.assign({ fecha: r.fecha }, e))));
       entR.sort((a, b) => (String(a.ini) < String(b.ini) ? -1 : 1));
@@ -3086,7 +3113,7 @@ class Component extends DCLogic {
       const pms = entR.map(e => e.pm).filter(Boolean);
       const pmMedia = pms.length ? Math.round(pms.reduce((a, b) => a + b, 0) / pms.length) : null;
       const MAX_R = 20, restoR = Math.max(0, entR.length - MAX_R);
-      const CAJAR = (rot, val, uni) => '<div style="flex:1;border:1px solid #e6e6e6;border-radius:12px;padding:14px 14px 13px">'
+      const CAJAR = (rot, val, uni) => '<div style="flex:1 1 28%;min-width:28%;border:1px solid #e6e6e6;border-radius:12px;padding:14px 14px 13px">'
         + '<div style="font-size:8.5px;font-weight:700;letter-spacing:.18em;color:#9a9a9a;text-transform:uppercase">' + esc(rot) + '</div>'
         + '<div style="font-size:26px;font-weight:300;margin-top:6px">' + esc(val) + '<span style="font-size:12px;color:#9a9a9a"> ' + esc(uni || '') + '</span></div></div>';
       const TH = (t, der) => '<th style="text-align:' + (der ? 'right' : 'left') + ';padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + t + '</th>';
@@ -3096,7 +3123,8 @@ class Component extends DCLogic {
         + esc(en ? ('Average of the ' + relRows.length + (relRows.length === 1 ? ' day' : ' days') + ' with data from your phone or watch in this period')
                  : ('Media de ' + relRows.length + (relRows.length === 1 ? ' día' : ' días') + ' con datos de tu móvil o tu reloj en este periodo'))
         + ' · ' + esc(_fechaLarga(relRows[0].fecha)) + ' → ' + esc(_fechaLarga(relRows[relRows.length - 1].fecha)) + '</div>'
-        + '<div style="display:flex;gap:10px">'
+        + '<div style="display:flex;flex-wrap:wrap;gap:10px">'
+          + CAJAR(en ? 'Total calories' : 'Calorías totales', ktM == null ? '—' : miles(ktM), en ? 'kcal/day' : 'kcal/día')
           + CAJAR(en ? 'Active calories' : 'Calorías activas', kcM == null ? '—' : miles(kcM), en ? 'kcal/day' : 'kcal/día')
           + CAJAR(en ? 'Sleep' : 'Sueño', suM == null ? '—' : dec((suM / 60).toFixed(1)), en ? 'h/night' : 'h/noche')
           + CAJAR(en ? 'Resting heart rate' : 'Pulso en reposo', prM == null ? '—' : String(Math.round(prM)), en ? 'bpm' : 'lpm')
@@ -3475,6 +3503,45 @@ class Component extends DCLogic {
     }
   };
 
+  // ── CONECTAR SALUD AL ENTRAR (Alex, 23 oct 2026) ─────────────────────────────────────────
+  _esAndroid = () => { try { return !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android'); } catch (e) { return false; } };
+  _claveAvisoSalud = () => { try { return 'salud_aviso_' + ((window.CastilloData && window.CastilloData.emailActual && window.CastilloData.emailActual()) || ''); } catch (e) { return 'salud_aviso_'; } };
+  _avisoSalud = () => {
+    try {
+      const cd = window.CastilloData, C = window.Capacitor, H = C && C.Plugins && C.Plugins.HealthPlugin;
+      if (!H || !cd || !cd.saludConectado || cd.saludConectado()) return;   // solo en la app instalada y si aún no está conectado
+      if (this.stage !== 'app' && this.state.stage !== 'app') return;
+      if (this.state.sheet || this.state.wOpen) return;                     // no tapa otra cosa abierta
+      const hasta = Number(localStorage.getItem(this._claveAvisoSalud()) || 0);
+      if (hasta && Date.now() < hasta) return;                             // dijo «Ahora no» hace menos de un día
+      this.openSheet({ k: 'salud' });
+    } catch (e) {}
+  };
+  saludAhoraNo = () => {
+    try { localStorage.setItem(this._claveAvisoSalud(), String(Date.now() + 24 * 3600e3)); } catch (e) {}
+    this.closeSheet();
+  };
+  saludConectar = () => {
+    const en = this.state.lang === 'en', android = this._esAndroid();
+    const fuente = android ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud');
+    const cd = window.CastilloData, C = window.Capacitor, H = C && C.Plugins && C.Plugins.HealthPlugin;
+    this.closeSheet();
+    if (!cd || !cd.conectarSalud || !H) { this.flash(en ? 'Loading…' : 'Cargando…'); return; }
+    const falla = () => this.flash((en ? 'Could not connect ' : 'No se pudo conectar ') + fuente);
+    // En Android sin la app Health Connect (Android 13 o anterior), primero hay que instalarla
+    Promise.resolve(H.isHealthAvailable ? H.isHealthAvailable() : { available: true }).catch(() => ({ available: true })).then((a) => {
+      if (a && a.available === false) {
+        if (android && H.showHealthConnectInPlayStore) { try { H.showHealthConnectInPlayStore(); } catch (e) {} this.flash(en ? 'Install Health Connect and come back' : 'Instala Health Connect y vuelve a la app'); }
+        else falla();
+        return;
+      }
+      return cd.conectarSalud().then((r) => {
+        if (!r || !r.available) { falla(); return; }
+        if (r.ok) { this.flash(fuente + (en ? ' connected' : ' conectado') + (r.pasos ? (' · ' + r.pasos + (en ? ' steps today' : ' pasos hoy')) : '')); this.refreshData(); }
+        else falla();
+      });
+    }).catch(falla);
+  };
   openSheet = s => { this.setState({ sheet: s, sheetIn: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ sheetIn: true }))); };
   closeSheet = () => { const sh = this.state.sheet; if (sh && sh.back) { this.openSheet(sh.back); return; } this.setState({ sheetIn: false }); this.later(() => this.setState({ sheet: null }), 480); };
   // Día seleccionado en la SEMANA ACTIVA (weekIdx). Imprescindible: DAYS global solo tiene la semana actual, así que
@@ -4722,7 +4789,7 @@ class Component extends DCLogic {
         apariencia: T('Apariencia'), idioma: T('Idioma'), espanol: T('Español'), ingles: T('Inglés'),
         datosPersonales: T('Datos personales'), tocaCambiarFoto: T('Toca para cambiar la foto'), emailPassNota: T('Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.'), telefonoLbl: T('Teléfono'), emailLbl: T('Email'), passLbl: T('Contraseña'), cambiar: T('Cambiar'), cambiarPass: T('Cambiar contraseña'), nuevaPass: T('Nueva contraseña'), repitePass: T('Repite la contraseña'), guardar: T('Guardar'),
         recuperacion: T('Recuperación'), sueno: T('Sueño'), esfuerzo: T('Esfuerzo'), ultimosEntrenos: T('Últimos entrenos'),
-        caloriasActivas: T('Calorías activas'), kcalDia: T('kcal/día'), hNoche: T('h/noche'), pulsoReposo: T('Pulso en reposo'), lpm: T('lpm'),
+        caloriasActivas: T('Calorías activas'), caloriasTotales: T('Calorías totales'), kcalDia: T('kcal/día'), hNoche: T('h/noche'), pulsoReposo: T('Pulso en reposo'), lpm: T('lpm'),
         historialCargas: T('Historial de cargas'), serieMasPesada: T('Serie más pesada'), sinCargas: T('Todavía no has registrado pesos en este ejercicio.'),
         resumen: T('Resumen'),
         comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'), recientes: T('Recientes'), favoritos: T('Favoritos'), resumenMes: T('Resumen del mes'), sinDatosMes: T('Sin datos este mes'), recuentoMes: T('Recuento del mes'), diaADia: T('Día a día'), mediaDiaria: T('Media diaria'),
@@ -4859,11 +4926,11 @@ class Component extends DCLogic {
           })) };
       })(),
       reloj: (() => {
-        const rows = (st.reloj || []).filter(r => r && (r.kcal_activas != null || r.pulso_reposo != null || r.sueno_min != null || (r.entrenos || []).length));
+        const rows = (st.reloj || []).filter(r => r && (r.kcal_activas != null || r.kcal_totales != null || r.pulso_reposo != null || r.sueno_min != null || (r.entrenos || []).length));
         if (!rows.length) return { visible: false };
         const en = st.lang === 'en';
         const media = k => { const v = rows.map(r => r[k]).filter(x => x != null && x > 0); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
-        const kc = media('kcal_activas'), su = media('sueno_min'), pr = media('pulso_reposo');
+        const kc = media('kcal_activas'), su = media('sueno_min'), pr = media('pulso_reposo'), kt = media('kcal_totales');
         const ent = [];
         rows.forEach(r => (r.entrenos || []).forEach(e => ent.push(Object.assign({ fecha: r.fecha }, e))));
         ent.sort((a, b) => (String(a.ini) < String(b.ini) ? 1 : -1));
@@ -4872,6 +4939,7 @@ class Component extends DCLogic {
         return { visible: true,
           titulo: android ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud'), hayLogo: !android, logo: 'logos-app/apple-salud.webp',
           kcal: kc == null ? '—' : sep(Math.round(kc)),
+          kcalTot: kt == null ? '—' : sep(Math.round(kt)),   // lo que gasta al día en total (activas + en reposo), Alex 23 oct
           sueno: su == null ? '—' : (su / 60).toFixed(1).replace('.', en ? '.' : ','),
           reposo: pr == null ? '—' : Math.round(pr),
           cuando: T('últimos 7 días'),
@@ -4918,6 +4986,24 @@ class Component extends DCLogic {
       chartL0: tD(chartLabels[0] || ''), chartL1: tD(chartLabels[1] || ''), chartL2: tD(chartLabels[2] || ''),
       chartDash: st.drawn ? 0 : 900, chartFill: st.drawn ? 1 : 0,
       isMetSheet: sh.k === 'met', metSheet,
+      isSaludSheet: sh.k === 'salud',
+      saludSheet: (() => {
+        const en = st.lang === 'en', android = this._esAndroid();
+        // con la app instalada nueva (plugin CastilloSalud) se lee todo, también con la app cerrada; con la vieja, solo los pasos
+        const todo = !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CastilloSalud);
+        const fuente = android ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud');
+        return { hayLogo: !android, sinLogo: android,
+          titulo: (en ? 'Connect ' : 'Conecta ') + fuente,
+          texto: todo
+            ? (en ? 'Your steps, calories, sleep and workouts (also from your ' + (android ? 'watch' : 'Apple Watch') + ') are logged automatically, even when the app is closed, and your coach sees them up to date.'
+                  : 'Así tus pasos, calorías, sueño y entrenos (también los de tu ' + (android ? 'reloj' : 'Apple Watch') + ') se apuntan solos, aunque no abras la app, y tu entrenador los ve al día.')
+            : (en ? 'Your daily steps are logged automatically and your cardio is marked as done, and your coach sees them up to date.'
+                  : 'Así tus pasos del día se apuntan solos, tu cardio se marca como hecho y tu entrenador los ve al día.'),
+          nota: en ? 'We only read this data, we never write anything. You can change it anytime in Settings → Connected apps.'
+                   : 'Solo leemos estos datos, nunca escribimos nada. Puedes cambiarlo cuando quieras en Ajustes → Apps conectadas.',
+          botonSi: en ? 'Connect' : 'Conectar', botonNo: en ? 'Not now' : 'Ahora no',
+          conectar: this.saludConectar, ahoraNo: this.saludAhoraNo };
+      })(),
       isVarSheet: sh.k === 'var', varSheet,
       dietRows,
       dietState: dietFuture ? T('Programada') : (dietToday ? T('Hoy · editable') : T('Editable')),
