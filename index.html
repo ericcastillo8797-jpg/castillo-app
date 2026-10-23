@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=245"></script>
+<script src="./castillo-i18n.js?v=275"></script>
 <script src="./castillo-transform.js?v=274"></script>
 <script src="./castillo-equiv.js?v=245"></script>
-<script src="./castillo-data.js?v=274"></script>
+<script src="./castillo-data.js?v=275"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 274;
+  var VERSION_ACTUAL = 275;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -751,6 +751,45 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <div style="display:flex;align-items:center;justify-content:space-between;background:var(--s2,#17171B);border-radius:11px;padding:10px 12px">
           <div style="font-size:12.5px;font-family:var(--font-mono,monospace)">{{ w.fecha }}</div>
           <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.5)">{{ w.detalle }}</div>
+        </div>
+        </sc-for>
+      </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- RELOJ (Apple Salud / Health Connect): debajo de WHOOP. Alex, 23 oct 2026: «pon lo del Apple Watch»: calorías,
+         pulso, sueño y entrenos del reloj. Solo sale si el móvil ha mandado algo de esto en los últimos 7 días. -->
+    <sc-if value="{{ reloj.visible }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:18px;background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:15px 16px 14px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+        <sc-if value="{{ reloj.hayLogo }}" hint-placeholder-val="{{ true }}">
+        <img src="{{ reloj.logo }}" alt="" style="height:16px;width:auto;border-radius:4px" onerror="this.style.display='none'" />
+        </sc-if>
+        <div style="flex:1;font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ reloj.titulo }}</div>
+        <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3)">{{ reloj.cuando }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 11px">
+          <div style="font-size:9.5px;color:rgba(var(--fgc,255,255,255),.4);text-transform:uppercase;letter-spacing:.06em">{{ L.caloriasActivas }}</div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-top:3px"><span style="font-family:'Instrument Serif',serif;font-size:27px">{{ reloj.kcal }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.4)">{{ L.kcalDia }}</span></div>
+        </div>
+        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 13px">
+          <div style="font-size:9.5px;color:rgba(var(--fgc,255,255,255),.4);text-transform:uppercase;letter-spacing:.06em">{{ L.sueno }}</div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-top:3px"><span style="font-family:'Instrument Serif',serif;font-size:27px">{{ reloj.sueno }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.4)">{{ L.hNoche }}</span></div>
+        </div>
+        <div style="background:var(--s2,#17171B);border-radius:14px;padding:12px 13px">
+          <div style="font-size:9.5px;color:rgba(var(--fgc,255,255,255),.4);text-transform:uppercase;letter-spacing:.06em">{{ L.pulsoReposo }}</div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-top:3px"><span style="font-family:'Instrument Serif',serif;font-size:27px">{{ reloj.reposo }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.4)">{{ L.lpm }}</span></div>
+        </div>
+      </div>
+      <sc-if value="{{ reloj.hayEntrenos }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.3);margin:14px 2px 7px">{{ L.ultimosEntrenos }}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ reloj.entrenos }}" as="w" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--s2,#17171B);border-radius:11px;padding:10px 12px">
+          <div style="font-size:12.5px;font-family:var(--font-mono,monospace);flex:none">{{ w.fecha }}</div>
+          <div style="font-size:11.5px;color:rgba(var(--fgc,255,255,255),.5);text-align:right">{{ w.detalle }}</div>
         </div>
         </sc-for>
       </div>
@@ -2239,7 +2278,7 @@ class Component extends DCLogic {
     logs: {}, wLock: false, pad: null, padIn: false,
     rest: 0, restMax: 90,
     borrarOpen: false, borrarTxt: '', borrarErr: '', borrando: false, privOpen: false,
-    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, whoop: null, dietMealIdx: 0,
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, whoop: null, reloj: null, dietMealIdx: 0,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, ckPreview: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
@@ -2416,6 +2455,9 @@ class Component extends DCLogic {
       if (window.CastilloData && window.CastilloData.alSincronizarSalud) {
         window.CastilloData.alSincronizarSalud(() => { try { this.refreshData(); } catch (e) {} });
       }
+      if (window.CastilloData && window.CastilloData.alSincronizarReloj) {
+        window.CastilloData.alSincronizarReloj(() => { try { this._cargaReloj(); } catch (e) {} });
+      }
     } catch (e) {}
     // Cuando por fin entra algo que estaba pendiente, se avisa y se repinta: el cliente tiene que
     // saber que su entreno SI se ha guardado, aunque sea mas tarde.
@@ -2539,6 +2581,24 @@ class Component extends DCLogic {
     try { const cd = window.CastilloData;
       if (cd && cd.whoopDatos) cd.whoopDatos().then(w => { if (w && w.ok && w.conectado) this.setState({ whoop: w }); }, () => {});
     } catch (e) {}
+    // Reloj (Apple Salud / Health Connect): lo que el móvil ha mandado de los últimos 7 días
+    try { this._cargaReloj(); } catch (e) {}
+  };
+  // Lo del reloj de los últimos 7 días (lo manda el móvil por su cuenta, también con la app cerrada).
+  _cargaReloj = () => {
+    const cd = window.CastilloData;
+    if (!cd || !cd.saludDatos) return;
+    const f = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    const h = new Date(), d = new Date(h.getFullYear(), h.getMonth(), h.getDate() - 6);
+    cd.saludDatos(f(d), f(h)).then(rows => this.setState({ reloj: rows || [] }), () => {});
+  };
+  // Nombre de cada tipo de entreno que manda el móvil (Apple Salud / Health Connect).
+  _tipoSalud = (t, en) => {
+    const M = { fuerza: ['Fuerza', 'Strength'], funcional: ['Funcional', 'Functional'], correr: ['Correr', 'Running'], caminar: ['Caminar', 'Walking'],
+      senderismo: ['Senderismo', 'Hiking'], bici: ['Bici', 'Cycling'], hiit: ['HIIT', 'HIIT'], eliptica: ['Elíptica', 'Elliptical'], remo: ['Remo', 'Rowing'],
+      natacion: ['Natación', 'Swimming'], yoga: ['Yoga', 'Yoga'], pilates: ['Pilates', 'Pilates'], baile: ['Baile', 'Dance'], core: ['Core', 'Core'],
+      estiramientos: ['Estiramientos', 'Stretching'], deporte: ['Deporte', 'Sport'], otro: ['Entreno', 'Workout'] };
+    return (M[t] || M.otro)[en ? 1 : 0];
   };
   // Alta de cliente nuevo: abre el formulario dentro de la app (misma webview). Al terminar vuelve ya logueado.
   goAlta = () => { try { window.location.href = 'alta.html?v=' + Date.now(); } catch (e) {} };   // rompe-cachés: carga SIEMPRE la última versión del formulario
@@ -2708,7 +2768,7 @@ class Component extends DCLogic {
   // Informe COMPLETO de 7 páginas (el diseño largo que validó Alex), no la hoja suelta de antes:
   // portada · entrenamientos · progreso por ejercicio · cardio · calorías por día ·
   // opciones y comidas libres · métricas. Cada página lleva su cabecera.
-  _resumenDocHtml = (m, wh) => {
+  _resumenDocHtml = (m, wh, rel) => {
     const en = this.state.lang === 'en', T = s => (window.I18N ? window.I18N.t(s, this.state.lang) : s);
     const hdr = (window.__DATA && window.__DATA.header) || {};
     const nombre = hdr.nombre || '';
@@ -3007,9 +3067,66 @@ class Component extends DCLogic {
         + '<div style="font-size:10px;color:#9a9a9a">· ' + esc(etiqueta) + '</div></div>';
     }
 
+    // ── Página del RELOJ (Apple Salud / Health Connect) ───────────────────────────────
+    // Alex, 9 y 23 oct 2026: «lo que da el Apple Watch: calorías quemadas, pulsaciones durante un entrenamiento, el
+    // sueño, los entrenamientos… que en el informe final de mes el cliente lo pueda ver». Lo manda el móvil por su
+    // cuenta. Solo sale si hay días con datos en el periodo; nunca se inventa nada.
+    let pReloj = '';
+    const relRows = (rel || []).filter(r => r && (r.kcal_activas != null || r.pulso_reposo != null || r.sueno_min != null || (r.entrenos || []).length));
+    if (relRows.length) {
+      const android = relRows.some(r => r.origen === 'android');
+      const fuente = android ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud');
+      const mediaR = k => { const v = relRows.map(r => r[k]).filter(x => x != null && x > 0); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+      const kcM = mediaR('kcal_activas'), suM = mediaR('sueno_min'), prM = mediaR('pulso_reposo');
+      const entR = [];
+      relRows.forEach(r => (r.entrenos || []).forEach(e => entR.push(Object.assign({ fecha: r.fecha }, e))));
+      entR.sort((a, b) => (String(a.ini) < String(b.ini) ? -1 : 1));
+      const minTot = entR.reduce((a, e) => a + (e.min || 0), 0);
+      const kcTot = entR.reduce((a, e) => a + (e.kcal || 0), 0);
+      const pms = entR.map(e => e.pm).filter(Boolean);
+      const pmMedia = pms.length ? Math.round(pms.reduce((a, b) => a + b, 0) / pms.length) : null;
+      const MAX_R = 20, restoR = Math.max(0, entR.length - MAX_R);
+      const CAJAR = (rot, val, uni) => '<div style="flex:1;border:1px solid #e6e6e6;border-radius:12px;padding:14px 14px 13px">'
+        + '<div style="font-size:8.5px;font-weight:700;letter-spacing:.18em;color:#9a9a9a;text-transform:uppercase">' + esc(rot) + '</div>'
+        + '<div style="font-size:26px;font-weight:300;margin-top:6px">' + esc(val) + '<span style="font-size:12px;color:#9a9a9a"> ' + esc(uni || '') + '</span></div></div>';
+      const TH = (t, der) => '<th style="text-align:' + (der ? 'right' : 'left') + ';padding:0 0 7px;font-size:9px;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase">' + t + '</th>';
+      const TD = (t, der, extra) => '<td style="padding:7px 0;border-top:1px solid #eee' + (der ? ';text-align:right' : '') + (extra || '') + '">' + t + '</td>';
+      pReloj = '<div style="font-size:17px;font-weight:600;margin:0 0 4px">' + esc(fuente) + '</div>'
+        + '<div style="font-size:11.5px;color:#6b6b6b;margin:0 0 16px">'
+        + esc(en ? ('Average of the ' + relRows.length + (relRows.length === 1 ? ' day' : ' days') + ' with data from your phone or watch in this period')
+                 : ('Media de ' + relRows.length + (relRows.length === 1 ? ' día' : ' días') + ' con datos de tu móvil o tu reloj en este periodo'))
+        + ' · ' + esc(_fechaLarga(relRows[0].fecha)) + ' → ' + esc(_fechaLarga(relRows[relRows.length - 1].fecha)) + '</div>'
+        + '<div style="display:flex;gap:10px">'
+          + CAJAR(en ? 'Active calories' : 'Calorías activas', kcM == null ? '—' : miles(kcM), en ? 'kcal/day' : 'kcal/día')
+          + CAJAR(en ? 'Sleep' : 'Sueño', suM == null ? '—' : dec((suM / 60).toFixed(1)), en ? 'h/night' : 'h/noche')
+          + CAJAR(en ? 'Resting heart rate' : 'Pulso en reposo', prM == null ? '—' : String(Math.round(prM)), en ? 'bpm' : 'lpm')
+          + CAJAR(en ? 'Workouts' : 'Entrenos', String(entR.length), '')
+        + '</div>'
+        + (entR.length
+          ? '<div style="height:22px"></div>' + ROT(en ? 'Workouts recorded by your phone or watch' : 'Entrenos registrados por tu móvil o tu reloj')
+            + '<div style="font-size:11.5px;color:#6b6b6b;margin:-2px 0 12px">'
+            + esc(en ? (entR.length + (entR.length === 1 ? ' workout · ' : ' workouts · ') + miles(minTot) + ' min')
+                     : (entR.length + (entR.length === 1 ? ' entreno · ' : ' entrenos · ') + miles(minTot) + ' min'))
+            + (kcTot ? esc(' · ' + miles(kcTot) + (en ? ' kcal in total' : ' kcal en total')) : '')
+            + (pmMedia ? esc(en ? (' · ' + pmMedia + ' bpm average heart rate') : (' · pulso medio ' + pmMedia + ' lpm')) : '') + '</div>'
+            + '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><tr>'
+            + TH(en ? 'Day' : 'Día') + TH(en ? 'Workout' : 'Entreno') + TH(en ? 'Duration' : 'Duración', 1)
+            + TH(en ? 'Heart rate (avg / max)' : 'Pulso (medio / máx.)', 1) + TH(en ? 'Calories' : 'Calorías', 1) + '</tr>'
+            + entR.slice(0, MAX_R).map(e => '<tr>' + TD(esc(_fechaLarga(e.fecha))) + TD(esc(this._tipoSalud(e.tipo, en)))
+                + TD(e.min ? (e.min + ' min') : '—', 1, ';color:#6b6b6b')
+                + TD(e.pm ? (e.pm + (e.px ? ' / ' + e.px : '') + (en ? ' bpm' : ' lpm')) : '—', 1)
+                + TD(e.kcal ? (miles(e.kcal) + ' kcal') : '—', 1, ';font-weight:600') + '</tr>').join('')
+            + '</table>'
+            + (restoR ? '<div style="font-size:11px;color:#9a9a9a;margin-top:8px">' + esc(en ? ('+ ' + restoR + ' more workouts not listed') : ('+ ' + restoR + ' entrenos más, no listados')) + '</div>' : '')
+          : '')
+        + '<div style="height:1px;background:#e6e6e6;margin:26px 0 10px"></div>'
+        + '<div style="font-size:10px;font-weight:600;letter-spacing:.24em;color:#141414">C A S T I L L O <span style="color:#9a9a9a;letter-spacing:normal;font-weight:400">· ' + esc(fuente) + ' · ' + esc(etiqueta) + '</span></div>';
+    }
+
     const doc = '<!doctype html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#141414;background:#fff;width:794px}</style></head><body>'
       + PAG(p1) + PAG(p2) + hojasSes.map(PAG).join('') + hojasEj.map(PAG).join('') + PAG(p4) + PAG(p5) + (m.periodo ? '' : PAG(p6)) + PAG(p7)
       + (pWhoop ? PAG(pWhoop) : '')
+      + (pReloj ? PAG(pReloj) : '')
       + '</body></html>';
     return { doc: doc, nombre: (en ? 'Summary-' : 'Resumen-') + etiqueta.replace(/\s+/g, '-') + '.pdf' };
   };
@@ -3064,6 +3181,15 @@ class Component extends DCLogic {
 
   // Pide a WHOOP los días del periodo que el cliente está mirando (mes, trimestre, semestre o año).
   // Si no lo tiene conectado, o si conectó a mitad, devuelve lo que haya: nunca inventa días.
+  // Lo del reloj (Apple Salud / Health Connect) de los días del periodo. Nunca inventa días: si no hay, lista vacía.
+  _relojDelPeriodo = async (m) => {
+    try {
+      if (!m || !m.desde) return [];
+      const cd = window.CastilloData;
+      if (!cd || !cd.saludDatos) return [];
+      return await cd.saludDatos(m.desde, m.hasta || m.desde);
+    } catch (e) { return []; }
+  };
   _whoopDelPeriodo = async (m) => {
     try {
       if (!m || !m.desde) return null;
@@ -3077,7 +3203,7 @@ class Component extends DCLogic {
     const rm = (window.__DATA && window.__DATA.resumenMeses) || [];
     const m = this._mesEn(Math.max(0, this.state.mesIdx || 0)); if (!m) return null;
     if (!(await this._ensurePdfLibs())) return null;
-    const built = this._resumenDocHtml(m, await this._whoopDelPeriodo(m));
+    const built = this._resumenDocHtml(m, await this._whoopDelPeriodo(m), await this._relojDelPeriodo(m));
     var old = document.getElementById('resumenGenFrame'); if (old) old.remove();
     var f = document.createElement('iframe'); f.id = 'resumenGenFrame';
     f.setAttribute('style', 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;background:#fff');
@@ -3145,7 +3271,7 @@ class Component extends DCLogic {
     if (this._bloqueaMesAbierto()) return;
     try {
       const m = this._mesEn(Math.max(0, this.state.mesIdx || 0)); if (!m) { this.flash(window.I18N ? window.I18N.t('Sin datos este mes', this.state.lang) : 'Sin datos este mes'); return; }
-      const built = this._resumenDocHtml(m, await this._whoopDelPeriodo(m));
+      const built = this._resumenDocHtml(m, await this._whoopDelPeriodo(m), await this._relojDelPeriodo(m));
       this._printDoc(built.doc, 'resumenPrintFrame');
     } catch (e) { this.flash('No se pudo imprimir el PDF'); }
   };
@@ -4596,6 +4722,7 @@ class Component extends DCLogic {
         apariencia: T('Apariencia'), idioma: T('Idioma'), espanol: T('Español'), ingles: T('Inglés'),
         datosPersonales: T('Datos personales'), tocaCambiarFoto: T('Toca para cambiar la foto'), emailPassNota: T('Tu email no se puede cambiar aquí: es el identificador de tu cuenta. Si lo necesitas, contacta con tu entrenador.'), telefonoLbl: T('Teléfono'), emailLbl: T('Email'), passLbl: T('Contraseña'), cambiar: T('Cambiar'), cambiarPass: T('Cambiar contraseña'), nuevaPass: T('Nueva contraseña'), repitePass: T('Repite la contraseña'), guardar: T('Guardar'),
         recuperacion: T('Recuperación'), sueno: T('Sueño'), esfuerzo: T('Esfuerzo'), ultimosEntrenos: T('Últimos entrenos'),
+        caloriasActivas: T('Calorías activas'), kcalDia: T('kcal/día'), hNoche: T('h/noche'), pulsoReposo: T('Pulso en reposo'), lpm: T('lpm'),
         historialCargas: T('Historial de cargas'), serieMasPesada: T('Serie más pesada'), sinCargas: T('Todavía no has registrado pesos en este ejercicio.'),
         resumen: T('Resumen'),
         comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'), recientes: T('Recientes'), favoritos: T('Favoritos'), resumenMes: T('Resumen del mes'), sinDatosMes: T('Sin datos este mes'), recuentoMes: T('Recuento del mes'), diaADia: T('Día a día'), mediaDiaria: T('Media diaria'),
@@ -4729,6 +4856,30 @@ class Component extends DCLogic {
             // solo el esfuerzo y las calorías DE ESA SESIÓN (Alex: las del día entero no las usa)
             detalle: [x.esfuerzo != null ? (T('esfuerzo') + ' ' + String(x.esfuerzo).replace('.', ',')) : null,
                       x.calorias != null ? (x.calorias + ' kcal') : null].filter(Boolean).join(' · ')
+          })) };
+      })(),
+      reloj: (() => {
+        const rows = (st.reloj || []).filter(r => r && (r.kcal_activas != null || r.pulso_reposo != null || r.sueno_min != null || (r.entrenos || []).length));
+        if (!rows.length) return { visible: false };
+        const en = st.lang === 'en';
+        const media = k => { const v = rows.map(r => r[k]).filter(x => x != null && x > 0); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+        const kc = media('kcal_activas'), su = media('sueno_min'), pr = media('pulso_reposo');
+        const ent = [];
+        rows.forEach(r => (r.entrenos || []).forEach(e => ent.push(Object.assign({ fecha: r.fecha }, e))));
+        ent.sort((a, b) => (String(a.ini) < String(b.ini) ? 1 : -1));
+        const android = rows.some(r => r.origen === 'android');
+        const sep = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, en ? ',' : '.');
+        return { visible: true,
+          titulo: android ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud'), hayLogo: !android, logo: 'logos-app/apple-salud.webp',
+          kcal: kc == null ? '—' : sep(Math.round(kc)),
+          sueno: su == null ? '—' : (su / 60).toFixed(1).replace('.', en ? '.' : ','),
+          reposo: pr == null ? '—' : Math.round(pr),
+          cuando: T('últimos 7 días'),
+          hayEntrenos: ent.length > 0,
+          // los 5 últimos: tipo, minutos, calorías y pulso medio de ESA sesión
+          entrenos: ent.slice(0, 5).map(x => ({
+            fecha: String(x.fecha || '').slice(8, 10) + '-' + String(x.fecha || '').slice(5, 7),
+            detalle: [this._tipoSalud(x.tipo, en), x.min ? (x.min + ' min') : null, x.kcal ? (sep(x.kcal) + ' kcal') : null, x.pm ? (x.pm + ' ' + T('lpm')) : null].filter(Boolean).join(' · ')
           })) };
       })(),
       evoTabs, evoMetrics: st.evoTab === 'comp', evoPhotos: st.evoTab === 'comp', evoEjercicio: st.evoTab === 'ejercicio',

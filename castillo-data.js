@@ -359,8 +359,51 @@
   function syncSaludPasos() {
     if (_sincSalud) { _sincOtra = true; return _sincSalud; }
     var fin = function () { _sincSalud = null; if (_sincOtra) { _sincOtra = false; return syncSaludPasos(); } };
-    _sincSalud = Promise.resolve().then(_leeYGuardaPasos).then(fin, fin);
+    // Al acabar, el plugin nativo (si la app instalada ya lo trae) manda lo del reloj y deja el segundo plano en
+    // marcha. Va DESPUÉS de los pasos para no escribir los dos a la vez la misma fila del día.
+    _sincSalud = Promise.resolve().then(_leeYGuardaPasos).then(fin, fin).then(function (r) { try { saludFondo(); } catch (e) {} return r; });
     return _sincSalud;
+  }
+
+  // ── PASOS Y RELOJ CON LA APP CERRADA ─────────────────────────────────────────────────────────
+  // Alex, 23 oct 2026: «que los pasos del Salud se actualicen solos, sin que los clientes tengan que entrar: hay
+  // clientes que no entran desde hace días y no puedo ver sus pasos». Y «pon lo del Apple Watch» (calorías,
+  // pulsaciones de los entrenos, sueño y entrenos, para el informe del mes).
+  // Lo hace el plugin nativo CastilloSalud (app 1.0.2 en iPhone / 1.0.8 en Android): el teléfono despierta la app
+  // cuando hay pasos nuevos (iPhone) o cada hora (Android) y manda los últimos 8 días a la función salud-sync.
+  // Como la sesión del cliente caduca a la hora, el móvil manda con una LLAVE propia que se pide aquí, con la app
+  // abierta. En una app instalada antigua (sin el plugin) todo esto no hace nada y sigue como antes.
+  var _fondoUlt = 0, _fondoEnMarcha = null, _avisaReloj = null;
+  function _plugSalud() { try { var C = window.Capacitor; return (C && C.Plugins && C.Plugins.CastilloSalud) || null; } catch (e) { return null; } }
+  function _pideLlaveSalud() {
+    return api('/functions/v1/salud-sync', { method: 'POST', body: JSON.stringify({ pedir_llave: true }) }, _ctx.token)
+      .then(function (j) { if (!j || !j.ok || !j.llave) throw new Error('sin llave'); return j.llave; });
+  }
+  // forzar: vuelve a pedir los permisos (botón «Conectar»). nuevo: aún no consta como conectado (lo está conectando).
+  function saludFondo(forzar, nuevo) {
+    var P = _plugSalud();
+    if (!P || !P.activar || !_ctx.email || !_ctx.token || (!nuevo && !saludConectado())) return Promise.resolve(null);
+    if (_fondoEnMarcha) return _fondoEnMarcha;
+    if (!forzar && Date.now() - _fondoUlt < 60000) return Promise.resolve(null);   // al volver a la app se pide dos veces seguidas
+    var objetivo = (window.__DATA && window.__DATA.pasosObjetivo) || PASOS_OBJETIVO;
+    _fondoEnMarcha = Promise.resolve(P.estado ? P.estado() : null).catch(function () { return null; }).then(function (e) {
+      var yaListo = e && e.activo && String(e.email || '').toLowerCase() === _ctx.email;
+      if (yaListo && !forzar) return P.sincronizar({ objetivo: objetivo });
+      return _pideLlaveSalud().then(function (llave) {
+        return P.activar({ llave: llave, url: SUPA + '/functions/v1/salud-sync', apikey: ANON, email: _ctx.email, objetivo: objetivo, forzar: !!forzar });
+      });
+    }).then(function (r) {
+      _fondoUlt = Date.now();
+      try { if (r && r.salud_escritos > 0 && typeof _avisaReloj === 'function') _avisaReloj(); } catch (e) {}
+      try { if (r && r.pasos_escritos > 0 && typeof _avisaSalud === 'function') _avisaSalud(); } catch (e) {}
+      return r;
+    }).catch(function () { return null; }).then(function (r) { _fondoEnMarcha = null; return r; });
+    return _fondoEnMarcha;
+  }
+  function apagaSaludFondo() {
+    var P = _plugSalud();
+    try { if (P && P.desactivar) P.desactivar().catch(function () {}); } catch (e) {}
+    _fondoUlt = 0;
   }
   function _leeYGuardaPasos() {
     var C = window.Capacitor, H = C && C.Plugins && C.Plugins.HealthPlugin;
@@ -443,7 +486,11 @@
   function conectarSalud() {
     var C = window.Capacitor, H = C && C.Plugins && C.Plugins.HealthPlugin;
     if (!H || !_ctx.email || !_ctx.token) return Promise.resolve({ available: !!H });
-    return H.requestHealthPermissions({ permissions: ['READ_STEPS'] }).then(function () {
+    // Con el plugin nuevo se piden de una vez los pasos y lo del reloj (una sola ventana) y queda el segundo plano en
+    // marcha; la petición de abajo ya no enseña nada porque el permiso de pasos ya está dado.
+    return saludFondo(true, true).catch(function () {}).then(function () {
+      return H.requestHealthPermissions({ permissions: ['READ_STEPS'] });
+    }).then(function () {
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       return H.queryAggregated({ startDate: start, endDate: now.toISOString(), dataType: 'steps', bucket: 'day' });
@@ -555,7 +602,7 @@
   }
 
   function saludConectado() { try { return localStorage.getItem('salud_conectado_' + (_ctx.email || '')) === '1'; } catch (e) { return false; } }
-  function desconectarSalud() { guardaDuro('salud_conectado_' + (_ctx.email || ''), null); }
+  function desconectarSalud() { guardaDuro('salud_conectado_' + (_ctx.email || ''), null); apagaSaludFondo(); }
   // Estado de conexión de cada app por usuario (Apple Salud es el flag real; el resto se marca en este móvil).
   function _appKey(name) { return 'app_con_' + (_ctx.email || '') + '_' + String(name).replace(/\s+/g, '_'); }
   function appConectado(name) { if (name === 'Apple Salud') return saludConectado(); try { return localStorage.getItem(_appKey(name)) === '1'; } catch (e) { return false; } }
@@ -762,7 +809,7 @@
         return loadData(at, em);
       });
     },
-    logout: function () { try { guardaDuro(LS, null); guardaDuro(CR, null); guardaDuro('castillo_fotos_borrador', null); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
+    logout: function () { apagaSaludFondo(); try { guardaDuro(LS, null); guardaDuro(CR, null); guardaDuro('castillo_fotos_borrador', null); localStorage.removeItem('castillo_profile'); localStorage.removeItem('castillo_profilephoto'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('salud_conectado') === 0 || k.indexOf('app_con_') === 0) localStorage.removeItem(k); }); } catch (e) {} _ctx = { token: null, email: null, hoy: null }; window.__DATA = null; },
     registrarComida: registrarComida,
     desregistrarComida: desregistrarComida,
     guardarPerfil: guardarPerfil, guardaIdioma: guardaIdioma,
@@ -821,6 +868,19 @@
         method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + _ctx.token }, body: cuerpo
       }).then(function (r) { return r.json(); }).catch(function () { return null; });
     },
+    // Lo del reloj (Apple Salud / Health Connect): calorías activas, pulso en reposo, sueño y entrenos, un día por
+    // fila (tabla salud_dia, la escribe el móvil por su cuenta). Con (desde, hasta) AAAA-MM-DD. Si aún no hay nada
+    // (o la tabla no existe todavía) devuelve una lista vacía.
+    saludDatos: function (desde, hasta) {
+      if (!_ctx.token || !_ctx.email) return Promise.resolve([]);
+      var q = '/rest/v1/salud_dia?select=fecha,kcal_activas,pulso_reposo,sueno_min,entrenos,origen&cliente_email=eq.' + encodeURIComponent(_ctx.email) + '&order=fecha.asc';
+      if (desde) q += '&fecha=gte.' + desde;
+      if (hasta) q += '&fecha=lte.' + hasta;
+      return api(q, {}, _ctx.token).then(function (r) { return Array.isArray(r) ? r : []; }).catch(function () { return []; });
+    },
+    alSincronizarReloj: function (fn) { _avisaReloj = fn; },
+    saludFondo: function () { try { return saludFondo(); } catch (e) { return Promise.resolve(null); } },
+    estadoSaludFondo: function () { var P = _plugSalud(); return (P && P.estado) ? P.estado().catch(function () { return null; }) : Promise.resolve(null); },
     conectarApp: conectarApp,
     desconectarApp: desconectarApp,
     conectarWhoop: conectarWhoop,
