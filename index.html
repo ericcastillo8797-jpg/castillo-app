@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 276;
+  var VERSION_ACTUAL = 277;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -4743,7 +4743,7 @@ class Component extends DCLogic {
       const uploading = !!(st.ckUploading && st.ckUploading[n]);
       const done = !!url && !uploading;
       const ver = (st.ckPreview && st.ckPreview[n]) || url;   // copia del movil si el enlace no llego a firmarse
-      return { n, ld: T('Cargando…'), done, uploading, pending: !url && !uploading, tap: this.tapPhoto(n),
+      return { n: T(n), ld: T('Cargando…'), done, uploading, pending: !url && !uploading, tap: this.tapPhoto(n),
         bg: done ? ('center/cover no-repeat url("' + ver + '")') : 'var(--s2,#121215)',
         bd: done ? 'rgba(var(--fgc,255,255,255),.45)' : 'rgba(var(--fgc,255,255,255),.09)',
         fg: done ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.3)' };
