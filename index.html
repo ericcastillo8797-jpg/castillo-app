@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 280;
+  var VERSION_ACTUAL = 281;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -4829,7 +4829,8 @@ class Component extends DCLogic {
       salSheet = {
         logo: !and, origen: and ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud'),
         titulo: this._tipoSalud(se.tipo, en) + ' ' + this._horaSalud(se.ini) + '–' + this._horaSalud(this._finSalud(se)),
-        cuando: cuando + (se.app ? ' · ' + se.app : ''), datos,
+        // Alex (31 oct 2026): el reloj solo si de verdad viene de un Apple Watch; si no, solo «Apple Salud» (arriba)
+        cuando: cuando + (/watch/i.test(se.app || '') ? ' · ' + se.app : ''), datos,
         hayHr: !!hr, hrMed: se.pm ? String(se.pm) : '—', hrMax: se.px ? String(se.px) : '—', hrX: hr ? hr.x : [], hrHi: hr ? String(hr.hi) : '', hrLo: hr ? String(hr.lo) : '',
         hayCad: !!cad, cadMed: se.cadm != null ? String(se.cadm) : (cv.length ? String(Math.round(cv.reduce((a, b) => a + b, 0) / cv.length)) : '—'),
         cadMax: se.cadx != null ? String(se.cadx) : (cv.length ? String(Math.round(Math.max(...cv))) : '—'), cadX: cad ? cad.x : [],
