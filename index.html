@@ -10,7 +10,7 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=276"></script>
+<script src="./castillo-i18n.js?v=280"></script>
 <script src="./castillo-transform.js?v=274"></script>
 <script src="./castillo-equiv.js?v=245"></script>
 <script src="./castillo-data.js?v=276"></script>
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 279;
+  var VERSION_ACTUAL = 280;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -196,6 +196,29 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <sc-if value="{{ t.pending }}" hint-placeholder-val="{{ true }}">
         <svg width="12" height="12" viewBox="0 0 11 11" fill="none" stroke="currentColor" opacity=".3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
         </sc-if>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <!-- Actividad de Apple Salud de hoy (Alex, 31 oct 2026): aparte de las tareas, no cuenta para el plan -->
+    <sc-if value="{{ saludHoy.hay }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:7px;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:22px 2px 11px">
+      <sc-if value="{{ saludHoy.logo }}" hint-placeholder-val="{{ true }}"><img src="logos-app/apple-salud.webp" alt="" style="width:15px;height:15px;border-radius:4px;flex:none" /></sc-if>
+      <span>{{ saludHoy.titulo }}</span>
+    </div>
+    <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(185,163,255,.28);border-radius:20px;overflow:hidden">
+      <sc-for list="{{ saludHoy.acts }}" as="s" hint-placeholder-count="1">
+      <div onClick="{{ s.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
+        <div style="width:26px;height:26px;flex:none;border-radius:7px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(185,163,255,.16)">
+          <sc-if value="{{ s.logo }}" hint-placeholder-val="{{ true }}"><img src="logos-app/apple-salud.webp" alt="" style="width:26px;height:26px;display:block" /></sc-if>
+          <sc-if value="{{ s.sinLogo }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="#B9A3FF"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.9 4.5 6.6 4.5c2.1 0 3.6 1.2 4.4 2.6.8-1.4 2.3-2.6 4.4-2.6 3.7 0 5.7 3.9 4.2 7.3C19.5 16.4 12 21 12 21Z"></path></svg></sc-if>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14.5px;font-weight:500">{{ s.label }}</div>
+          <div style="font-size:11.5px;color:#B9A3FF;margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</div>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 11 11" fill="none" stroke="currentColor" opacity=".3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
       </div>
       </sc-for>
     </div>
@@ -464,6 +487,28 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <sc-if value="{{ daySel.rest }}" hint-placeholder-val="{{ false }}">
       <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:22px 18px;text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.34)">Día de descanso — sin actividades asignadas.</div>
       </sc-if>
+      <!-- Actividad de Apple Salud de ese día (Alex, 31 oct 2026) -->
+    <sc-if value="{{ saludDia.hay }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:7px;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 10px">
+      <sc-if value="{{ saludDia.logo }}" hint-placeholder-val="{{ true }}"><img src="logos-app/apple-salud.webp" alt="" style="width:15px;height:15px;border-radius:4px;flex:none" /></sc-if>
+      <span>{{ saludDia.titulo }}</span>
+    </div>
+    <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(185,163,255,.28);border-radius:20px;overflow:hidden">
+      <sc-for list="{{ saludDia.acts }}" as="s" hint-placeholder-count="1">
+      <div onClick="{{ s.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
+        <div style="width:26px;height:26px;flex:none;border-radius:7px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(185,163,255,.16)">
+          <sc-if value="{{ s.logo }}" hint-placeholder-val="{{ true }}"><img src="logos-app/apple-salud.webp" alt="" style="width:26px;height:26px;display:block" /></sc-if>
+          <sc-if value="{{ s.sinLogo }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="#B9A3FF"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.9 4.5 6.6 4.5c2.1 0 3.6 1.2 4.4 2.6.8-1.4 2.3-2.6 4.4-2.6 3.7 0 5.7 3.9 4.2 7.3C19.5 16.4 12 21 12 21Z"></path></svg></sc-if>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14.5px;font-weight:500">{{ s.label }}</div>
+          <div style="font-size:11.5px;color:#B9A3FF;margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</div>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 11 11" fill="none" stroke="currentColor" opacity=".3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
 
     </div>
   </div>
@@ -1445,6 +1490,95 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </sc-for>
         </div>
         <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:14px">{{ L.regCadaSemana }}</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isSalSheet }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Actividad de Apple Salud" style="display:flex;flex-direction:column;min-height:0">
+      <div style="padding:14px 20px 14px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
+        <div style="display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#B9A3FF">
+          <sc-if value="{{ salSheet.logo }}" hint-placeholder-val="{{ true }}"><img src="logos-app/apple-salud.webp" alt="" style="width:16px;height:16px;border-radius:4px" /></sc-if>
+          <span>{{ salSheet.origen }}</span>
+        </div>
+        <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ salSheet.titulo }}</div>
+        <div style="font-size:12px;color:rgba(var(--fgc,255,255,255),.45);margin-top:3px">{{ salSheet.cuando }}</div>
+      </div>
+      <div style="overflow-y:auto;padding:14px 20px 30px;display:flex;flex-direction:column;gap:11px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <sc-for list="{{ salSheet.datos }}" as="d" hint-placeholder-count="4">
+          <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:14px;padding:11px 12px">
+            <div style="font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.38)">{{ d.l }}</div>
+            <div style="font-size:19px;font-weight:600;margin-top:4px">{{ d.v }}<span style="font-size:11px;font-weight:500;color:rgba(var(--fgc,255,255,255),.45);margin-left:3px">{{ d.u }}</span></div>
+          </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ salSheet.hayHr }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:18px;padding:14px 14px 12px">
+          <div style="font-size:13px;font-weight:600">{{ L.salPulso }}</div>
+          <div style="display:flex;justify-content:space-between;margin:8px 0 10px">
+            <div><div style="font-size:22px;font-weight:600">{{ salSheet.hrMed }}</div><div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.38)">{{ L.salMedia }}</div></div>
+            <div style="text-align:right"><div style="font-size:22px;font-weight:600">{{ salSheet.hrMax }}</div><div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.38)">{{ L.salMaximo }}</div></div>
+          </div>
+          <svg viewBox="0 0 320 110" preserveAspectRatio="none" style="width:100%;height:120px;display:block;overflow:visible">
+            <path d="{{ salHrArea }}" fill="rgba(235,87,87,.16)"></path>
+            <path d="{{ salHrLine }}" fill="none" stroke="#EB5757" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <div style="display:flex;justify-content:space-between;margin-top:6px">
+            <sc-for list="{{ salSheet.hrX }}" as="x" hint-placeholder-count="5"><span style="font-size:10px;color:rgba(var(--fgc,255,255,255),.38)">{{ x.t }}</span></sc-for>
+          </div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ salSheet.hayCad }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:18px;padding:14px 14px 12px">
+          <div style="font-size:13px;font-weight:600">{{ L.salCadencia }}</div>
+          <div style="display:flex;justify-content:space-between;margin:8px 0 10px">
+            <div><div style="font-size:22px;font-weight:600">{{ salSheet.cadMed }}<span style="font-size:11px;font-weight:500;color:rgba(var(--fgc,255,255,255),.45)"> /min</span></div><div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.38)">{{ L.salMedia }}</div></div>
+            <div style="text-align:right"><div style="font-size:22px;font-weight:600">{{ salSheet.cadMax }}<span style="font-size:11px;font-weight:500;color:rgba(var(--fgc,255,255,255),.45)"> /min</span></div><div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.38)">{{ L.salMaximo }}</div></div>
+          </div>
+          <svg viewBox="0 0 320 110" preserveAspectRatio="none" style="width:100%;height:100px;display:block;overflow:visible">
+            <path d="{{ salCadArea }}" fill="rgba(185,163,255,.16)"></path>
+            <path d="{{ salCadLine }}" fill="none" stroke="#B9A3FF" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <div style="display:flex;justify-content:space-between;margin-top:6px">
+            <sc-for list="{{ salSheet.cadX }}" as="x" hint-placeholder-count="5"><span style="font-size:10px;color:rgba(var(--fgc,255,255,255),.38)">{{ x.t }}</span></sc-for>
+          </div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ salSheet.hayZonas }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:18px;padding:14px 14px 12px">
+          <div style="font-size:13px;font-weight:600">{{ L.salZonas }}</div>
+          <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.38);margin:3px 0 10px">{{ salSheet.zonasNota }}</div>
+          <sc-for list="{{ salSheet.zonas }}" as="z" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:10px;margin:7px 0">
+            <div style="width:104px;flex:none"><div style="font-size:11.5px;font-weight:600">{{ z.n }}</div><div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.38)">{{ z.r }}</div></div>
+            <div style="flex:1;height:18px;border-radius:9px;background:rgba(var(--fgc,255,255,255),.07);overflow:hidden">
+              <div style="height:100%;width:{{ z.w }};background:{{ z.c }};border-radius:9px"></div>
+            </div>
+            <div style="width:74px;flex:none;text-align:right;font-size:11px"><span style="font-weight:600">{{ z.t }}</span> <span style="color:rgba(var(--fgc,255,255,255),.45)">{{ z.pct }}</span></div>
+          </div>
+          </sc-for>
+        </div>
+        </sc-if>
+        <sc-if value="{{ salSheet.hayKm }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:18px;padding:14px 14px 12px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px">{{ L.salParciales }}</div>
+          <sc-for list="{{ salSheet.km }}" as="k" hint-placeholder-count="2">
+          <div style="display:flex;align-items:center;gap:10px;margin:6px 0">
+            <div style="width:34px;flex:none;font-size:11.5px;font-weight:600">{{ k.d }}</div>
+            <div style="flex:1;height:18px;border-radius:9px;background:rgba(var(--fgc,255,255,255),.07);overflow:hidden">
+              <div style="height:100%;width:{{ k.w }};background:#EB5757;border-radius:9px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;box-sizing:border-box;font-size:10px;font-weight:600;color:#fff">{{ k.ritmo }}</div>
+            </div>
+            <div style="width:52px;flex:none;text-align:right;font-size:11px;font-weight:600">{{ k.t }}</div>
+          </div>
+          </sc-for>
+          <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.38);margin-top:4px">{{ L.salParcialesPie }}</div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ salSheet.sinDetalle }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:11.5px;line-height:1.45;color:rgba(var(--fgc,255,255,255),.45);text-align:center;padding:4px 10px">{{ salSheet.notaDetalle }}</div>
+        </sc-if>
+        <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:2px">{{ salSheet.pie }}</div>
       </div>
     </div>
     </sc-if>
@@ -2622,13 +2756,64 @@ class Component extends DCLogic {
     const f = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
     const h = new Date(), d = new Date(h.getFullYear(), h.getMonth(), h.getDate() - 6);
     cd.saludDatos(f(d), f(h)).then(rows => this.setState({ reloj: rows || [] }), () => {});
+    // Alex (31 oct 2026): los entrenos que manda Apple Salud / Health Connect salen como actividad en Hoy y en la Agenda.
+    const d90 = new Date(h.getFullYear(), h.getMonth(), h.getDate() - 90);
+    cd.saludDatos(f(d90), f(h)).then(rows => this.setState({ relojAct: rows || [] }), () => {});
+  };
+  // ── ACTIVIDAD DE APPLE SALUD (Alex, 31 oct 2026) ─────────────────────────────────────────
+  // Lo que el reloj o el móvil apuntan solos (fuerza, caminar, baile…). Va aparte: no cuenta para el plan.
+  _horaSalud = iso => { const d = new Date(iso); return isNaN(d) ? '' : String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  _segSalud = e => (e && (e.seg || (e.min || 0) * 60)) || 0;
+  _finSalud = e => (e.fin ? e.fin : new Date(new Date(e.ini).getTime() + this._segSalud(e) * 1000).toISOString());
+  _durSalud = s => { s = Math.round(s || 0); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60, d2 = n => String(n).padStart(2, '0'); return h ? (h + ':' + d2(m) + ':' + d2(x)) : (m + ':' + d2(x)); };
+  _saludDelDia = fecha => {
+    const st = this.state, en = st.lang === 'en';
+    const todas = st.relojAct || [];
+    const android = todas.some(r => r && r.origen === 'android');
+    const lista = [];
+    todas.filter(r => r && r.fecha === fecha).forEach(r => (r.entrenos || []).forEach(e => { if (e && e.ini) lista.push(e); }));
+    lista.sort((a, b) => (String(a.ini) < String(b.ini) ? -1 : 1));
+    return {
+      hay: lista.length > 0, logo: !android,
+      titulo: android ? (en ? 'Health Connect activity' : 'Actividad de Health Connect') : (en ? 'Apple Health activity' : 'Actividad de Apple Salud'),
+      acts: lista.map(e => ({ label: this._tipoSalud(e.tipo, en), logo: !android, sinLogo: android,
+        sub: [this._horaSalud(e.ini) + '–' + this._horaSalud(this._finSalud(e)), e.min ? (e.min + ' min') : null, e.kcal ? (e.kcal + ' kcal') : null, e.pm ? ('♥ ' + e.pm + ' ' + (en ? 'bpm' : 'lpm')) : null].filter(Boolean).join(' · '),
+        open: () => this.openSheet({ k: 'sal', e, android }) }))
+    };
+  };
+  // Tiempo en cada zona de pulso, con las zonas por % del pulso máximo (220 − edad), como en Harbiz.
+  _zonasSalud = (e, fcmax, en) => {
+    const lim = [0.65, 0.72, 0.79, 0.86, 0.93].map(p => Math.round(p * fcmax));
+    const zona = b => (b >= lim[4] ? 4 : b >= lim[3] ? 3 : b >= lim[2] ? 2 : b >= lim[1] ? 1 : b >= lim[0] ? 0 : -1);
+    const seg = [0, 0, 0, 0, 0];
+    if (e.hrb && typeof e.hrb === 'object' && Object.keys(e.hrb).length) Object.keys(e.hrb).forEach(k => { const i = zona(Number(k) + 2.5); if (i >= 0) seg[i] += Number(e.hrb[k]) || 0; });
+    else if (Array.isArray(e.hr) && e.hr.length > 1) for (let i = 0; i < e.hr.length - 1; i++) { const d = Math.min(120, (e.hr[i + 1][0] - e.hr[i][0]) || 0); const z = zona(e.hr[i][1]); if (z >= 0 && d > 0) seg[z] += d; }
+    else return null;
+    const total = this._segSalud(e) || 1;
+    const N = en ? ['Recovery', 'Aerobic base', 'Aerobic', 'Threshold', 'Maximum'] : ['Recuperación', 'Base aeróbica', 'Aeróbico', 'Umbral', 'Máximo'];
+    const C = ['#3FB6A8', '#3D8BEF', '#F2C94C', '#F2994A', '#EB5757'];
+    const tope = [lim[1], lim[2], lim[3], lim[4], fcmax];
+    return seg.map((x, i) => { const pct = Math.min(100, Math.round(x / total * 100)); return { n: 'Z' + (i + 1) + ' · ' + N[i], r: lim[i] + '–' + tope[i] + ' ' + (en ? 'bpm' : 'lpm'), t: this._durSalud(x), pct: pct + '%', w: Math.max(pct, x > 0 ? 6 : 0) + '%', c: C[i] }; });
+  };
+  // Línea y relleno de una serie [[segundo, valor], …] para un SVG de 320 × 110.
+  _serieSalud = (serie, total) => {
+    const pts = (serie || []).filter(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1]));
+    if (pts.length < 2) return null;
+    const vs = pts.map(p => p[1]); let lo = Math.min(...vs), hi = Math.max(...vs);
+    lo = Math.max(0, Math.floor((lo - 5) / 10) * 10); hi = Math.ceil((hi + 5) / 10) * 10; if (hi <= lo) hi = lo + 10;
+    const T = Math.max(total || 0, pts[pts.length - 1][0]) || 1;
+    const xy = pts.map(p => [(p[0] / T * 320).toFixed(1), (110 - (p[1] - lo) / (hi - lo) * 110).toFixed(1)]);
+    const linea = 'M' + xy.map(q => q.join(',')).join(' L');
+    return { linea, area: linea + ' L' + xy[xy.length - 1][0] + ',110 L' + xy[0][0] + ',110 Z', hi, lo,
+      x: [0, 0.25, 0.5, 0.75, 1].map(f => ({ t: this._durSalud(T * f) })) };
   };
   // Nombre de cada tipo de entreno que manda el móvil (Apple Salud / Health Connect).
   _tipoSalud = (t, en) => {
     const M = { fuerza: ['Fuerza', 'Strength'], funcional: ['Funcional', 'Functional'], correr: ['Correr', 'Running'], caminar: ['Caminar', 'Walking'],
       senderismo: ['Senderismo', 'Hiking'], bici: ['Bici', 'Cycling'], hiit: ['HIIT', 'HIIT'], eliptica: ['Elíptica', 'Elliptical'], remo: ['Remo', 'Rowing'],
       natacion: ['Natación', 'Swimming'], yoga: ['Yoga', 'Yoga'], pilates: ['Pilates', 'Pilates'], baile: ['Baile', 'Dance'], core: ['Core', 'Core'],
-      estiramientos: ['Estiramientos', 'Stretching'], deporte: ['Deporte', 'Sport'], otro: ['Entreno', 'Workout'] };
+      estiramientos: ['Estiramientos', 'Stretching'], deporte: ['Deporte', 'Sport'], escaleras: ['Escaleras', 'Stair climbing'], cardio: ['Cardio', 'Cardio'],
+      otro: ['Entreno', 'Workout'] };
     return (M[t] || M.otro)[en ? 1 : 0];
   };
   // Alta de cliente nuevo: abre el formulario dentro de la app (misma webview). Al terminar vuelve ya logueado.
@@ -3494,6 +3679,7 @@ class Component extends DCLogic {
       if (!_ckAbierta && d && d.checkinHoy && Object.keys(d.checkinHoy).length) patch.ck = Object.assign({}, this.state.ck, d.checkinHoy);
       if (!_ckAbierta && d && d.checkinFotosHoy && Object.keys(d.checkinFotosHoy).length) patch.ckPhotos = Object.assign({}, this.state.ckPhotos, d.checkinFotosHoy);
       this.setState(patch);
+      try { this._cargaReloj(); } catch (e) {}   // y lo último que ha mandado Apple Salud (actividades de hoy)
     }, () => {});
   };
   // true si esa fecha ('YYYY-MM-DD') es POSTERIOR a hoy (en la zona del cliente) → no se puede registrar aún
@@ -4507,6 +4693,9 @@ class Component extends DCLogic {
       };
     });
     // (La nutrición sale SOLO los días que el entrenador la puso en el calendario, con el título del CRM — se añade en el bucle de arriba desde la agenda.)
+    // Actividad de Apple Salud de hoy (pantalla Hoy) y del día elegido (Agenda)
+    const _fHoy = (x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'))(new Date());
+    const saludHoy = this._saludDelDia(_fHoy), saludDia = this._saludDelDia(dS.fecha);
     const daySel = {
       long: tD(dS.long), rom: dS.rom, t: dS.t, s: tr(dS.s), ses: dS.ses, isToday: !!dS.today,
       acts: dayActs, hasActs: dayActs.length > 0, rest: dayActs.length === 0
@@ -4614,6 +4803,45 @@ class Component extends DCLogic {
         dl: (d > 0 ? '↑ ' : d < 0 ? '↓ ' : '· ') + Math.abs(d).toFixed(1).replace('.', ',') };
     }) }));
 
+    // Ficha de una actividad de Apple Salud (Alex, 31 oct 2026: como la de Harbiz)
+    const se = sh.k === 'sal' ? sh.e : null;
+    let salSheet = {}, salHrLine = '', salHrArea = '', salCadLine = '', salCadArea = '';
+    if (se) {
+      const en = st.lang === 'en', and = !!sh.android, tot = this._segSalud(se), lpm = en ? 'bpm' : 'lpm';
+      const nac = new Date((st.profile && st.profile.fechaNac) || '');
+      const edad = isNaN(nac) ? null : (a => (a > 10 && a < 100 ? Math.floor(a) : null))((Date.now() - nac.getTime()) / 31557600000);
+      const fcmax = 220 - (edad || 30);
+      const hr = this._serieSalud(se.hr, tot), cad = this._serieSalud(se.cad, tot);
+      if (hr) { salHrLine = hr.linea; salHrArea = hr.area; }
+      if (cad) { salCadLine = cad.linea; salCadArea = cad.area; }
+      const miles = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, en ? ',' : '.');
+      const datos = [{ l: T('Tiempo total'), v: this._durSalud(tot), u: '' }];
+      if (se.dist) datos.push({ l: T('Distancia'), v: (se.dist / 1000).toFixed(2).replace('.', en ? '.' : ','), u: 'km' });
+      if (se.pm) datos.push({ l: T('Pulso medio'), v: String(se.pm), u: lpm });
+      if (se.px) datos.push({ l: T('Pulso máximo'), v: String(se.px), u: lpm });
+      if (se.kcal) datos.push({ l: T('Calorías'), v: miles(se.kcal), u: 'kcal' });
+      const zonas = this._zonasSalud(se, fcmax, en);
+      const cv = (se.cad || []).map(p => p && p[1]).filter(v => isFinite(v));
+      const kms = Array.isArray(se.km) ? se.km.filter(k => Array.isArray(k) && k[0] > 0 && k[1] > 0) : [];
+      const kmMax = Math.max(1, ...kms.map(k => k[1] / k[0]));
+      let cuando = '';
+      try { cuando = new Date(se.ini).toLocaleDateString(en ? 'en-US' : 'es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) + ' · ' + this._horaSalud(se.ini); } catch (er) {}
+      salSheet = {
+        logo: !and, origen: and ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud'),
+        titulo: this._tipoSalud(se.tipo, en) + ' ' + this._horaSalud(se.ini) + '–' + this._horaSalud(this._finSalud(se)),
+        cuando: cuando + (se.app ? ' · ' + se.app : ''), datos,
+        hayHr: !!hr, hrMed: se.pm ? String(se.pm) : '—', hrMax: se.px ? String(se.px) : '—', hrX: hr ? hr.x : [], hrHi: hr ? String(hr.hi) : '', hrLo: hr ? String(hr.lo) : '',
+        hayCad: !!cad, cadMed: se.cadm != null ? String(se.cadm) : (cv.length ? String(Math.round(cv.reduce((a, b) => a + b, 0) / cv.length)) : '—'),
+        cadMax: se.cadx != null ? String(se.cadx) : (cv.length ? String(Math.round(Math.max(...cv))) : '—'), cadX: cad ? cad.x : [],
+        hayZonas: !!zonas, zonas: zonas || [],
+        zonasNota: (en ? 'Max HR ' : 'Pulso máximo ') + fcmax + ' ' + lpm + (edad ? (en ? ' (220 − age)' : ' (220 − edad)') : (en ? ' (estimated)' : ' (estimado)')),
+        hayKm: kms.length > 0,
+        km: kms.map(k => { const ritmo = k[1] / k[0]; return { d: (Math.abs(k[0] - Math.round(k[0])) < 0.01 ? String(Math.round(k[0])) : k[0].toFixed(2).replace('.', en ? '.' : ',')), ritmo: this._durSalud(ritmo), t: this._durSalud(k[1]), w: Math.max(8, Math.round(ritmo / kmMax * 100)) + '%' }; }),
+        sinDetalle: !hr && !cad && !zonas,
+        notaDetalle: T('La gráfica del pulso y las zonas saldrán cuando tengas la última versión de la app.'),
+        pie: and ? T('Registrado automáticamente por Health Connect. No hace falta apuntarlo.') : T('Registrado automáticamente por Apple Salud. No hace falta apuntarlo.')
+      };
+    }
     const ve = sh.k === 'var' ? sh.e : null;
     let varSheet = {};
     if (ve) {
@@ -4779,6 +5007,7 @@ class Component extends DCLogic {
         hoy: T('Hoy'), agenda: T('Agenda'), evolucion: T('Evolución'), ajustes: T('Ajustes'),
         planHoy: T('Plan de hoy'), config: T('Configuración'), dieta: T('Dieta'),
         tareasHoy: T('Tareas de hoy'), resumenSemanal: T('Resumen semanal'),
+        salPulso: T('Pulso'), salMedia: T('Media'), salMaximo: T('Máximo'), salCadencia: T('Cadencia (pasos/min)'), salZonas: T('Tiempo en zonas de pulso'), salParciales: T('Parciales por km'), salParcialesPie: T('Km · ritmo (min/km) · tiempo'),
         pautaAlim: T('Pauta alimenticia'), cumplGlobal: T('Cumplimiento global'), global: T('Global'),
         bibliotecaTecnica: T('Biblioteca de técnica'),
         sincroniza: T('Sincroniza tu actividad'), sincronizaSub: T('Conecta tu dispositivo para volcar tu actividad automáticamente'), conectar: T('Conectar'),
@@ -5016,6 +5245,7 @@ class Component extends DCLogic {
           conectar: this.saludConectar, ahoraNo: this.saludAhoraNo };
       })(),
       isVarSheet: sh.k === 'var', varSheet,
+      isSalSheet: sh.k === 'sal', salSheet, salHrLine, salHrArea, salCadLine, salCadArea, saludHoy, saludDia,
       dietRows,
       dietState: dietFuture ? T('Programada') : (dietToday ? T('Hoy · editable') : T('Editable')),
       dietNote: dietFuture ? T('Podrá registrarla ese día.')

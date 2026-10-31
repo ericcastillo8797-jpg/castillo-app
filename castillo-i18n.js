@@ -723,6 +723,13 @@
     'Últimos entrenos': 'Latest workouts', 'últimos 7 días': 'last 7 days', 'esfuerzo': 'strain',
     // bloque del reloj (Apple Salud / Health Connect), 23 oct 2026
     'Calorías activas': 'Active calories', 'Calorías totales': 'Total calories', 'kcal/día': 'kcal/day', 'h/noche': 'h/night', 'lpm': 'bpm',
+    // actividad de Apple Salud en Hoy, Agenda y su ficha (31 oct 2026)
+    'Tiempo total': 'Total time', 'Distancia': 'Distance', 'Pulso medio': 'Average HR', 'Pulso máximo': 'Max HR', 'Pulso': 'Heart rate',
+    'Media': 'Average', 'Máximo': 'Max', 'Cadencia (pasos/min)': 'Cadence (steps/min)', 'Tiempo en zonas de pulso': 'Time in HR zones',
+    'Parciales por km': 'Splits per km', 'Km · ritmo (min/km) · tiempo': 'Km · pace (min/km) · time',
+    'La gráfica del pulso y las zonas saldrán cuando tengas la última versión de la app.': 'The heart-rate chart and zones will show once you have the latest version of the app.',
+    'Registrado automáticamente por Apple Salud. No hace falta apuntarlo.': 'Recorded automatically by Apple Health. No need to log it.',
+    'Registrado automáticamente por Health Connect. No hace falta apuntarlo.': 'Recorded automatically by Health Connect. No need to log it.',
     'Cerrar': 'Close', 'Resumen': 'Summary', 'Mes': 'Month', 'Trimestre': 'Quarter', 'Semestre': 'Half-year', 'Año': 'Year',
     'Resumen del trimestre': 'Quarterly summary', 'Resumen del semestre': 'Half-year summary', 'Resumen del año': 'Yearly summary',
     'Favoritos': 'Favourites',
