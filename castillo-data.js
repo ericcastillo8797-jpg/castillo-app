@@ -870,6 +870,14 @@
         method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + _ctx.token }, body: cuerpo
       }).then(function (r) { return r.json(); }).catch(function () { return null; });
     },
+    // Entrenos de WHOOP con todo lo que da WHOOP (31 oct 2026), para Hoy y la Agenda. (desde, hasta) AAAA-MM-DD.
+    whoopEntrenos: function (desde, hasta) {
+      if (!_ctx.token) return Promise.resolve(null);
+      return fetch(SUPA + '/functions/v1/whoop-datos', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + _ctx.token },
+        body: JSON.stringify({ entrenos: true, desde: desde, hasta: hasta || desde })
+      }).then(function (r) { return r.json(); }).catch(function () { return null; });
+    },
     // Lo del reloj (Apple Salud / Health Connect): calorías totales y activas, pulso en reposo, sueño y entrenos, un día por
     // fila (tabla salud_dia, la escribe el móvil por su cuenta). Con (desde, hasta) AAAA-MM-DD. Si aún no hay nada
     // (o la tabla no existe todavía) devuelve una lista vacía.

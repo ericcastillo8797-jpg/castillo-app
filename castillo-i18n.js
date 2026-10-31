@@ -727,6 +727,8 @@
     'Tiempo total': 'Total time', 'Distancia': 'Distance', 'Pulso medio': 'Average HR', 'Pulso máximo': 'Max HR', 'Pulso': 'Heart rate',
     'Media': 'Average', 'Máximo': 'Max', 'Cadencia (pasos/min)': 'Cadence (steps/min)', 'Tiempo en zonas de pulso': 'Time in HR zones',
     'Parciales por km': 'Splits per km', 'Km · ritmo (min/km) · tiempo': 'Km · pace (min/km) · time',
+    'Desnivel': 'Elevation gain', 'Zonas de WHOOP, por % de tu pulso máximo': 'WHOOP zones, by % of your max heart rate',
+    'Registrado automáticamente por WHOOP. No hace falta apuntarlo.': 'Recorded automatically by WHOOP. No need to log it.', 'WHOOP grabó el': 'WHOOP recorded', 'del entreno.': 'of the workout.',
     'La gráfica del pulso y las zonas saldrán cuando tengas la última versión de la app.': 'The heart-rate chart and zones will show once you have the latest version of the app.',
     'Registrado automáticamente por Apple Salud. No hace falta apuntarlo.': 'Recorded automatically by Apple Health. No need to log it.',
     'Registrado automáticamente por Health Connect. No hace falta apuntarlo.': 'Recorded automatically by Health Connect. No need to log it.',

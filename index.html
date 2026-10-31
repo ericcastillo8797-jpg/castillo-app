@@ -10,7 +10,7 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=280"></script>
+<script src="./castillo-i18n.js?v=282"></script>
 <script src="./castillo-transform.js?v=274"></script>
 <script src="./castillo-equiv.js?v=245"></script>
 <script src="./castillo-data.js?v=276"></script>
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 281;
+  var VERSION_ACTUAL = 282;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -224,6 +224,27 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     </div>
     </sc-if>
 
+    <!-- Actividad de WHOOP de hoy (Alex, 31 oct 2026) -->
+    <sc-if value="{{ whoopHoy.hay }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:7px;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 11px">
+      <img src="logos-app/whoop.png" alt="" style="width:15px;height:15px;border-radius:4px;flex:none;background:#fff" />
+      <span>{{ whoopHoy.titulo }}</span>
+    </div>
+    <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(185,163,255,.28);border-radius:20px;overflow:hidden">
+      <sc-for list="{{ whoopHoy.acts }}" as="s" hint-placeholder-count="1">
+      <div onClick="{{ s.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
+        <div style="width:26px;height:26px;flex:none;border-radius:7px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff">
+          <img src="logos-app/whoop.png" alt="" style="width:22px;height:22px;display:block" />
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14.5px;font-weight:500">{{ s.label }}</div>
+          <div style="font-size:11.5px;color:#B9A3FF;margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</div>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 11 11" fill="none" stroke="currentColor" opacity=".3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
     <div style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:28px 2px 11px">{{ L.resumenSemanal }}</div>
     <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(var(--fgc,255,255,255),.09);border-radius:20px;padding:18px 16px 6px">
       <div style="display:flex;align-items:center;gap:16px">
@@ -499,6 +520,27 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <div style="width:26px;height:26px;flex:none;border-radius:7px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(185,163,255,.16)">
           <sc-if value="{{ s.logo }}" hint-placeholder-val="{{ true }}"><img src="logos-app/apple-salud.webp" alt="" style="width:26px;height:26px;display:block" /></sc-if>
           <sc-if value="{{ s.sinLogo }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="#B9A3FF"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.9 4.5 6.6 4.5c2.1 0 3.6 1.2 4.4 2.6.8-1.4 2.3-2.6 4.4-2.6 3.7 0 5.7 3.9 4.2 7.3C19.5 16.4 12 21 12 21Z"></path></svg></sc-if>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14.5px;font-weight:500">{{ s.label }}</div>
+          <div style="font-size:11.5px;color:#B9A3FF;margin-top:2.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</div>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 11 11" fill="none" stroke="currentColor" opacity=".3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
+      <!-- Actividad de WHOOP de ese día (Alex, 31 oct 2026) -->
+    <sc-if value="{{ whoopDia.hay }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:7px;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36);margin:18px 2px 10px">
+      <img src="logos-app/whoop.png" alt="" style="width:15px;height:15px;border-radius:4px;flex:none;background:#fff" />
+      <span>{{ whoopDia.titulo }}</span>
+    </div>
+    <div style="background:var(--s1,#0C0C0E);border:.5px solid rgba(185,163,255,.28);border-radius:20px;overflow:hidden">
+      <sc-for list="{{ whoopDia.acts }}" as="s" hint-placeholder-count="1">
+      <div onClick="{{ s.open }}" style="display:flex;align-items:center;gap:13px;padding:15px;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.06);cursor:pointer;transition:background .2s" style-hover="background:rgba(var(--fgc,255,255,255),.035)">
+        <div style="width:26px;height:26px;flex:none;border-radius:7px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff">
+          <img src="logos-app/whoop.png" alt="" style="width:22px;height:22px;display:block" />
         </div>
         <div style="flex:1;min-width:0">
           <div style="font-size:14.5px;font-weight:500">{{ s.label }}</div>
@@ -1499,6 +1541,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       <div style="padding:14px 20px 14px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
         <div style="display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#B9A3FF">
           <sc-if value="{{ salSheet.logo }}" hint-placeholder-val="{{ true }}"><img src="logos-app/apple-salud.webp" alt="" style="width:16px;height:16px;border-radius:4px" /></sc-if>
+          <sc-if value="{{ salSheet.logoWhoop }}" hint-placeholder-val="{{ false }}"><img src="logos-app/whoop.png" alt="" style="width:16px;height:16px;border-radius:4px;background:#fff" /></sc-if>
           <span>{{ salSheet.origen }}</span>
         </div>
         <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ salSheet.titulo }}</div>
@@ -2759,6 +2802,32 @@ class Component extends DCLogic {
     // Alex (31 oct 2026): los entrenos que manda Apple Salud / Health Connect salen como actividad en Hoy y en la Agenda.
     const d90 = new Date(h.getFullYear(), h.getMonth(), h.getDate() - 90);
     cd.saludDatos(f(d90), f(h)).then(rows => this.setState({ relojAct: rows || [] }), () => {});
+    // y los entrenos de WHOOP, si lo tiene conectado (Alex, 31 oct 2026: «igual que los de Apple Salud»)
+    if (cd.whoopEntrenos) cd.whoopEntrenos(f(d90), f(h)).then(r => this.setState({ whoopAct: (r && r.ok && r.conectado && Array.isArray(r.entrenos)) ? r.entrenos : [] }), () => {});
+  };
+  // Nombre del deporte que manda WHOOP («weightlifting», «functional-fitness»…). Si no lo conocemos, tal cual.
+  _deporteWhoop = (d, en) => {
+    const k = String(d || '').toLowerCase().replace(/[-_]+/g, ' ').trim();
+    const M = { weightlifting: ['Pesas', 'Weightlifting'], powerlifting: ['Powerlifting', 'Powerlifting'], 'functional fitness': ['Funcional', 'Functional fitness'],
+      running: ['Correr', 'Running'], walking: ['Caminar', 'Walking'], cycling: ['Bici', 'Cycling'], spin: ['Spinning', 'Spin'], 'mountain biking': ['Bici de montaña', 'Mountain biking'],
+      'hiking/rucking': ['Senderismo', 'Hiking'], hiking: ['Senderismo', 'Hiking'], swimming: ['Natación', 'Swimming'], rowing: ['Remo', 'Rowing'], yoga: ['Yoga', 'Yoga'], pilates: ['Pilates', 'Pilates'],
+      barre: ['Barre', 'Barre'], dance: ['Baile', 'Dance'], boxing: ['Boxeo', 'Boxing'], 'martial arts': ['Artes marciales', 'Martial arts'], 'jiu jitsu': ['Jiu-jitsu', 'Jiu-jitsu'],
+      tennis: ['Tenis', 'Tennis'], padel: ['Pádel', 'Padel'], pickleball: ['Pickleball', 'Pickleball'], basketball: ['Baloncesto', 'Basketball'], soccer: ['Fútbol', 'Soccer'],
+      football: ['Fútbol americano', 'Football'], golf: ['Golf', 'Golf'], hiit: ['HIIT', 'HIIT'], elliptical: ['Elíptica', 'Elliptical'], stairmaster: ['Escaleras', 'Stairmaster'],
+      stretching: ['Estiramientos', 'Stretching'], meditation: ['Meditación', 'Meditation'], sauna: ['Sauna', 'Sauna'], activity: ['Actividad', 'Activity'], other: ['Actividad', 'Activity'] };
+    if (M[k]) return M[k][en ? 1 : 0];
+    return k ? k.charAt(0).toUpperCase() + k.slice(1) : (en ? 'Workout' : 'Entreno');
+  };
+  _whoopDelDia = fecha => {
+    const st = this.state, en = st.lang === 'en';
+    const dia = iso => { const d = new Date(iso); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    const lista = (st.whoopAct || []).filter(e => e && e.ini && dia(e.ini) === fecha).sort((a, b) => (String(a.ini) < String(b.ini) ? -1 : 1));
+    const dec = n => String(n).replace('.', en ? '.' : ',');
+    return { hay: lista.length > 0, titulo: en ? 'WHOOP activity' : 'Actividad de WHOOP',
+      acts: lista.map(e => ({ label: this._deporteWhoop(e.deporte, en),
+        sub: [this._horaSalud(e.ini) + '–' + this._horaSalud(this._finSalud(e)), e.min ? (e.min + ' min') : null, e.kcal ? (e.kcal + ' kcal') : null,
+          e.esfuerzo != null ? ((en ? 'Strain ' : 'Esfuerzo ') + dec(e.esfuerzo)) : null, e.pm ? ('♥ ' + e.pm + ' ' + (en ? 'bpm' : 'lpm')) : null].filter(Boolean).join(' · '),
+        open: () => this.openSheet({ k: 'sal', e, whoop: true }) })) };
   };
   // ── ACTIVIDAD DE APPLE SALUD (Alex, 31 oct 2026) ─────────────────────────────────────────
   // Lo que el reloj o el móvil apuntan solos (fuerza, caminar, baile…). Va aparte: no cuenta para el plan.
@@ -2771,7 +2840,10 @@ class Component extends DCLogic {
     const todas = st.relojAct || [];
     const android = todas.some(r => r && r.origen === 'android');
     const lista = [];
-    todas.filter(r => r && r.fecha === fecha).forEach(r => (r.entrenos || []).forEach(e => { if (e && e.ini) lista.push(e); }));
+    // si el cliente tiene WHOOP enlazado con Apple Salud, ese entreno ya sale en «Actividad de WHOOP» (con más datos): no se repite aquí
+    const wIni = (st.whoopAct || []).map(w => Date.parse(w.ini)).filter(x => !isNaN(x));
+    const deWhoop = e => /whoop/i.test(e.app || '') && wIni.some(x => Math.abs(x - Date.parse(e.ini)) < 15 * 60000);
+    todas.filter(r => r && r.fecha === fecha).forEach(r => (r.entrenos || []).forEach(e => { if (e && e.ini && !deWhoop(e)) lista.push(e); }));
     lista.sort((a, b) => (String(a.ini) < String(b.ini) ? -1 : 1));
     return {
       hay: lista.length > 0, logo: !android,
@@ -4696,6 +4768,7 @@ class Component extends DCLogic {
     // Actividad de Apple Salud de hoy (pantalla Hoy) y del día elegido (Agenda)
     const _fHoy = (x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'))(new Date());
     const saludHoy = this._saludDelDia(_fHoy), saludDia = this._saludDelDia(dS.fecha);
+    const whoopHoy = this._whoopDelDia(_fHoy), whoopDia = this._whoopDelDia(dS.fecha);
     const daySel = {
       long: tD(dS.long), rom: dS.rom, t: dS.t, s: tr(dS.s), ses: dS.ses, isToday: !!dS.today,
       acts: dayActs, hasActs: dayActs.length > 0, rest: dayActs.length === 0
@@ -4820,27 +4893,43 @@ class Component extends DCLogic {
       if (se.pm) datos.push({ l: T('Pulso medio'), v: String(se.pm), u: lpm });
       if (se.px) datos.push({ l: T('Pulso máximo'), v: String(se.px), u: lpm });
       if (se.kcal) datos.push({ l: T('Calorías'), v: miles(se.kcal), u: 'kcal' });
-      const zonas = this._zonasSalud(se, fcmax, en);
+      const esW = !!sh.whoop || se.fuente === 'whoop';
+      if (esW) {   // WHOOP: sus datos tal cual (no da el pulso minuto a minuto, ni cadencia, ni parciales)
+        datos.splice(0, datos.length, { l: T('Tiempo total'), v: this._durSalud(tot), u: '' });
+        if (se.dist) datos.push({ l: T('Distancia'), v: (se.dist / 1000).toFixed(2).replace('.', en ? '.' : ','), u: 'km' });
+        if (se.pm) datos.push({ l: T('Pulso medio'), v: String(se.pm), u: lpm });
+        if (se.px) datos.push({ l: T('Pulso máximo'), v: String(se.px), u: lpm });
+        if (se.kcal) datos.push({ l: T('Calorías'), v: miles(se.kcal), u: 'kcal' });
+        if (se.esfuerzo != null) datos.push({ l: T('Esfuerzo'), v: String(se.esfuerzo).replace('.', en ? '.' : ','), u: '/ 21' });
+        if (se.desnivel) datos.push({ l: T('Desnivel'), v: String(se.desnivel), u: 'm' });
+      }
+      const zonasW = esW && Array.isArray(se.zonasW) && se.zonasW.length === 6 ? (() => {
+        const C = ['#3FB6A8', '#3D8BEF', '#F2C94C', '#F2994A', '#EB5757'], R = ['50–60', '60–70', '70–80', '80–90', '90–100'], total = tot || 1;
+        return se.zonasW.slice(1).map((x, i) => { const pct = Math.min(100, Math.round((x || 0) / total * 100));
+          return { n: (en ? 'Zone ' : 'Zona ') + (i + 1), r: R[i] + ' % ' + (en ? 'of max HR' : 'del pulso máx.'), t: this._durSalud(x || 0), pct: pct + '%', w: Math.max(pct, x > 0 ? 6 : 0) + '%', c: C[i] }; });
+      })() : null;
+      const zonas = esW ? zonasW : this._zonasSalud(se, fcmax, en);
       const cv = (se.cad || []).map(p => p && p[1]).filter(v => isFinite(v));
       const kms = Array.isArray(se.km) ? se.km.filter(k => Array.isArray(k) && k[0] > 0 && k[1] > 0) : [];
       const kmMax = Math.max(1, ...kms.map(k => k[1] / k[0]));
       let cuando = '';
       try { cuando = new Date(se.ini).toLocaleDateString(en ? 'en-US' : 'es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) + ' · ' + this._horaSalud(se.ini); } catch (er) {}
       salSheet = {
-        logo: !and, origen: and ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud'),
-        titulo: this._tipoSalud(se.tipo, en) + ' ' + this._horaSalud(se.ini) + '–' + this._horaSalud(this._finSalud(se)),
+        logo: !and && !esW, logoWhoop: esW, origen: esW ? 'WHOOP' : (and ? 'Health Connect' : (en ? 'Apple Health' : 'Apple Salud')),
+        titulo: (esW ? this._deporteWhoop(se.deporte, en) : this._tipoSalud(se.tipo, en)) + ' ' + this._horaSalud(se.ini) + '–' + this._horaSalud(this._finSalud(se)),
         // Alex (31 oct 2026): el reloj solo si de verdad viene de un Apple Watch; si no, solo «Apple Salud» (arriba)
         cuando: cuando + (/watch/i.test(se.app || '') ? ' · ' + se.app : ''), datos,
         hayHr: !!hr, hrMed: se.pm ? String(se.pm) : '—', hrMax: se.px ? String(se.px) : '—', hrX: hr ? hr.x : [], hrHi: hr ? String(hr.hi) : '', hrLo: hr ? String(hr.lo) : '',
         hayCad: !!cad, cadMed: se.cadm != null ? String(se.cadm) : (cv.length ? String(Math.round(cv.reduce((a, b) => a + b, 0) / cv.length)) : '—'),
         cadMax: se.cadx != null ? String(se.cadx) : (cv.length ? String(Math.round(Math.max(...cv))) : '—'), cadX: cad ? cad.x : [],
         hayZonas: !!zonas, zonas: zonas || [],
-        zonasNota: (en ? 'Max HR ' : 'Pulso máximo ') + fcmax + ' ' + lpm + (edad ? (en ? ' (220 − age)' : ' (220 − edad)') : (en ? ' (estimated)' : ' (estimado)')),
+        zonasNota: esW ? T('Zonas de WHOOP, por % de tu pulso máximo') : ((en ? 'Max HR ' : 'Pulso máximo ') + fcmax + ' ' + lpm + (edad ? (en ? ' (220 − age)' : ' (220 − edad)') : (en ? ' (estimated)' : ' (estimado)'))),
         hayKm: kms.length > 0,
         km: kms.map(k => { const ritmo = k[1] / k[0]; return { d: (Math.abs(k[0] - Math.round(k[0])) < 0.01 ? String(Math.round(k[0])) : k[0].toFixed(2).replace('.', en ? '.' : ',')), ritmo: this._durSalud(ritmo), t: this._durSalud(k[1]), w: Math.max(8, Math.round(ritmo / kmMax * 100)) + '%' }; }),
-        sinDetalle: !hr && !cad && !zonas,
+        sinDetalle: !esW && !hr && !cad && !zonas,
         notaDetalle: T('La gráfica del pulso y las zonas saldrán cuando tengas la última versión de la app.'),
-        pie: and ? T('Registrado automáticamente por Health Connect. No hace falta apuntarlo.') : T('Registrado automáticamente por Apple Salud. No hace falta apuntarlo.')
+        pie: esW ? (T('Registrado automáticamente por WHOOP. No hace falta apuntarlo.') + (se.registrado != null && se.registrado < 95 ? ' ' + T('WHOOP grabó el') + ' ' + se.registrado + ' % ' + T('del entreno.') : ''))
+          : and ? T('Registrado automáticamente por Health Connect. No hace falta apuntarlo.') : T('Registrado automáticamente por Apple Salud. No hace falta apuntarlo.')
       };
     }
     const ve = sh.k === 'var' ? sh.e : null;
@@ -5246,7 +5335,7 @@ class Component extends DCLogic {
           conectar: this.saludConectar, ahoraNo: this.saludAhoraNo };
       })(),
       isVarSheet: sh.k === 'var', varSheet,
-      isSalSheet: sh.k === 'sal', salSheet, salHrLine, salHrArea, salCadLine, salCadArea, saludHoy, saludDia,
+      isSalSheet: sh.k === 'sal', salSheet, salHrLine, salHrArea, salCadLine, salCadArea, saludHoy, saludDia, whoopHoy, whoopDia,
       dietRows,
       dietState: dietFuture ? T('Programada') : (dietToday ? T('Hoy · editable') : T('Editable')),
       dietNote: dietFuture ? T('Podrá registrarla ese día.')
