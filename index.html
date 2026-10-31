@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 277;
+  var VERSION_ACTUAL = 278;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -2285,6 +2285,10 @@ function applyRealData(d) {
   VAR = d.VAR || {};
   EXPROG = d.EXPROG || [];
 }
+// Alex (31 oct 2026): salía «Dominadas» encima de un ejercicio de piernas con el vídeo de ese ejercicio. La variante
+// elegida va por el número interno del ejercicio (e12…), que cambia cuando cambian los workouts, y además se arrastraba
+// al entreno de otro día. Ahora una variante solo cuenta si de verdad es variante de ESE ejercicio; devuelve [nombre, vídeo].
+const _varDe = (id, n) => (n ? ((VAR[id] || []).map(x => String(x).split('|')).find(p => p[0] === n) || null) : null);
 
 class Component extends DCLogic {
   state = {
@@ -3780,7 +3784,9 @@ class Component extends DCLogic {
     this.setState({ wOpen: true, wIn: false, wWk: (typeof wk === 'string' ? wk : null), wTitle: (typeof title === 'string' ? title : ''),
       // Variantes: manda lo que dejó a medias; si no, las que YA registró ese día (así al volver a
       // abrir el entreno sigue viéndose la variante que hizo, con su vídeo y su nombre).
-      logs: _logsIni, swaps: (_enCurso && _enCurso.swaps) || ((_dd.swapsByDate && _dd.swapsByDate[_f]) ? Object.assign({}, _dd.swapsByDate[_f]) : (this.state.swaps || {})), wLock: _cerrado });
+      // (31 oct 2026) las elegidas en pantalla solo se conservan si se vuelve a abrir el MISMO entreno del MISMO día:
+      // antes pasaban al entreno de otro día y caían encima de otro ejercicio.
+      logs: _logsIni, swaps: (_enCurso && _enCurso.swaps) || ((_dd.swapsByDate && _dd.swapsByDate[_f]) ? Object.assign({}, _dd.swapsByDate[_f]) : ((this.state.wF === _f && this.state.wWk === (typeof wk === 'string' ? wk : null)) ? (this.state.swaps || {}) : {})), wF: _f, wLock: _cerrado });
     requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ wIn: true })));
   };
   closeWorkout = () => { try { localStorage.removeItem('castillo_entreno'); const dd = window.CastilloData; if (dd && dd.guardaDuro) dd.guardaDuro('castillo_entreno', null); } catch (e) {} this.setState({ wIn: false, wExit: false }); this.later(() => this.setState({ wOpen: false }), 540); };
@@ -3815,9 +3821,11 @@ class Component extends DCLogic {
       // Si el cliente hizo una VARIANTE, se guardan las dos cosas: el nombre que hizo de verdad
       // (para el entrenador) y el ejercicio del plan en 'base'. Antes solo se guardaba la variante
       // y al reabrir el entreno no se encontraba ese ejercicio: parecía que no había registrado nada.
-      ejercicios = list.map(e => ({ nombre: swaps[e.id] || e.n, base: e.n, variante: swaps[e.id] || null, y: e.y, objetivo: e.p,
+      // (31 oct 2026) con una variante se guarda SU vídeo; antes se quedaba el del ejercicio del plan y en el CRM salía
+      // «Dominadas» con el vídeo del remo en T.
+      ejercicios = list.map(e => { const _sv = _varDe(e.id, swaps[e.id]); return { nombre: _sv ? _sv[0] : e.n, base: e.n, variante: _sv ? _sv[0] : null, y: (_sv && _sv[1]) || e.y, objetivo: e.p,
         plan: parseInt(e.s, 10) || 0,
-        series: (logs[e.id] || []).slice(0, parseInt(e.s, 10) || 0).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && (l.done || (String(l.r == null ? '' : l.r).trim() && String(l.w == null ? '' : l.w).trim()))) })) }));
+        series: (logs[e.id] || []).slice(0, parseInt(e.s, 10) || 0).map(l => ({ reps: (l && l.r) || '', peso: (l && l.w) || '', done: !!(l && (l.done || (String(l.r == null ? '' : l.r).trim() && String(l.w == null ? '' : l.w).trim()))) })) }; });
       // COMPLETO = todas las series PLANIFICADAS de TODOS los ejercicios, rellenas. Antes se
       // miraba solo lo que el cliente habia tocado: si rellenaba 2 de 3 series y nada del resto,
       // los ejercicios sin tocar no contaban y el entreno salia "completado" con un ejercicio.
@@ -4412,13 +4420,13 @@ class Component extends DCLogic {
       const dn = arr.slice(0, e.s).filter(x => x && x.done).length;
       const isOpen = !st.exClosed[e.id];
       // si hay una variante elegida, usa SU vídeo/miniatura (no solo el título)
-      const _swap = st.swaps[e.id];
-      let _vy = e.y;
-      if (_swap) { const _f = (VAR[e.id] || []).map(x => x.split('|')).find(p => p[0] === _swap); if (_f && _f[1]) _vy = _f[1]; }
+      const _sv = _varDe(e.id, st.swaps[e.id]);
+      const _swap = _sv ? _sv[0] : null;
+      const _vy = (_sv && _sv[1]) || e.y;
       return {
         n: tEx(_swap || e.n), p: e.p, rest: e.rest, open: isOpen, thumb: THUMB(_vy),
         openVar: this.openVar(e),
-        varLabel: st.swaps[e.id] ? T('Variante en uso · ver otras') : T('Variantes de este ejercicio'),
+        varLabel: _swap ? T('Variante en uso · ver otras') : T('Variantes de este ejercicio'),
         nS: String(e.s), reps: e.p.split('×').pop().trim(),
         prevDate: (_ult => _ult ? _ult.fecha : '')(_ultimaSesion(e.id)), prevSets: (_ult => _ult ? _ult.texto : '')(_ultimaSesion(e.id)), hayPrev: !!_ultimaSesion(e.id),
         openHist: this.openHist(e),
@@ -4606,7 +4614,7 @@ class Component extends DCLogic {
     const ve = sh.k === 'var' ? sh.e : null;
     let varSheet = {};
     if (ve) {
-      const cur = st.swaps[ve.id];
+      const cur = (_varDe(ve.id, st.swaps[ve.id]) || [])[0] || null;
       const _reps = String(ve.p || '').split('×').pop().trim();
       const _serTxt = (ve.s ? ve.s + ' series' : '') + (_reps ? ' · ' + _reps + ' reps' : '');
       varSheet = {
