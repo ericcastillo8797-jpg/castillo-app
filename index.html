@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 278;
+  var VERSION_ACTUAL = 279;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -3484,7 +3484,10 @@ class Component extends DCLogic {
         patch.meals = Object.assign({}, this.state.meals, d.mealsReg);
         const lk = Object.assign({}, this.state.mealsLocked); Object.keys(d.mealsReg).forEach(k => { lk[k] = true; }); patch.mealsLocked = lk;
       }
-      if (d && d.logsInit && Object.keys(d.logsInit).length) patch.logs = Object.assign({}, this.state.logs, d.logsInit);
+      // Con un entreno ABIERTO no se tocan sus series (31 oct 2026, Christopher, Android: «keeps clearing my reps as I'm
+      // adding»). Al volver a la app (bloquear el móvil entre series…) se recargan los datos y esto ponía encima lo último
+      // guardado en el servidor: los ejercicios guardados vacíos se quedaban en blanco.
+      if (!this.state.wOpen && d && d.logsInit && Object.keys(d.logsInit).length) patch.logs = Object.assign({}, this.state.logs, d.logsInit);
       // Con la hoja de medidas/fotos ABIERTA no se toca lo que tiene en pantalla (21 oct 2026): al volver del
       // selector de fotos se recargan los datos y eso volvia a poner la foto vieja de hoy encima de la nueva.
       const _ckAbierta = !!(this.state.sheet && this.state.sheet.k === 'ck');
