@@ -10,7 +10,7 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=282"></script>
+<script src="./castillo-i18n.js?v=283"></script>
 <script src="./castillo-transform.js?v=274"></script>
 <script src="./castillo-equiv.js?v=245"></script>
 <script src="./castillo-data.js?v=276"></script>
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 282;
+  var VERSION_ACTUAL = 283;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1630,7 +1630,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
     <div data-screen-label="Variantes del ejercicio" style="display:flex;flex-direction:column;min-height:0">
       <div style="padding:14px 20px 14px;flex:none;border-bottom:.5px solid rgba(var(--fgc,255,255,255),.08)">
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.siNoMaterial }}</div>
-        <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">Variantes de {{ varSheet.n }}</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ varSheet.titulo }}</div>
       </div>
       <div style="overflow-y:auto;padding:14px 20px 30px;display:flex;flex-direction:column;gap:11px">
         <sc-for list="{{ varSheet.opts }}" as="v" hint-placeholder-count="3">
@@ -1651,9 +1651,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </div>
         </sc-for>
         <sc-if value="{{ varSheet.swapped }}" hint-placeholder-val="{{ false }}">
-        <div onClick="{{ varSheet.reset }}" style="text-align:center;padding:13px;border-radius:100px;border:.5px solid rgba(var(--fgc,255,255,255),.14);font-size:12.5px;color:rgba(var(--fgc,255,255,255),.6);cursor:pointer">Volver al ejercicio original</div>
+        <div onClick="{{ varSheet.reset }}" style="text-align:center;padding:13px;border-radius:100px;border:.5px solid rgba(var(--fgc,255,255,255),.14);font-size:12.5px;color:rgba(var(--fgc,255,255,255),.6);cursor:pointer">{{ varSheet.volver }}</div>
         </sc-if>
-        <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:2px">Su equipo verá la variante que ha utilizado.</div>
+        <div style="text-align:center;font-size:10.5px;color:rgba(var(--fgc,255,255,255),.3);margin-top:2px">{{ varSheet.pie }}</div>
       </div>
     </div>
     </sc-if>
@@ -4937,16 +4937,18 @@ class Component extends DCLogic {
     if (ve) {
       const cur = (_varDe(ve.id, st.swaps[ve.id]) || [])[0] || null;
       const _reps = String(ve.p || '').split('×').pop().trim();
-      const _serTxt = (ve.s ? ve.s + ' series' : '') + (_reps ? ' · ' + _reps + ' reps' : '');
+      const _serTxt = (ve.s ? ve.s + ' ' + T('series') : '') + (_reps ? ' · ' + _reps + ' reps' : '');
       varSheet = {
         n: tEx(ve.n), swapped: !!cur, reset: this.resetVar(ve.id),
+        titulo: (st.lang === 'en' ? 'Variations of ' : 'Variantes de ') + tEx(ve.n),
+        volver: T('Volver al ejercicio original'), pie: T('Su equipo verá la variante que ha utilizado.'),
         opts: (VAR[ve.id] || []).map((x, i) => {
           const parts = x.split('|'), on = cur === parts[0];
           return { n: tEx(parts[0]), thumb: THUMB(parts[1]), delay: (0.03 + i * 0.05) + 's', series: _serTxt,
-            note: on ? 'Es la que se registrará' : 'Misma serie y repeticiones · toca elegir',
-            play: () => this.openSheet({ k: 'vid', v: { t: tEx(parts[0]), g: 'Variante', y: parts[1] }, back: this.state.sheet }),
+            note: on ? T('Es la que se registrará') : T('Misma serie y repeticiones · toca elegir'),
+            play: () => this.openSheet({ k: 'vid', v: { t: tEx(parts[0]), g: T('Variante'), y: parts[1] }, back: this.state.sheet }),
             use: this.useVar(ve.id, parts[0]),
-            btn: on ? '✓ Variante elegida' : 'Elegir esta variante',
+            btn: on ? T('✓ Variante elegida') : T('Elegir esta variante'),
             bd: on ? A + '.45)' : A + '.07)',
             btnBg: on ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.09)',
             btnFg: on ? 'var(--bg,#000)' : 'var(--fg,#fff)',

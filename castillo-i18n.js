@@ -716,6 +716,8 @@
     'Entreno': 'Workout', 'Sesión de entrenamiento': 'Training session',
     'Correo electrónico': 'Email', 'Contraseña': 'Password',
     'Su equipo verá la variante que ha utilizado.': 'Your coach will see the variant you used.',
+    'Elegir esta variante': 'Choose this variation', '✓ Variante elegida': '✓ Variation chosen', 'Variante': 'Variation',
+    'Es la que se registrará': 'This is the one that will be logged', 'Misma serie y repeticiones · toca elegir': 'Same sets and reps · tap to choose',
     'Frontal, lateral y espalda': 'Front, side and back',
     'Buscar alimento…': 'Search food…', 'Buscar por nombre…': 'Search by name…',
     'Revisado por su equipo antes de la sesión del viernes.': 'Reviewed by your coach before Friday\'s session.',
