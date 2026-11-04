@@ -206,12 +206,29 @@
       }
       return y;
     }
+    // Alex (4 nov 2026): «este vídeo no es mío, que ponga el mío, no el de Harbiz». El catálogo EX va por NOMBRE y
+    // se quedaba con el vídeo del primer programa donde salía el ejercicio (a veces uno viejo de Harbiz, o uno sin
+    // vídeo). Si sus entrenos de Librería → Workouts traen vídeo para ese nombre, manda el de ellos.
+    var vidWorkouts = {};
+    progList.forEach(function (program) {
+      if (!program || program.nombre !== 'Workouts') return;
+      (((program.contenido || {}).weeks) || []).forEach(function (wk) {
+        (wk.weekDays || []).forEach(function (day) {
+          (day.dayTasks || []).forEach(function (t) {
+            ((t.workout && t.workout.exercises) || []).forEach(function (ex) {
+              var n = ex.name_provisional || ex.name, v = ytId(ex.url_provisional || ex.thumbnailUrl || '');
+              if (n && v && !vidWorkouts[n]) vidWorkouts[n] = v;
+            });
+          });
+        });
+      });
+    });
     function addEx(ex, grupo) {
       var name = ex.name_provisional || ex.name || 'Ejercicio';
       if (exByName[name]) return exByName[name];
       exN++;
       var id = 'e' + exN;
-      var y = ytId(ex.url_provisional || ex.thumbnailUrl || '');
+      var y = vidWorkouts[name] || ytId(ex.url_provisional || ex.thumbnailUrl || '');
       if (!y) y = ytPorNombreDe(name);
       // OJO: si esto llega como texto ("3"), las sumas del contador se concatenan en vez de sumar
       // y el "X de Y series" y el porcentaje del entreno salen mal. Se fuerza a número.
