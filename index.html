@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 283;
+  var VERSION_ACTUAL = 284;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -4063,6 +4063,27 @@ class Component extends DCLogic {
   cancelExitWorkout = () => this.setState({ wExit: false });
   saveAndExitWorkout = () => { this.setState({ wExit: false }); this.finishWorkout(); };
   discardWorkout = () => { this.setState({ wExit: false }); this.closeWorkout(); };
+  // (4 nov 2026) La ventana de Apple / Google para valorar la app sin salir de ella. Solo con la app de tienda nueva
+  // (iPhone 1.0.3 (18) / Android v12, que traen pedirResena); con las viejas no hace nada. Sale al terminar un entreno
+  // COMPLETO que ha llegado al equipo, a partir del 3.º, y como mucho una vez cada 120 días. Apple y Google deciden
+  // además si la enseñan (Apple, máx. 3 veces al año). El texto de la ventana lo pone el móvil, en su idioma.
+  _pideResena = () => {
+    try {
+      const C = window.Capacitor, P = C && C.Plugins && C.Plugins.CastilloSalud;
+      if (!P || !(C.isNativePlatform && C.isNativePlatform())) return;
+      const n = (parseInt(localStorage.getItem('cp_resena_n') || '0', 10) || 0) + 1;
+      localStorage.setItem('cp_resena_n', String(n));
+      const ult = parseInt(localStorage.getItem('cp_resena_ult') || '0', 10) || 0;
+      if (n < 3 || Date.now() - ult < 120 * 864e5) return;
+      setTimeout(() => {
+        try {
+          Promise.resolve(P.pedirResena()).then(r => {
+            if (r && r.ok) { try { localStorage.setItem('cp_resena_ult', String(Date.now())); } catch (e) {} }
+          }, () => {});
+        } catch (e) {}
+      }, 1800);
+    } catch (e) {}
+  };
   finishWorkout = () => {
     // Alex 2026-08-17: se puede registrar cualquier día. Se guarda SIEMPRE en el día abierto (dS.fecha).
     // Primero se PREPARA lo que se va a guardar y despues se cierra el entreno. Antes se cerraba lo primero (y con
@@ -4118,7 +4139,7 @@ class Component extends DCLogic {
     // "Enviado al equipo" solo se dice cuando el servidor lo ha confirmado. Antes salia nada mas pulsar, llegara o
     // no: el entrenador veia "enviado", guardaba el movil y el entreno no habia salido de el.
     this.flash(en ? 'Saving…' : 'Guardando…');
-    cd.registrarEntreno(title, ejercicios, completo, dS.fecha).then(() => { this.flash(hecho); this.refreshData(); }, () => {
+    cd.registrarEntreno(title, ejercicios, completo, dS.fecha).then(() => { this.flash(hecho); this.refreshData(); if (completo) this._pideResena(); }, () => {
       // No se pierde: queda pendiente en el movil y entra solo en cuanto haya conexion.
       this.flash(en ? 'NOT sent yet: no connection. It is saved on this phone and will be sent on its own.'
                     : 'Aún NO se ha enviado: no hay conexión. Queda guardado en este móvil y se enviará solo.', 6000);
