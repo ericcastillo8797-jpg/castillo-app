@@ -209,7 +209,7 @@
     var pPerfil = api('/rest/v1/perfil_cliente?select=*&cliente_email=ilike.' + e + '&limit=1', {}, token)
       .catch(function () { return []; });
     // comidas libres / cheat meals (para las kcal del desglose mensual)
-    var pLibre = api('/rest/v1/comida_libre?select=fecha,comida,alimentos&cliente_email=ilike.' + e + '&order=fecha.asc', {}, token)
+    var pLibre = api('/rest/v1/comida_libre?select=fecha,comida,alimentos,updated_at&cliente_email=ilike.' + e + '&order=fecha.asc,updated_at.asc', {}, token)
       .catch(function () { return []; });
     // config de medidas (qué medidas rellena el cliente) — la edita Alex en el CRM; si no hay, la app usa su lista por defecto
     var pCfg = api('/rest/v1/app_config?select=valor&clave=eq.medidas&limit=1', {}, token)
@@ -220,7 +220,13 @@
     // set de medidas PROPIO de este cliente (si Alex se lo ha personalizado); si no hay, se usa la base global
     var pMedC = api('/rest/v1/medidas_cliente_cfg?select=grupos&cliente_email=ilike.' + e + '&limit=1', {}, token)
       .catch(function () { return []; });
-    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre, pCfg, pMet, pMedC, pWk]).then(function (res) {
+    // Lesiones del cliente (Alex, 14 nov 2026): los ejercicios de sus carpetas nunca le salen en las variantes.
+    var pLes = api('/rest/v1/cliente_lesiones?select=lesion_id,lesiones(ejercicios)&cliente_email=eq.' + e, {}, token)
+      .catch(function () { return []; });
+    // Lo que se le ha desbloqueado a este cliente en el CRM («Macros a mano»)
+    var pOpc = api('/rest/v1/cliente_opciones?select=macros_manual&cliente_email=eq.' + e + '&limit=1', {}, token)
+      .catch(function () { return []; });
+    return Promise.all([pRow, pProg, pEx, pReg, pCom, pChk, pPerfil, pLibre, pCfg, pMet, pMedC, pWk, pLes, pOpc]).then(function (res) {
       var rows = res[0] || [], programs = (res[1] || []).concat([workoutsComoPrograma(res[11] || [])]), ejercicios = res[2] || [], registros = res[3] || [];
       var comAll = res[4] || [], chkAll = res[5] || [];
       var perfilRow = (res[6] && res[6][0]) || null;
@@ -248,7 +254,10 @@
         if (hrow && hrow.evolution && hrow.evolution.photos) hrow.evolution.photos.forEach(function (p) { p.front_url = swap(p.front_url); p.side_url = swap(p.side_url); p.back_url = swap(p.back_url); });
         if (perfilRow && perfilRow.foto) perfilRow.foto = swap(perfilRow.foto);
         var comReg = comAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
-        var data = window.buildAppData(rows[0], programs, ejercicios, registros, comAll, chkAll, (res[7] || []), (res[9] || []));
+        var _prohib = [];
+        (res[12] || []).forEach(function (r) { var l = r && r.lesiones; ((l && l.ejercicios) || []).forEach(function (id) { if (id && _prohib.indexOf(id) < 0) _prohib.push(id); }); });
+        var _extra = { prohibidos: _prohib, macrosManual: !!(res[13] && res[13][0] && res[13][0].macros_manual) };
+        var data = window.buildAppData(rows[0], programs, ejercicios, registros, comAll, chkAll, (res[7] || []), (res[9] || []), _extra);
         data.mealsReg = (comReg && comReg.comidas) || {};   // { meal_id: opcion } registradas HOY (bloqueadas)
         var chkHoy = chkAll.filter(function (r) { return (r.fecha || '').slice(0, 10) === hoyStr; })[0] || null;
         data.checkinHoy = (chkHoy && chkHoy.valores) || {};   // valores ya registrados hoy (para prerellenar)
@@ -683,6 +692,19 @@
     });
   }
 
+  // «Macros a mano» (Alex, 14 nov 2026): el cliente apunta las kcal y los macros de una comida (los saca de Cal AI).
+  // Se guarda como una comida libre con un solo alimento manual:true, y la comida queda registrada como 'macros'.
+  // Las dos cosas se reintentan solas si no hay cobertura (las colas de 'libre' y 'comida').
+  function guardarMacrosManual(mealId, comida, m, fecha) {
+    var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+    var a = { nombre: 'Macros a mano', manual: true, kcal: Math.round(+m.kcal || 0), prot: Math.round(+m.prot || 0), carbs: Math.round(+m.carbs || 0), fat: Math.round(+m.fat || 0) };
+    if (window.__DATA) {   // se ve al momento, sin esperar a recargar
+      var mm = window.__DATA.manualMacros || (window.__DATA.manualMacros = {});
+      (mm[f] || (mm[f] = {}))[comida || ''] = { kcal: a.kcal, p: a.prot, c: a.carbs, g: a.fat };
+    }
+    return Promise.all([guardarComidaLibre(comida, [a], f), registrarComida(mealId, 'macros', f)]);
+  }
+
   // cambia la contraseña del cliente (Supabase Auth). NO afecta al CRM: el CRM enlaza por EMAIL, no por contraseña.
   function cambiarPassword(pass) {
     if (!_ctx.token) return Promise.reject(new Error('sin sesión'));
@@ -855,6 +877,7 @@
         .then(function () { return true; }).catch(alFallar);
     },
     guardarComidaLibre: guardarComidaLibre,
+    guardarMacrosManual: guardarMacrosManual,   // «Macros a mano» (14 nov 2026)
     conectarSalud: conectarSalud,
     saludConectado: saludConectado,
     desconectarSalud: desconectarSalud,

@@ -10,10 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=283"></script>
-<script src="./castillo-transform.js?v=285"></script>
+<script src="./castillo-i18n.js?v=286"></script>
+<script src="./castillo-transform.js?v=286"></script>
 <script src="./castillo-equiv.js?v=245"></script>
-<script src="./castillo-data.js?v=276"></script>
+<script src="./castillo-data.js?v=286"></script>
 <script src="./support.js"></script>
 <script>
 // ─── AUTOACTUALIZACIÓN ────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 285;
+  var VERSION_ACTUAL = 286;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1307,6 +1307,29 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.nutricion }}</div>
         <div style="font-family:'Instrument Serif',serif;font-size:28px;line-height:1.1;margin-top:4px">{{ daySel.long }}</div>
       </div>
+      <!-- Recuento del día (Alex, 14 nov 2026): solo clientes con «Macros a mano». Lo que lleva y lo que le queda. -->
+      <sc-if value="{{ dayCount.on }}" hint-placeholder-val="{{ false }}">
+      <div data-dia-cuenta="1" style="flex:none;margin:12px 16px 0;padding:12px 14px;border-radius:16px;background:var(--s2,#17171B);border:.5px solid rgba(var(--fgc,255,255,255),.1)">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <div style="font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.4)">{{ dayCount.titulo }}</div>
+          <div style="font-size:11.5px;font-weight:600;color:{{ dayCount.restCol }}">{{ dayCount.resto }}</div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:5px;margin-top:4px"><span style="font-family:'Instrument Serif',serif;font-size:28px">{{ dayCount.kcal }}</span><span style="font-size:12px;color:rgba(var(--fgc,255,255,255),.45)">/ {{ dayCount.kcalObj }} kcal</span></div>
+        <div style="height:4px;border-radius:4px;background:rgba(var(--fgc,255,255,255),.08);margin-top:8px;overflow:hidden"><div style="height:100%;width:{{ dayCount.bar }};background:{{ dayCount.barCol }};border-radius:4px;transition:width .4s"></div></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <sc-for list="{{ dayCount.macros }}" as="x" hint-placeholder-count="3">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;color:rgba(var(--fgc,255,255,255),.45)">{{ x.l }}</div>
+            <div style="font-size:13px;font-weight:600;margin-top:2px;white-space:nowrap">{{ x.v }}<span style="font-weight:400;color:rgba(var(--fgc,255,255,255),.45)"> / {{ x.obj }} g</span></div>
+            <div style="font-size:10.5px;margin-top:1px;color:{{ x.col }}">{{ x.resto }}</div>
+          </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ dayCount.hayNota }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:10.5px;color:rgba(var(--fgc,255,255,255),.4);margin-top:8px">{{ dayCount.nota }}</div>
+        </sc-if>
+      </div>
+      </sc-if>
       <div style="flex:none;padding:12px 16px 4px;display:flex;gap:8px;overflow-x:auto">
         <sc-for list="{{ dietDaySheet.tabs }}" as="tb" hint-placeholder-count="4">
         <div onClick="{{ tb.pick }}" style="flex:none;padding:9px 15px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .25s cubic-bezier(.32,.72,0,1);background:{{ tb.bg }};color:{{ tb.fg }};border:1px solid {{ tb.bd }}" style-active="transform:scale(.95)">{{ tb.n }}</div>
@@ -1891,6 +1914,40 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
       </sc-if>
       <sc-if value="{{ resetSent }}" hint-placeholder-val="{{ false }}">
       <div onClick="{{ closeReset }}" style="margin-top:20px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer">{{ resetCerrar }}</div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- CAPA «Macros a mano» (Alex, 14 nov 2026): solo clientes desbloqueados en el CRM. Apuntan las kcal y los macros
+     de una comida (los sacan de su app de calorías, p. ej. Cal AI) y cuentan como si hubieran marcado la comida. -->
+<sc-if value="{{ isMacros }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:13">
+  <div onClick="{{ closeMacros }}" style="position:absolute;inset:0;background:rgba(0,0,0,.5);transition:opacity .46s cubic-bezier(.32,.72,0,1);opacity:{{ macDim }}"></div>
+  <div data-macros-sheet="1" style="position:absolute;left:0;right:0;bottom:0;max-height:88%;display:flex;flex-direction:column;background:var(--s4,#111114);border:.5px solid rgba(var(--fgc,255,255,255),.13);border-bottom:none;border-radius:30px 30px 0 0;transition:transform .5s cubic-bezier(.32,.72,0,1);transform:{{ macY }}">
+    <div onClick="{{ closeMacros }}" style="position:absolute;top:12px;right:14px;z-index:3;width:30px;height:30px;border-radius:50%;background:rgba(var(--fgc,255,255,255),.1);display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.9)">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l7 7M9 2l-7 7"></path></svg>
+    </div>
+    <div style="padding:11px 0 0;display:flex;justify-content:center;flex:none"><div style="width:38px;height:4.5px;border-radius:4px;background:rgba(var(--fgc,255,255,255),.22)"></div></div>
+    <div style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 20px calc(28px + env(safe-area-inset-bottom))">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.36)">{{ L.macrosMano }} · {{ macComida }}</div>
+      <div style="font-family:'Instrument Serif',serif;font-size:26px;line-height:1.15;margin-top:5px">{{ L.macrosTitulo }}</div>
+      <div style="font-size:12.5px;line-height:1.5;color:rgba(var(--fgc,255,255,255),.5);margin-top:6px">{{ L.macrosSub }}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+        <sc-for list="{{ macCampos }}" as="c" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:5px;background:var(--s2,#17171B);border:1px solid rgba(var(--fgc,255,255,255),.12);border-radius:14px;padding:10px 12px">
+          <div style="font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--fgc,255,255,255),.45)">{{ c.l }}</div>
+          <div style="display:flex;align-items:baseline;gap:5px">
+            <input data-mac="{{ c.k }}" value="{{ c.v }}" onInput="{{ c.set }}" onChange="{{ c.set }}" type="text" inputmode="decimal" placeholder="0" style="width:100%;min-width:0;background:transparent;border:none;outline:none;color:var(--fg,#fff);font-size:24px;font-family:'Instrument Serif',serif;padding:0">
+            <div style="flex:none;font-size:12px;color:rgba(var(--fgc,255,255,255),.45)">{{ c.u }}</div>
+          </div>
+        </div>
+        </sc-for>
+      </div>
+      <div data-mac-guardar="1" onClick="{{ saveMacros }}" style="margin-top:16px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:15px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">{{ L.guardarMacros }}</div>
+      <sc-if value="{{ macHay }}" hint-placeholder-val="{{ false }}">
+      <div data-mac-quitar="1" onClick="{{ quitarMacros }}" style="margin-top:10px;text-align:center;font-size:12.5px;color:rgba(var(--fgc,255,255,255),.5);padding:8px;cursor:pointer">{{ L.quitarMacros }}</div>
       </sc-if>
     </div>
   </div>
@@ -3021,6 +3078,26 @@ class Component extends DCLogic {
     if (cd && cd.alimentosFavoritos) cd.alimentosFavoritos().then(list => this.setState({ cheatFavs: list || [] }), () => {});
   };
   closeCheat = () => { this.setState({ cheatIn: false }); this.later(() => this.setState({ cheat: null }), 420); };
+  // ---- «MACROS A MANO» (Alex, 14 nov 2026): solo clientes desbloqueados en el CRM ----
+  openMacros = (mealId, comida, prev) => () => {
+    const v = n => (prev && n != null) ? String(Math.round(n)) : '';
+    this.setState({ macros: { mealId: mealId, comida: comida, hay: !!prev }, macrosIn: false,
+      macVal: { kcal: v(prev && prev.kcal), prot: v(prev && prev.p), carbs: v(prev && prev.c), fat: v(prev && prev.g) } });
+    requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ macrosIn: true })));
+  };
+  closeMacros = () => { this.setState({ macrosIn: false }); this.later(() => this.setState({ macros: null }), 420); };
+  setMacVal = k => e => { const raw = String((e && e.target) ? e.target.value : e).replace(/[^0-9.,]/g, ''); this.setState(s => ({ macVal: Object.assign({}, s.macVal, { [k]: raw }) })); };
+  saveMacros = () => {
+    const en = this.state.lang === 'en', mc = this.state.macros; if (!mc) return;
+    const num = k => { const n = parseFloat(String((this.state.macVal || {})[k] || '').replace(',', '.')); return isNaN(n) || n < 0 ? 0 : n; };
+    const m = { kcal: num('kcal'), prot: num('prot'), carbs: num('carbs'), fat: num('fat') };
+    if (!(m.kcal > 0)) { this.flash(en ? 'Enter at least the calories' : 'Pon al menos las calorías'); return; }
+    const fecha = this._selDay().fecha, cd = window.CastilloData;
+    if (cd && cd.guardarMacrosManual) cd.guardarMacrosManual(mc.mealId, mc.comida, m, fecha).then(() => this.refreshData(), () => this.flash(en ? 'Saved on your phone. It will sync when you have signal.' : 'Guardado en tu móvil. Se enviará cuando tengas cobertura.'));
+    this.flash(en ? 'Macros saved' : 'Macros guardados');
+    this.closeMacros();
+  };
+  quitarMacros = () => { const mc = this.state.macros; if (!mc) return; this.pickMeal(mc.mealId, 'macros')(); this.closeMacros(); };
   // ---- RESUMEN MENSUAL (desglose por mes, cuadros pulsables) ----
   // Sin tope hacia atrás: si se pasa del último mes con datos, se sigue retrocediendo y el mes
   // aparece a cero. Solo se frena hacia delante, que sería el futuro.
@@ -3068,7 +3145,7 @@ class Component extends DCLogic {
     const pct = o => (o && o.total) ? (o.pct + '%') : '—';
     const kg = v => { const t = dec(String(v == null ? '' : v).trim()); return /kg\/lbs$/i.test(t) ? t : /kg$/i.test(t) ? t + '/lbs' : (t ? t + ' kg/lbs' : '—'); };
     const tEjer = n => { try { return (window.I18N && window.I18N.exercise) ? window.I18N.exercise(n, this.state.lang) : n; } catch (er) { return n; } };
-    const tOpc  = l => en ? String(l || '').replace(/^Opción/, 'Option').replace(/^Comida libre/, 'Free meal') : l;
+    const tOpc  = l => en ? String(l || '').replace(/^Opción/, 'Option').replace(/^Comida libre/, 'Free meal').replace(/^Macros a mano$/, 'Manual macros') : l;
     const tCom  = n => { try { return (window.I18N && window.I18N.meal) ? window.I18N.meal(n, this.state.lang) : n; } catch (er) { return n; } };
     const tFood = n => { try { return (window.I18N && window.I18N.food) ? window.I18N.food(n, this.state.lang) : n; } catch (er) { return n; } };
     const tSport = n => { try { return (window.I18N && window.I18N.sport) ? window.I18N.sport(n, this.state.lang) : (n || ''); } catch (er) { return n || ''; } };
@@ -4402,6 +4479,7 @@ class Component extends DCLogic {
     const foodSub = (m, i) => {
       if (i === 'mp') return T('Meal prep');
       if (i === 'libre') return 'Cheat meal';
+      if (i === 'macros') { const x = ((_dd.manualMacros || {})[_selFecha] || {})[m.n]; return T('Macros a mano') + (x ? ' · ' + Math.round(x.kcal) + ' kcal' : ''); }
       const o = m.o[i];
       if (o == null) return '';
       return T('Opción') + ' ' + (i + 1) + ' · ' + F(o).map(f => tFood(f.n)).join(', ');
@@ -4664,8 +4742,47 @@ class Component extends DCLogic {
             selBg: cmSel ? 'var(--fg,#fff)' : 'transparent',
             selFg: cmSel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.72)',
             selBd: cmSel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.3)' };
-        })()]) };
+        })()].concat(_dd.macrosManual ? [(() => {
+          // OPCIÓN «Macros a mano» (Alex, 14 nov 2026): solo clientes desbloqueados en el CRM. Pone las kcal y los macros.
+          const mmSel = _selMeals[m.id] === 'macros';
+          const x = mmSel ? (((_dd.manualMacros || {})[_selFecha] || {})[m.n] || null) : null;
+          const LT = isEN ? ['P', 'C', 'F'] : ['P', 'H', 'G'];
+          return { rom: T('OPCIÓN') + ' 10 · ' + T('Macros a mano'), isSpecial: true, normal: false, showTotal: !!x, foods: [],
+            kcalTotal: x ? (Math.round(x.kcal) + ' kcal · ' + LT[0] + ' ' + Math.round(x.p) + ' · ' + LT[1] + ' ' + Math.round(x.c) + ' · ' + LT[2] + ' ' + Math.round(x.g)) : '',
+            sub: T('Apunta tú las calorías y los macros de esta comida.'), delay: (0.03 + (m.o.length + 2) * 0.03) + 's',
+            bg: mmSel ? 'rgba(var(--fgc,255,255,255),.1)' : 'var(--s2,#17171B)',
+            bd: mmSel ? 'rgba(var(--fgc,255,255,255),.5)' : 'rgba(var(--fgc,255,255,255),.07)',
+            numFg: mmSel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.45)',
+            pick: this.openMacros(m.id, m.n, x),
+            pickLabel: mmSel ? ('✓ ' + T('Registrada')) : T('Registrar'),
+            selBg: mmSel ? 'var(--fg,#fff)' : 'transparent',
+            selFg: mmSel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.72)',
+            selBd: mmSel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.3)' };
+        })()] : [])) };
     });
+    // Recuento del día (Alex, 14 nov 2026): solo clientes con «Macros a mano». Suma lo marcado ese día: opciones del
+    // plan (sus alimentos llevan macros), meal prep (como la opción 1), cheat meal (solo kcal) y los macros a mano.
+    const dayCount = (() => {
+      if (!_dd.macrosManual) return { on: false };
+      const tot = { kcal: 0, p: 0, c: 0, g: 0 }; let soloKcal = false;
+      DIET.forEach(m => {
+        const op = _selMeals[m.id]; if (op == null) return;
+        if (op === 'macros') { const x = ((_dd.manualMacros || {})[_selFecha] || {})[m.n] || {}; tot.kcal += +x.kcal || 0; tot.p += +x.p || 0; tot.c += +x.c || 0; tot.g += +x.g || 0; return; }
+        if (op === 'libre') { tot.kcal += +(((_dd.libreKcal || {})[_selFecha] || {})[m.n]) || 0; soloKcal = true; return; }
+        const oi = op === 'mp' ? 0 : op, fx = (m.ox && m.ox[oi]) || [];
+        if (fx.length) fx.forEach(f => { tot.kcal += +f.kcal || 0; tot.p += +f.p || 0; tot.c += +f.c || 0; tot.g += +f.g || 0; });
+        else tot.kcal += +((m.okcal || [])[oi]) || 0;
+      });
+      const ob = { kcal: +_mac.kcal || 0, p: +_mac.protein || 0, c: +_mac.carbs || 0, g: +_mac.fat || 0 };
+      const R = n => Math.round(n);
+      const resto = (v, o, u) => !o ? '' : (o - v >= 0 ? T('Te quedan') + ' ' + _milesN(R(o - v)) + ' ' + u : T('Te pasas') + ' ' + _milesN(R(v - o)) + ' ' + u);
+      const col = (v, o) => (o && v > o * 1.05) ? '#FF6B5C' : 'rgba(var(--fgc,255,255,255),.55)';
+      return { on: true, titulo: _selFecha === _todayFecha ? T('Hoy llevas') : T('Ese día llevaste'),
+        kcal: _milesN(R(tot.kcal)), kcalObj: ob.kcal ? _milesN(R(ob.kcal)) : '—', resto: resto(tot.kcal, ob.kcal, 'kcal'), restCol: col(tot.kcal, ob.kcal),
+        bar: (ob.kcal ? Math.min(100, Math.round(tot.kcal / ob.kcal * 100)) : 0) + '%', barCol: (ob.kcal && tot.kcal > ob.kcal * 1.05) ? '#FF6B5C' : 'var(--fg,#fff)',
+        macros: [[T('Proteína'), tot.p, ob.p], [T('Hidratos'), tot.c, ob.c], [T('Grasa'), tot.g, ob.g]].map(([l, v, o]) => ({ l: l, v: _milesN(R(v)), obj: o ? _milesN(R(o)) : '—', resto: resto(v, o, 'g'), col: col(v, o) })),
+        hayNota: soloKcal, nota: T('Las comidas libres solo suman calorías.') };
+    })();
     const dietDaySheet = {
       tabs: _dmeals.map(x => ({ n: x.n, sel: x.sel, pick: x.pick,
         bg: x.sel ? 'var(--fg,#fff)' : 'var(--s2,#17171B)', fg: x.sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.62)',
@@ -5145,6 +5262,7 @@ class Component extends DCLogic {
         caloriasActivas: T('Calorías activas'), caloriasTotales: T('Calorías totales'), kcalDia: T('kcal/día'), hNoche: T('h/noche'), pulsoReposo: T('Pulso en reposo'), lpm: T('lpm'),
         historialCargas: T('Historial de cargas'), serieMasPesada: T('Serie más pesada'), sinCargas: T('Todavía no has registrado pesos en este ejercicio.'),
         resumen: T('Resumen'),
+        macrosMano: T('Macros a mano'), macrosTitulo: T('¿Cuánto has comido?'), macrosSub: T('Pon lo que te marca tu app de calorías para esta comida.'), guardarMacros: T('Guardar'), quitarMacros: T('Quitar los macros de esta comida'),
         comidaLibre: 'Cheat meal', queComiste: T('¿Qué comiste?'), buscarAlimento: T('Buscar alimento…'), buscar: T('Buscar'), buscando: T('Buscando…'), anadir: T('Añadir'), sinResultados: T('Sin resultados. Prueba otro nombre.'), tuComida: T('Tu comida'), registrarComida: T('Registrar cheat meal'), resultados: T('Resultados'), recientes: T('Recientes'), favoritos: T('Favoritos'), resumenMes: T('Resumen del mes'), sinDatosMes: T('Sin datos este mes'), recuentoMes: T('Recuento del mes'), diaADia: T('Día a día'), mediaDiaria: T('Media diaria'),
         cuenta: T('Cuenta'), cerrarSesion: T('Cerrar sesión'), aplicacion: T('Aplicación'),
         wExitTitulo: T('Estás en mitad del entrenamiento'),
@@ -5436,12 +5554,16 @@ class Component extends DCLogic {
       sheet: st.sheet, sheetDim: dim, sheetY: st.sheetIn ? 'none' : 'translateY(100%)', closeSheet: this.closeSheet,
       isMealSheet: sh.k === 'meal', mealSheet, isVideoSheet: sh.k === 'vid', videoSheet,
       isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => { const _hoy = (DAYS.find(x => x.today) || {}).fecha; const _loc = _hoy ? this._locByFecha(_hoy) : null; this.setState(Object.assign({ dietMealIdx: 0 }, _loc ? { day: _loc.day, weekIdx: _loc.weekIdx } : {})); this.openSheet({ k: 'dietall' }); },
-      isDietDaySheet: sh.k === 'dietday', dietDaySheet,
+      isDietDaySheet: sh.k === 'dietday', dietDaySheet, dayCount,
       isFoodSwapSheet: !!st.swap, closeSwap: this.closeSwap,
       swapY: st.swapIn ? 'none' : 'translateY(100%)', swapDim: st.swapIn ? 1 : 0,
       pwOpen: st.pwOpen, openPw: this.openPw, closePw: this.closePw, savePw: this.savePw,
       pwNew: st.pwNew, pwNew2: st.pwNew2, setPwNew: this.setPwNew, setPwNew2: this.setPwNew2,
       pwY: st.pwIn ? 'none' : 'translateY(100%)', pwDim: st.pwIn ? 1 : 0,
+      isMacros: !!st.macros, closeMacros: this.closeMacros, saveMacros: this.saveMacros, quitarMacros: this.quitarMacros,
+      macY: st.macrosIn ? 'none' : 'translateY(100%)', macDim: st.macrosIn ? 1 : 0, macHay: !!(st.macros && st.macros.hay),
+      macComida: st.macros ? tMeal(st.macros.comida) : '',
+      macCampos: [['kcal', T('Calorías'), 'kcal'], ['prot', T('Proteína'), 'g'], ['carbs', T('Hidratos'), 'g'], ['fat', T('Grasa'), 'g']].map(([k, l, u]) => ({ k: k, l: l, u: u, v: (st.macVal || {})[k] || '', set: this.setMacVal(k) })),
       isCheat: !!st.cheat, closeCheat: this.closeCheat, cheatY: st.cheatIn ? 'none' : 'translateY(100%)', cheatDim: st.cheatIn ? 1 : 0,
       cheatComida: st.cheat ? tMeal(st.cheat.comida) : '', cheatQ: st.cheatQ, setCheatQ: this.setCheatQ, runCheat: this.runCheat, saveCheat: this.saveCheat, cheatBusy: st.cheatBusy,
       cheatHasRes: Array.isArray(st.cheatRes) && st.cheatRes.length > 0, cheatNoRes: Array.isArray(st.cheatRes) && st.cheatRes.length === 0,

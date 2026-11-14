@@ -38,13 +38,21 @@
     return ' g';
   }
 
-  function buildAppData(row, programs, ejercicios, registros, comidaRegs, checkinRegs, comidaLibre, customMetrics) {
+  function buildAppData(row, programs, ejercicios, registros, comidaRegs, checkinRegs, comidaLibre, customMetrics, extra) {
+    // 9º arg (14 nov 2026, Alex): { prohibidos: [ids de ejercicios de las carpetas de lesiones del cliente], macrosManual: bool }
+    extra = extra || {};
+    var _prohibidos = {}; (extra.prohibidos || []).forEach(function (id) { if (id) _prohibidos[String(id)] = 1; });
     // métricas personalizadas del cliente: key -> {label, unit} (para etiquetar bien en la Evolución)
     var customByKey = {}; (Array.isArray(customMetrics) ? customMetrics : []).forEach(function (m) { if (m && m.key) customByKey[m.key] = { label: m.label || m.key, unit: m.unit || '' }; });
     // kcal de cheat meals por día y comida: comLibreByDate['YYYY-MM-DD'][nombreComida] = kcal total
     var comLibreByDate = {};
+    // «Macros a mano» (14 nov 2026): van en comida_libre con un alimento manual:true. No suman como cheat meal: cada comida
+    // se queda con lo ÚLTIMO que guardó el cliente (las filas llegan por fecha y hora de guardado).
+    var manualByDate = {};
     (Array.isArray(comidaLibre) ? comidaLibre : []).forEach(function (r) {
       var f = (r.fecha || '').slice(0, 10); if (!f) return;
+      var _man = (r.alimentos || []).filter(function (a) { return a && a.manual; })[0];
+      if (_man) { (manualByDate[f] || (manualByDate[f] = {}))[r.comida || ''] = { kcal: +_man.kcal || 0, p: +_man.prot || 0, c: +_man.carbs || 0, g: +_man.fat || 0 }; return; }
       var kc = (r.alimentos || []).reduce(function (s, a) { return s + (parseInt(a.kcal, 10) || 0); }, 0);
       (comLibreByDate[f] || (comLibreByDate[f] = {}))[r.comida || ''] = ((comLibreByDate[f] || {})[r.comida || ''] || 0) + kc;
     });
@@ -670,6 +678,7 @@
       if (!lib || !Array.isArray(lib.variantes) || !lib.variantes.length) return;
       var list = lib.variantes.map(function (vid) {
         var v = libById[vid]; if (!v) return null;
+        if (_prohibidos[String(vid)]) return null;   // lesiones del cliente (14 nov 2026): nunca le sale como variante
         return v.nombre + '|' + ytId(v.video_url || '');
       }).filter(Boolean);
       if (list.length) VAR[exRec.id] = list;
@@ -987,6 +996,7 @@
       var nutDias = [], _cont = {};
       function kcalDe(m, op, kn2) {
         if (op === 'libre') return ((comLibreByDate[kn2] || {})[m.n]) || 0;
+        if (op === 'macros') return (((manualByDate[kn2] || {})[m.n]) || {}).kcal || 0;
         if (op === 'mp') return (m.okcal && m.okcal[0]) || 0;
         return (m.okcal && m.okcal[op]) || 0;
       }
@@ -1007,7 +1017,7 @@
           var items = [], dayKcal = 0;
           DIET.forEach(function (m) {
             var op = com[m.id]; if (op == null) return;
-            var opLbl = op === 'mp' ? 'Meal prep' : op === 'libre' ? 'Cheat meal' : ('Opción ' + (op + 1));
+            var opLbl = op === 'mp' ? 'Meal prep' : op === 'libre' ? 'Cheat meal' : op === 'macros' ? 'Macros a mano' : ('Opción ' + (op + 1));
             var kc = kcalDe(m, op, kn); dayKcal += kc;
             items.push({ meal: m.n, opcion: opLbl, kcal: kc });
             _cont[m.id][opLbl] = (_cont[m.id][opLbl] || 0) + 1;
@@ -1253,7 +1263,9 @@
       todayTasks: todayTasks, planHoyPct: planHoyPct, weekSummary: weekSummary, macros: macros,
       mealsByDate: comByDate, checkinDoneThisWeek: checkinDoneThisWeek, progresoFotos: progresoFotos,
       WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG, pasosObjetivo: pasosObjetivo,
-      resumenTrimestres: resumenTrimestres, resumenSemestres: resumenSemestres, resumenAnios: resumenAnios
+      resumenTrimestres: resumenTrimestres, resumenSemestres: resumenSemestres, resumenAnios: resumenAnios,
+      // 14 nov 2026 (Alex): «Macros a mano» solo para los clientes desbloqueados en el CRM, y lo apuntado a mano / en cheat meal por día
+      macrosManual: !!extra.macrosManual, manualMacros: manualByDate, libreKcal: comLibreByDate
     };
   }
 
