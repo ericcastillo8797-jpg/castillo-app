@@ -26,7 +26,7 @@
     var m = String(u).match(/(?:v=|\/vi\/|\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
     return m ? m[1] : '';
   }
-  function comma(v) { if (v == null || v === '') return '—'; return String(v).replace('.', ','); }
+  function comma(v) { if (v == null || v === '') return '—'; var en = false; try { en = localStorage.getItem('castillo_lang') === 'en'; } catch (e) {} return en ? String(v).replace(',', '.') : String(v).replace('.', ','); }   // 42.5 en inglés (15 nov 2026)
   function ddmm(dt) { try { var d = (dt instanceof Date) ? dt : new Date(dt); if (isNaN(d)) return ''; return String(d.getDate()).padStart(2, '0') + '-' + String(d.getMonth() + 1).padStart(2, '0'); } catch (e) { return ''; } }
   function startOfDay(dt) { return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()); }
   function mondayOf(dt) { var d = startOfDay(dt); var g = (d.getDay() + 6) % 7; d.setDate(d.getDate() - g); return d; }
@@ -77,7 +77,7 @@
     var chkMedDates = {}, chkFotoDates = {};
     chkList.forEach(function (c) { var _f = (c.fecha || '').slice(0, 10); if (c.valores && Object.keys(c.valores).length) chkMedDates[_f] = true; if (c.fotos && Object.keys(c.fotos).length) chkFotoDates[_f] = true; });
     function wkKeyOf(dt) { return dt.getFullYear() + '-W' + isoWeek(dt); }
-    function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+    function miles(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, (typeof _EN !== 'undefined' && _EN) ? ',' : '.'); }   // 12,000 en inglés (15 nov 2026)
     // La capa de datos también escribe texto que ve el cliente, así que necesita saber el idioma.
     var _EN = (function () { try { return localStorage.getItem('castillo_lang') === 'en'; } catch (e) { return false; } })();
     var TXT = { pasos: _EN ? 'steps' : 'pasos', faltan: _EN ? 'to go' : 'faltan', cumplido: _EN ? 'goal reached' : 'objetivo cumplido', de: _EN ? 'of' : 'de', series: _EN ? 'sets' : 'series', ejercicios: _EN ? 'exercises' : 'ejercicios', comidas: _EN ? 'meals' : 'comidas' };
