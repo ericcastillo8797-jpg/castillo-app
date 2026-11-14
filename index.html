@@ -23,7 +23,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 289;
+  var VERSION_ACTUAL = 290;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1352,9 +1352,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </sc-for>
         </div>
         <!-- Gramos / A ojo (Alex, 15 nov 2026): siempre empieza en gramos; «A ojo» enseña cucharadas, puñados, tazas… -->
-        <div data-medida="1" style="flex:none;display:flex;border:1px solid rgba(var(--fgc,255,255,255),.16);border-radius:100px;overflow:hidden">
-          <div data-medida-g="1" onClick="{{ dietDaySheet.aprox.toG }}" style="padding:8px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.gBg }};color:{{ dietDaySheet.aprox.gFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtG }}</div>
-          <div data-medida-a="1" onClick="{{ dietDaySheet.aprox.toA }}" style="padding:8px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.aBg }};color:{{ dietDaySheet.aprox.aFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtA }}</div>
+        <div data-medida="1" style="flex:none;display:flex;border:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:100px;overflow:hidden">
+          <div data-medida-g="1" onClick="{{ dietDaySheet.aprox.toG }}" style="padding:4px 8px;font-size:10.5px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.gBg }};color:{{ dietDaySheet.aprox.gFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtG }}</div>
+          <div data-medida-a="1" onClick="{{ dietDaySheet.aprox.toA }}" style="padding:4px 8px;font-size:10.5px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.aBg }};color:{{ dietDaySheet.aprox.aFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtA }}</div>
         </div>
       </div>
       <sc-if value="{{ dietDaySheet.aprox.on }}" hint-placeholder-val="{{ false }}">
@@ -1441,9 +1441,9 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </sc-for>
         </div>
         <!-- Gramos / A ojo (Alex, 15 nov 2026): siempre empieza en gramos; «A ojo» enseña cucharadas, puñados, tazas… -->
-        <div data-medida="1" style="flex:none;display:flex;border:1px solid rgba(var(--fgc,255,255,255),.16);border-radius:100px;overflow:hidden">
-          <div data-medida-g="1" onClick="{{ dietDaySheet.aprox.toG }}" style="padding:8px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.gBg }};color:{{ dietDaySheet.aprox.gFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtG }}</div>
-          <div data-medida-a="1" onClick="{{ dietDaySheet.aprox.toA }}" style="padding:8px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.aBg }};color:{{ dietDaySheet.aprox.aFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtA }}</div>
+        <div data-medida="1" style="flex:none;display:flex;border:.5px solid rgba(var(--fgc,255,255,255),.14);border-radius:100px;overflow:hidden">
+          <div data-medida-g="1" onClick="{{ dietDaySheet.aprox.toG }}" style="padding:4px 8px;font-size:10.5px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.gBg }};color:{{ dietDaySheet.aprox.gFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtG }}</div>
+          <div data-medida-a="1" onClick="{{ dietDaySheet.aprox.toA }}" style="padding:4px 8px;font-size:10.5px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.aBg }};color:{{ dietDaySheet.aprox.aFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtA }}</div>
         </div>
       </div>
       <sc-if value="{{ dietDaySheet.aprox.on }}" hint-placeholder-val="{{ false }}">
@@ -4873,8 +4873,9 @@ class Component extends DCLogic {
       meal: _dmeals[_dmi] || { n: '', lockNote: '', opts: [] },
       // selector Gramos / A ojo, a la derecha de las comidas (Alex, 15 nov 2026)
       aprox: { on: !!st.aprox, txtG: 'g', txtA: T('A ojo'), toG: this.setAprox(false), toA: this.setAprox(true),
-        gBg: st.aprox ? 'transparent' : 'var(--fg,#fff)', gFg: st.aprox ? 'rgba(var(--fgc,255,255,255),.6)' : 'var(--bg,#000)',
-        aBg: st.aprox ? 'var(--fg,#fff)' : 'transparent', aFg: st.aprox ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)',
+        // Alex (15 nov): «más pequeño, que la gente no se abrume de tanto botón» → pequeño y en gris, la marcada solo un poco más clara
+        gBg: st.aprox ? 'transparent' : 'rgba(var(--fgc,255,255,255),.16)', gFg: st.aprox ? 'rgba(var(--fgc,255,255,255),.42)' : 'rgba(var(--fgc,255,255,255),.85)',
+        aBg: st.aprox ? 'rgba(var(--fgc,255,255,255),.16)' : 'transparent', aFg: st.aprox ? 'rgba(var(--fgc,255,255,255),.85)' : 'rgba(var(--fgc,255,255,255),.42)',
         nota: T('Medidas aproximadas, para no tener que pesar. Palma: un trozo del tamaño y grosor de tu palma. Puñado: lo que cabe en tu mano. Taza: 240 ml. Las calorías son las de tu plan.') }
     };
 
