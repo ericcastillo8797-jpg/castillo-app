@@ -707,6 +707,7 @@
     'Macros a mano': 'Manual macros', 'Apunta tú las calorías y los macros de esta comida.': 'Enter the calories and macros of this meal yourself.',
     '¿Cuánto has comido?': 'How much did you eat?', 'Pon lo que te marca tu app de calorías para esta comida.': 'Enter what your calorie app shows for this meal.',
     'Quitar los macros de esta comida': 'Remove the macros from this meal', 'Proteína': 'Protein', 'Hidratos': 'Carbs', 'Grasa': 'Fat',
+    'Llevas': 'So far', 'Hoy te quedan': 'Left today:', 'Hoy te pasas': 'Over today by',
     'Hoy llevas': 'Today so far', 'Ese día llevaste': 'That day', 'Te quedan': 'Left:', 'Te pasas': 'Over by', 'Las comidas libres solo suman calorías.': 'Free meals only add calories.',
     'Comida libre': 'Free meal', '¿Comiste fuera? Búscalo y regístralo.': 'Ate out? Search it and log it.', '¿Qué comiste?': 'What did you eat?', 'Buscar alimento…': 'Search food…', 'Buscar': 'Search', 'Buscando…': 'Searching…', 'Añadir': 'Add', 'Sin resultados. Prueba otro nombre.': 'No results. Try another name.', 'Tu comida': 'Your meal', 'Registrar comida libre': 'Log free meal', 'Registrar cheat meal': 'Log cheat meal', 'Resultados': 'Results', 'Recientes': 'Recent',
     'Estás en mitad del entrenamiento': "You're in the middle of a workout",

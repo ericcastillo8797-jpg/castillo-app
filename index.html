@@ -10,7 +10,7 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=286"></script>
+<script src="./castillo-i18n.js?v=287"></script>
 <script src="./castillo-transform.js?v=286"></script>
 <script src="./castillo-equiv.js?v=245"></script>
 <script src="./castillo-data.js?v=286"></script>
@@ -22,7 +22,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 286;
+  var VERSION_ACTUAL = 287;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -346,9 +346,16 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           <div style="font-family:'Instrument Serif',serif;font-size:23px;line-height:1">{{ m.v }}</div>
           <div style="font-size:9px;color:rgba(var(--fgc,255,255,255),.4);margin-top:1px">{{ m.u }}</div>
           <div style="font-size:9px;font-weight:600;color:rgba(var(--fgc,255,255,255),.62);margin-top:7px;line-height:1.2">{{ m.l }}</div>
+          <sc-if value="{{ m.hay }}" hint-placeholder-val="{{ false }}">
+          <div style="height:3px;border-radius:3px;background:rgba(var(--fgc,255,255,255),.1);margin:8px 8px 0;overflow:hidden"><div style="height:100%;width:{{ m.bar }};background:{{ m.barCol }};border-radius:3px"></div></div>
+          <div data-macro-hoy="1" style="font-size:9.5px;font-weight:600;color:{{ m.col }};margin-top:5px;line-height:1.2">{{ m.hecho }}</div>
+          </sc-if>
         </div>
         </sc-for>
       </div>
+      <sc-if value="{{ macroHoy.on }}" hint-placeholder-val="{{ false }}">
+      <div data-macro-hoy-resto="1" style="text-align:center;font-size:11.5px;font-weight:600;color:rgba(var(--fgc,255,255,255),.6);margin-top:11px">{{ macroHoy.resto }}</div>
+      </sc-if>
       <div onClick="{{ openDietAll }}" style="margin-top:15px;background:var(--fg,#fff);color:var(--bg,#000);border-radius:100px;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:transform .2s cubic-bezier(.2,.8,.2,1)" style-active="transform:scale(.97)">
         <span style="font-size:13.5px;font-weight:600">{{ L.verMiDieta }}</span>
         <svg width="13" height="13" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5 8 5.5 3 9.5"></path></svg>
@@ -4647,6 +4654,33 @@ class Component extends DCLogic {
       { l: T('Carbohidratos'), v: String(_mac.carbs || 0), u: 'g' },
       { l: T('Grasas'), v: String(_mac.fat || 0), u: 'g' }
     ];
+    // Lo que lleva comido un día (Alex, 14 nov 2026): solo clientes con «Macros a mano». Suma lo marcado ese día: opciones
+    // del plan (sus alimentos llevan macros), meal prep (como la opción 1), cheat meal (solo kcal) y los macros a mano.
+    const _cuentaDia = fecha => {
+      const tot = { kcal: 0, p: 0, c: 0, g: 0 }; let soloKcal = false;
+      const reg = ((_dd.mealsByDate) || {})[fecha] || {};
+      DIET.forEach(m => {
+        const op = reg[m.id]; if (op == null) return;
+        if (op === 'macros') { const x = ((_dd.manualMacros || {})[fecha] || {})[m.n] || {}; tot.kcal += +x.kcal || 0; tot.p += +x.p || 0; tot.c += +x.c || 0; tot.g += +x.g || 0; return; }
+        if (op === 'libre') { tot.kcal += +(((_dd.libreKcal || {})[fecha] || {})[m.n]) || 0; soloKcal = true; return; }
+        const oi = op === 'mp' ? 0 : op, fx = (m.ox && m.ox[oi]) || [];
+        if (fx.length) fx.forEach(f => { tot.kcal += +f.kcal || 0; tot.p += +f.p || 0; tot.c += +f.c || 0; tot.g += +f.g || 0; });
+        else tot.kcal += +((m.okcal || [])[oi]) || 0;
+      });
+      return { tot: tot, soloKcal: soloKcal, ob: { kcal: +_mac.kcal || 0, p: +_mac.protein || 0, c: +_mac.carbs || 0, g: +_mac.fat || 0 } };
+    };
+    const _pasa = (v, o) => o && v > o * 1.05;
+    // «Tus objetivos diarios» de Hoy: debajo de cada objetivo, lo que lleva hoy (solo con «Macros a mano»)
+    const macroHoy = { on: !!_dd.macrosManual, resto: '' };
+    if (_dd.macrosManual) {
+      const cH = _cuentaDia(_todayFecha);
+      ['kcal', 'p', 'c', 'g'].forEach((k, i) => { const v = Math.round(cH.tot[k]), o = cH.ob[k], c = macroCards[i];
+        c.hay = true; c.hecho = T('Llevas') + ' ' + _milesN(v);
+        c.bar = (o ? Math.min(100, Math.round(v / o * 100)) : 0) + '%'; c.barCol = _pasa(v, o) ? '#FF6B5C' : 'var(--fg,#fff)';
+        c.col = _pasa(v, o) ? '#FF6B5C' : 'rgba(var(--fgc,255,255,255),.55)'; });
+      const ko = cH.ob.kcal, kv = Math.round(cH.tot.kcal);
+      macroHoy.resto = !ko ? '' : (ko - kv >= 0 ? T('Hoy te quedan') + ' ' + _milesN(ko - kv) + ' kcal' : T('Hoy te pasas') + ' ' + _milesN(kv - ko) + ' kcal');
+    }
     const dietSub = _hdr ? (_hdr.nMeals + ' comidas · varias opciones cada una') : 'Comidas · varias opciones cada una';
     const evoCounts = _hdr ? (_hdr.nPhotos + ' fotos · ' + _hdr.nMetrics + ' métricas') : 'Fotos · métricas';
 
@@ -4762,26 +4796,18 @@ class Component extends DCLogic {
     });
     // Recuento del día (Alex, 14 nov 2026): solo clientes con «Macros a mano». Suma lo marcado ese día: opciones del
     // plan (sus alimentos llevan macros), meal prep (como la opción 1), cheat meal (solo kcal) y los macros a mano.
+    // Recuento del día en «Nutrición del día» (Alex, 14 nov 2026): solo clientes con «Macros a mano».
     const dayCount = (() => {
       if (!_dd.macrosManual) return { on: false };
-      const tot = { kcal: 0, p: 0, c: 0, g: 0 }; let soloKcal = false;
-      DIET.forEach(m => {
-        const op = _selMeals[m.id]; if (op == null) return;
-        if (op === 'macros') { const x = ((_dd.manualMacros || {})[_selFecha] || {})[m.n] || {}; tot.kcal += +x.kcal || 0; tot.p += +x.p || 0; tot.c += +x.c || 0; tot.g += +x.g || 0; return; }
-        if (op === 'libre') { tot.kcal += +(((_dd.libreKcal || {})[_selFecha] || {})[m.n]) || 0; soloKcal = true; return; }
-        const oi = op === 'mp' ? 0 : op, fx = (m.ox && m.ox[oi]) || [];
-        if (fx.length) fx.forEach(f => { tot.kcal += +f.kcal || 0; tot.p += +f.p || 0; tot.c += +f.c || 0; tot.g += +f.g || 0; });
-        else tot.kcal += +((m.okcal || [])[oi]) || 0;
-      });
-      const ob = { kcal: +_mac.kcal || 0, p: +_mac.protein || 0, c: +_mac.carbs || 0, g: +_mac.fat || 0 };
+      const cd = _cuentaDia(_selFecha), tot = cd.tot, ob = cd.ob;
       const R = n => Math.round(n);
       const resto = (v, o, u) => !o ? '' : (o - v >= 0 ? T('Te quedan') + ' ' + _milesN(R(o - v)) + ' ' + u : T('Te pasas') + ' ' + _milesN(R(v - o)) + ' ' + u);
-      const col = (v, o) => (o && v > o * 1.05) ? '#FF6B5C' : 'rgba(var(--fgc,255,255,255),.55)';
+      const col = (v, o) => _pasa(v, o) ? '#FF6B5C' : 'rgba(var(--fgc,255,255,255),.55)';
       return { on: true, titulo: _selFecha === _todayFecha ? T('Hoy llevas') : T('Ese día llevaste'),
         kcal: _milesN(R(tot.kcal)), kcalObj: ob.kcal ? _milesN(R(ob.kcal)) : '—', resto: resto(tot.kcal, ob.kcal, 'kcal'), restCol: col(tot.kcal, ob.kcal),
-        bar: (ob.kcal ? Math.min(100, Math.round(tot.kcal / ob.kcal * 100)) : 0) + '%', barCol: (ob.kcal && tot.kcal > ob.kcal * 1.05) ? '#FF6B5C' : 'var(--fg,#fff)',
+        bar: (ob.kcal ? Math.min(100, Math.round(tot.kcal / ob.kcal * 100)) : 0) + '%', barCol: _pasa(tot.kcal, ob.kcal) ? '#FF6B5C' : 'var(--fg,#fff)',
         macros: [[T('Proteína'), tot.p, ob.p], [T('Hidratos'), tot.c, ob.c], [T('Grasa'), tot.g, ob.g]].map(([l, v, o]) => ({ l: l, v: _milesN(R(v)), obj: o ? _milesN(R(o)) : '—', resto: resto(v, o, 'g'), col: col(v, o) })),
-        hayNota: soloKcal, nota: T('Las comidas libres solo suman calorías.') };
+        hayNota: cd.soloKcal, nota: T('Las comidas libres solo suman calorías.') };
     })();
     const dietDaySheet = {
       tabs: _dmeals.map(x => ({ n: x.n, sel: x.sel, pick: x.pick,
@@ -5311,7 +5337,7 @@ class Component extends DCLogic {
       prevWeek, nextWeek, prevWeekOpacity, nextWeekOpacity,
       planPct, planBar: _reveal ? planPct : 0, planPctLabel: Math.round(planPct * _ha) + '%', planTasks, wsRows, wsRings, wsGlobal, wsGlobalLabel: Math.round(wsGlobal * _ha) + '%', wsKcal,
       wsKcalLabel: wsKcal + ' kcal ' + T('objetivo / día'),
-      macroCards, macroPlan: ((_dd.macros || {}).plan) || '', connectHealth: () => {
+      macroCards, macroHoy, macroPlan: ((_dd.macros || {}).plan) || '', connectHealth: () => {
         if (!(window.CastilloData && window.CastilloData.conectarSalud)) { this.flash(T('Cargando…')); return; }
         window.CastilloData.conectarSalud().then((r) => {
           if (!r || !r.available) { this.flash('Actualiza la app para conectar Apple Salud'); return; }
