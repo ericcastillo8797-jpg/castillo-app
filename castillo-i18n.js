@@ -714,6 +714,7 @@
     '¿Cuánto has comido hoy?': 'How much have you eaten today?', '¿Cuánto comiste ese día?': 'How much did you eat that day?',
     'Pon el total del día que te marca tu app de calorías. Cuenta en lugar de lo que hayas apuntado comida a comida.': 'Enter the day total from your calorie app. It counts instead of what you logged meal by meal.',
     'Quitar el total del día': 'Remove the day total', 'Cuenta el total del día que apuntaste.': 'Counting the day total you entered.',
+    'A ojo': 'Approx.', 'Medidas aproximadas, para no tener que pesar. Palma: un trozo del tamaño y grosor de tu palma. Puñado: lo que cabe en tu mano. Taza: 240 ml. Las calorías son las de tu plan.': 'Approximate measures, so you don\'t have to weigh. Palm: a piece the size and thickness of your palm. Handful: what fits in your hand. Cup: 240 ml. Calories are from your plan.',
     'Va dentro del total del día que apuntaste.': 'Included in the day total you entered.',
     'Comida libre': 'Free meal', '¿Comiste fuera? Búscalo y regístralo.': 'Ate out? Search it and log it.', '¿Qué comiste?': 'What did you eat?', 'Buscar alimento…': 'Search food…', 'Buscar': 'Search', 'Buscando…': 'Searching…', 'Añadir': 'Add', 'Sin resultados. Prueba otro nombre.': 'No results. Try another name.', 'Tu comida': 'Your meal', 'Registrar comida libre': 'Log free meal', 'Registrar cheat meal': 'Log cheat meal', 'Resultados': 'Results', 'Recientes': 'Recent',
     'Estás en mitad del entrenamiento': "You're in the middle of a workout",

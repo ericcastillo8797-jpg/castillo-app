@@ -10,9 +10,10 @@
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./castillo-i18n.js?v=288"></script>
+<script src="./castillo-i18n.js?v=289"></script>
 <script src="./castillo-transform.js?v=288"></script>
 <script src="./castillo-equiv.js?v=245"></script>
+<script src="./castillo-medidas.js?v=289"></script>
 <script src="./castillo-data.js?v=288"></script>
 <script src="./support.js"></script>
 <script>
@@ -22,7 +23,7 @@
 // primer plano) se mira un fichero de versión SIN caché; si hay una versión más nueva, se recarga
 // con un parámetro distinto, que es lo único que obliga al navegador a bajarla otra vez.
 (function () {
-  var VERSION_ACTUAL = 288;
+  var VERSION_ACTUAL = 289;
   window.__APP_VERSION = VERSION_ACTUAL;
   // Donde vive la version publicada. La app instalada lleva su copia DENTRO, asi que para saber
   // si hay algo nuevo tiene que preguntar fuera, a esta direccion; el navegador se lo pregunta
@@ -1344,11 +1345,21 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
         </sc-if>
       </div>
       </sc-if>
-      <div style="flex:none;padding:12px 16px 4px;display:flex;gap:8px;overflow-x:auto">
+      <div style="flex:none;padding:12px 16px 4px;display:flex;align-items:center;gap:8px">
+        <div style="flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto">
         <sc-for list="{{ dietDaySheet.tabs }}" as="tb" hint-placeholder-count="4">
         <div onClick="{{ tb.pick }}" style="flex:none;padding:9px 15px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .25s cubic-bezier(.32,.72,0,1);background:{{ tb.bg }};color:{{ tb.fg }};border:1px solid {{ tb.bd }}" style-active="transform:scale(.95)">{{ tb.n }}</div>
         </sc-for>
+        </div>
+        <!-- Gramos / A ojo (Alex, 15 nov 2026): siempre empieza en gramos; «A ojo» enseña cucharadas, puñados, tazas… -->
+        <div data-medida="1" style="flex:none;display:flex;border:1px solid rgba(var(--fgc,255,255,255),.16);border-radius:100px;overflow:hidden">
+          <div data-medida-g="1" onClick="{{ dietDaySheet.aprox.toG }}" style="padding:8px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.gBg }};color:{{ dietDaySheet.aprox.gFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtG }}</div>
+          <div data-medida-a="1" onClick="{{ dietDaySheet.aprox.toA }}" style="padding:8px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.aBg }};color:{{ dietDaySheet.aprox.aFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtA }}</div>
+        </div>
       </div>
+      <sc-if value="{{ dietDaySheet.aprox.on }}" hint-placeholder-val="{{ false }}">
+      <div data-medida-nota="1" style="flex:none;margin:6px 16px 0;font-size:11px;line-height:1.45;color:rgba(var(--fgc,255,255,255),.45)">{{ dietDaySheet.aprox.nota }}</div>
+      </sc-if>
       <div style="overflow-y:auto;padding:8px 20px 26px">
         <div style="display:flex;align-items:center;gap:10px;margin:6px 0 12px">
           <div style="font-size:17px;font-weight:700">{{ dietDaySheet.meal.n }}</div>
@@ -1382,7 +1393,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
               </sc-if>
               <div style="min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }}</div>
             </div>
-            <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:56px;text-align:right">{{ f.q }}</div>
+            <div style="font-size:{{ f.qFs }};line-height:1.25;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:{{ f.qW }};text-align:right">{{ f.q }}</div>
             <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:62px;text-align:right">{{ f.kcalLabel }}</div>
           </div>
           </sc-for>
@@ -1423,11 +1434,21 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
           </sc-for>
         </div>
       </div>
-      <div style="flex:none;padding:12px 16px 4px;display:flex;gap:8px;overflow-x:auto">
+      <div style="flex:none;padding:12px 16px 4px;display:flex;align-items:center;gap:8px">
+        <div style="flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto">
         <sc-for list="{{ dietDaySheet.tabs }}" as="tb" hint-placeholder-count="4">
         <div onClick="{{ tb.pick }}" style="flex:none;padding:9px 15px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .25s cubic-bezier(.32,.72,0,1);background:{{ tb.bg }};color:{{ tb.fg }};border:1px solid {{ tb.bd }}" style-active="transform:scale(.95)">{{ tb.n }}</div>
         </sc-for>
+        </div>
+        <!-- Gramos / A ojo (Alex, 15 nov 2026): siempre empieza en gramos; «A ojo» enseña cucharadas, puñados, tazas… -->
+        <div data-medida="1" style="flex:none;display:flex;border:1px solid rgba(var(--fgc,255,255,255),.16);border-radius:100px;overflow:hidden">
+          <div data-medida-g="1" onClick="{{ dietDaySheet.aprox.toG }}" style="padding:8px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.gBg }};color:{{ dietDaySheet.aprox.gFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtG }}</div>
+          <div data-medida-a="1" onClick="{{ dietDaySheet.aprox.toA }}" style="padding:8px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ dietDaySheet.aprox.aBg }};color:{{ dietDaySheet.aprox.aFg }};transition:all .2s" style-active="transform:scale(.94)">{{ dietDaySheet.aprox.txtA }}</div>
+        </div>
       </div>
+      <sc-if value="{{ dietDaySheet.aprox.on }}" hint-placeholder-val="{{ false }}">
+      <div data-medida-nota="1" style="flex:none;margin:6px 16px 0;font-size:11px;line-height:1.45;color:rgba(var(--fgc,255,255,255),.45)">{{ dietDaySheet.aprox.nota }}</div>
+      </sc-if>
       <div style="overflow-y:auto;padding:8px 20px 26px">
         <div style="display:flex;align-items:center;gap:10px;margin:6px 0 12px">
           <div style="font-size:17px;font-weight:700">{{ dietDaySheet.meal.n }}</div>
@@ -1462,7 +1483,7 @@ input::placeholder{color:rgba(var(--fgc,255,255,255),.3)}
               </sc-if>
               <div style="min-width:0;font-size:13.5px;color:rgba(var(--fgc,255,255,255),.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }}</div>
             </div>
-            <div style="font-size:13px;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:56px;text-align:right">{{ f.q }}</div>
+            <div style="font-size:{{ f.qFs }};line-height:1.25;color:rgba(var(--fgc,255,255,255),.44);flex:none;width:{{ f.qW }};text-align:right">{{ f.q }}</div>
             <div style="font-size:13px;font-weight:500;color:rgba(var(--fgc,255,255,255),.7);flex:none;width:62px;text-align:right">{{ f.kcalLabel }}</div>
           </div>
           </sc-for>
@@ -2555,7 +2576,7 @@ class Component extends DCLogic {
     logs: {}, wLock: false, pad: null, padIn: false,
     rest: 0, restMax: 90,
     borrarOpen: false, borrarTxt: '', borrarErr: '', borrando: false, privOpen: false,
-    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, whoop: null, reloj: null, dietMealIdx: 0,
+    day: 29, weekIdx: 0, vidCat: 'Todos', evoTab: 'comp', evoCompOpen: true, playEx: null, whoop: null, reloj: null, dietMealIdx: 0, aprox: false,
     fontScale: (function () { try { return parseFloat(localStorage.getItem('castillo_fontscale')) || 1; } catch (e) { return 1; } })(),
     theme: null, anim: 1, drawn: true, swaps: {},
     ck: {}, ckPhotos: {}, ckPreview: {}, ckUploading: {}, toast: null, marks: {}, mealsLocked: {}, showAllApps: false, foodSwaps: {},
@@ -3074,9 +3095,11 @@ class Component extends DCLogic {
   openDietSheet = fecha => () => {
     // Resuelve el día en la semana correcta (no resetear a hoy si estás viendo otra semana)
     const loc = this._locByFecha(fecha);
-    this.setState(Object.assign({ dietMealIdx: 0 }, loc ? { day: loc.day, weekIdx: loc.weekIdx } : {}));
+    this.setState(Object.assign({ dietMealIdx: 0, aprox: false }, loc ? { day: loc.day, weekIdx: loc.weekIdx } : {}));   // siempre arranca en gramos (Alex, 15 nov 2026)
     this.openSheet({ k: 'dietday' });
   };
+  // «A ojo» (Alex, 15 nov 2026): las cantidades del plan en cucharadas, puñados, tazas… Por defecto, gramos.
+  setAprox = v => () => this.setState({ aprox: !!v });
   // abre el selector de equivalencias de un alimento
   // abre "cambiar alimento" como CAPA ENCIMA de la dieta (no la reemplaza)
   openFoodSwap = (mealId, mealName, optI, foodI, origName, alts) => () => {
@@ -4769,7 +4792,9 @@ class Component extends DCLogic {
             const alts = (fx && typeof window !== 'undefined' && window.EQUIV) ? window.EQUIV.alternativas(fx, lang) : null;
             const sw = (st.foodSwaps || {})[m.id + '|' + i + '|' + fi];
             const canSwap = !!(alts && alts.length);
-            return { n: sw ? sw.name : tFood(f.n), q: sw ? (sw.grams + ' g') : f.q, kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '',
+            const qG = sw ? (sw.grams + ' g') : f.q;
+            const qA = (st.aprox && typeof window !== 'undefined' && window.MEDIDAS) ? window.MEDIDAS.aproxTexto(sw ? sw.name : f.n, qG, f.kcal, lang) : qG;
+            return { n: sw ? sw.name : tFood(f.n), q: qA, qW: st.aprox ? '96px' : '56px', qFs: st.aprox ? '12px' : '13px', kcalLabel: f.kcal !== '' ? (f.kcal + ' kcal') : '',
               swapped: !!sw, canSwap: canSwap,
               openSwap: canSwap ? this.openFoodSwap(m.id, m.n, i, fi, tFood(f.n), alts) : (() => {}) };
           });
@@ -4845,7 +4870,12 @@ class Component extends DCLogic {
       tabs: _dmeals.map(x => ({ n: x.n, sel: x.sel, pick: x.pick,
         bg: x.sel ? 'var(--fg,#fff)' : 'var(--s2,#17171B)', fg: x.sel ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.62)',
         bd: x.sel ? 'var(--fg,#fff)' : 'rgba(var(--fgc,255,255,255),.1)' })),
-      meal: _dmeals[_dmi] || { n: '', lockNote: '', opts: [] }
+      meal: _dmeals[_dmi] || { n: '', lockNote: '', opts: [] },
+      // selector Gramos / A ojo, a la derecha de las comidas (Alex, 15 nov 2026)
+      aprox: { on: !!st.aprox, txtG: 'g', txtA: T('A ojo'), toG: this.setAprox(false), toA: this.setAprox(true),
+        gBg: st.aprox ? 'transparent' : 'var(--fg,#fff)', gFg: st.aprox ? 'rgba(var(--fgc,255,255,255),.6)' : 'var(--bg,#000)',
+        aBg: st.aprox ? 'var(--fg,#fff)' : 'transparent', aFg: st.aprox ? 'var(--bg,#000)' : 'rgba(var(--fgc,255,255,255),.6)',
+        nota: T('Medidas aproximadas, para no tener que pesar. Palma: un trozo del tamaño y grosor de tu palma. Puñado: lo que cabe en tu mano. Taza: 240 ml. Las calorías son las de tu plan.') }
     };
 
     const vs = sh.k === 'vid' ? sh.v : null;
@@ -5611,7 +5641,7 @@ class Component extends DCLogic {
       toast: st.toast,
       sheet: st.sheet, sheetDim: dim, sheetY: st.sheetIn ? 'none' : 'translateY(100%)', closeSheet: this.closeSheet,
       isMealSheet: sh.k === 'meal', mealSheet, isVideoSheet: sh.k === 'vid', videoSheet,
-      isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => { const _hoy = (DAYS.find(x => x.today) || {}).fecha; const _loc = _hoy ? this._locByFecha(_hoy) : null; this.setState(Object.assign({ dietMealIdx: 0 }, _loc ? { day: _loc.day, weekIdx: _loc.weekIdx } : {})); this.openSheet({ k: 'dietall' }); },
+      isDietAllSheet: sh.k === 'dietall', dietAll, openDietAll: () => { const _hoy = (DAYS.find(x => x.today) || {}).fecha; const _loc = _hoy ? this._locByFecha(_hoy) : null; this.setState(Object.assign({ dietMealIdx: 0, aprox: false }, _loc ? { day: _loc.day, weekIdx: _loc.weekIdx } : {})); this.openSheet({ k: 'dietall' }); },
       isDietDaySheet: sh.k === 'dietday', dietDaySheet, dayCount,
       isFoodSwapSheet: !!st.swap, closeSwap: this.closeSwap,
       swapY: st.swapIn ? 'none' : 'translateY(100%)', swapDim: st.swapIn ? 1 : 0,
@@ -5646,7 +5676,7 @@ class Component extends DCLogic {
       mesDetailSheet, isMesDetail: !!st.mesDetail, closeMesDetail: this.closeMesDetail,
       mesDetailY: st.mesDetailIn ? 'none' : 'translateY(100%)', mesDetailDim: st.mesDetailIn ? 1 : 0,
       isDetEnt: st.mesDetail === 'entrenos', isDetCar: st.mesDetail === 'cardio', isDetNut: st.mesDetail === 'nutricion', isDetMet: st.mesDetail === 'metricas',
-      foodSwapSheet: st.swap ? { origName: st.swap.origName, opts: (st.swap.alts || []).map((a, i) => ({ name: a.name, detail: a.grams + ' g · ~' + a.kcal + ' kcal', delay: (0.05 + i * 0.05) + 's', choose: this.chooseFood(st.swap.swapKey, st.swap.mealName, st.swap.origName, a) })) } : {},
+      foodSwapSheet: st.swap ? { origName: st.swap.origName, opts: (st.swap.alts || []).map((a, i) => ({ name: a.name, detail: ((st.aprox && window.MEDIDAS) ? window.MEDIDAS.aproxTexto(a.name, a.grams + ' g', a.kcal, lang) : (a.grams + ' g')) + ' · ~' + a.kcal + ' kcal', delay: (0.05 + i * 0.05) + 's', choose: this.chooseFood(st.swap.swapKey, st.swap.mealName, st.swap.origName, a) })) } : {},
       isCkSheet: sh.k === 'ck', ckShots, ckGroups, submitCheckin: this.submitCheckin,
       ckPadH: (st.pad && st.pad.t === 'ck') ? '52vh' : '0px',
       ckShowFotos: sh.mode !== 'medidas', ckShowMedidas: sh.mode !== 'fotos',
