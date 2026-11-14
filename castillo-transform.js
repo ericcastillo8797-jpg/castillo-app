@@ -49,9 +49,14 @@
     // «Macros a mano» (14 nov 2026): van en comida_libre con un alimento manual:true. No suman como cheat meal: cada comida
     // se queda con lo ÚLTIMO que guardó el cliente (las filas llegan por fecha y hora de guardado).
     var manualByDate = {};
+    // «Macros de todo el día» (14 nov 2026): el total del día de una vez (alimento manual:true, dia:true). Lo último manda;
+    // quitado:true = lo quitó. diaByDate[f] = { kcal, p, c, g, comidas: [meal_id que marcó él] }
+    var diaByDate = {};
     (Array.isArray(comidaLibre) ? comidaLibre : []).forEach(function (r) {
       var f = (r.fecha || '').slice(0, 10); if (!f) return;
       var _man = (r.alimentos || []).filter(function (a) { return a && a.manual; })[0];
+      if (_man && _man.dia) { diaByDate[f] = _man.quitado ? null : { kcal: +_man.kcal || 0, p: +_man.prot || 0, c: +_man.carbs || 0, g: +_man.fat || 0, comidas: Array.isArray(_man.comidas) ? _man.comidas : [] }; return; }
+      if (_man && _man.quitado) { if (manualByDate[f]) delete manualByDate[f][r.comida || '']; return; }   // los quitó
       if (_man) { (manualByDate[f] || (manualByDate[f] = {}))[r.comida || ''] = { kcal: +_man.kcal || 0, p: +_man.prot || 0, c: +_man.carbs || 0, g: +_man.fat || 0 }; return; }
       var kc = (r.alimentos || []).reduce(function (s, a) { return s + (parseInt(a.kcal, 10) || 0); }, 0);
       (comLibreByDate[f] || (comLibreByDate[f] = {}))[r.comida || ''] = ((comLibreByDate[f] || {})[r.comida || ''] || 0) + kc;
@@ -1018,10 +1023,12 @@
           DIET.forEach(function (m) {
             var op = com[m.id]; if (op == null) return;
             var opLbl = op === 'mp' ? 'Meal prep' : op === 'libre' ? 'Cheat meal' : op === 'macros' ? 'Macros a mano' : ('Opción ' + (op + 1));
+            if (op === 'macros' && diaByDate[kn] && !((manualByDate[kn] || {})[m.n])) opLbl = 'Macros de todo el día';
             var kc = kcalDe(m, op, kn); dayKcal += kc;
             items.push({ meal: m.n, opcion: opLbl, kcal: kc });
             _cont[m.id][opLbl] = (_cont[m.id][opLbl] || 0) + 1;
           });
+          if (diaByDate[kn]) dayKcal = diaByDate[kn].kcal;   // el total del día que apuntó sustituye a la suma
           nutDias.push({ lbl: d2(dn2) + ' ' + MO[mo].slice(0, 3), kcal: dayKcal, items: items });
         }
       }
@@ -1265,7 +1272,7 @@
       WEEKS: WEEKS, curWeekIdx: curWeekIdx, EXPROG: EXPROG, pasosObjetivo: pasosObjetivo,
       resumenTrimestres: resumenTrimestres, resumenSemestres: resumenSemestres, resumenAnios: resumenAnios,
       // 14 nov 2026 (Alex): «Macros a mano» solo para los clientes desbloqueados en el CRM, y lo apuntado a mano / en cheat meal por día
-      macrosManual: !!extra.macrosManual, manualMacros: manualByDate, libreKcal: comLibreByDate
+      macrosManual: !!extra.macrosManual, manualMacros: manualByDate, libreKcal: comLibreByDate, manualDia: diaByDate
     };
   }
 

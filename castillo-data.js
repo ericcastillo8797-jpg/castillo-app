@@ -670,6 +670,7 @@
       var seen = {}, out = [];
       (rows || []).forEach(function (r) {
         (r.alimentos || []).forEach(function (a) {
+          if (a && a.manual) return;   // «Macros a mano» / «de todo el día» no son alimentos (14 nov 2026)
           var k = String(a.nombre || '').toLowerCase(); if (!k || seen[k]) return; seen[k] = 1;
           var k100 = (a.kcal100 != null) ? a.kcal100 : (a.gramos > 0 ? Math.round((a.kcal || 0) / a.gramos * 100) : (a.kcal || 0));
           out.push({ nombre: a.nombre, kcal: k100 });
@@ -703,6 +704,57 @@
       (mm[f] || (mm[f] = {}))[comida || ''] = { kcal: a.kcal, p: a.prot, c: a.carbs, g: a.fat };
     }
     return Promise.all([guardarComidaLibre(comida, [a], f), registrarComida(mealId, 'macros', f)]);
+  }
+
+  // Quitar los macros a mano de una comida: deja constancia (quitado:true; lo último manda) para que esos números no
+  // vuelvan a salir si la comida se marca otra vez (p. ej. con el total del día), y la desmarca.
+  function quitarMacrosManual(mealId, comida, fecha) {
+    var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+    var mm = window.__DATA && window.__DATA.manualMacros;
+    if (mm && mm[f]) delete mm[f][comida || ''];
+    return Promise.all([guardarComidaLibre(comida, [{ nombre: 'Macros a mano', manual: true, quitado: true }], f), desregistrarComida(mealId, f)]);
+  }
+
+  // «Macros de todo el día» (Alex, 14 nov 2026): el cliente apunta de una vez el total del día que le da su app de
+  // calorías. Va en comida_libre como la comida 'Todo el día', con un alimento manual:true, dia:true (lo último que se
+  // guarda manda; al quitarlo se guarda otra fila con quitado:true). Ese total sustituye a lo apuntado comida a comida.
+  // Las comidas que estaban sin marcar quedan marcadas como 'macros' y se apuntan en 'comidas', para desmarcar solo
+  // esas si lo quita. comida_registros va en una sola escritura; sin cobertura, cada comida va a la cola de siempre.
+  var COMIDA_DIA = 'Todo el día';
+  function _guardaComidasDia(f, comidas, pend) {
+    var byDate = (window.__DATA && window.__DATA.mealsByDate) || {};
+    if (window.__DATA) {
+      window.__DATA.mealsByDate = Object.assign({}, byDate, { [f]: comidas });
+      if (f === _ctx.hoy) window.__DATA.mealsReg = comidas;
+    }
+    if (!pend.length) return Promise.resolve();
+    var row = { cliente_email: _ctx.email, fecha: f, comidas: comidas, registrado_por: _ctx.email, updated_at: new Date().toISOString() };
+    return api('/rest/v1/comida_registros?on_conflict=cliente_email,fecha', {
+      method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row)
+    }, _ctx.token).catch(function (err) { pend.forEach(encola); throw err; });
+  }
+  function guardarMacrosDia(m, fecha, marcar) {
+    if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+    var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+    var D = window.__DATA || {}, comidas = Object.assign({}, (D.mealsByDate || {})[f] || {});
+    var nuevas = (marcar || []).filter(function (id) { return comidas[id] == null; });
+    nuevas.forEach(function (id) { comidas[id] = 'macros'; });
+    var antes = (((D.manualDia || {})[f]) || {}).comidas || [];
+    var lista = antes.concat(nuevas.filter(function (id) { return antes.indexOf(id) < 0; }));
+    var a = { nombre: 'Macros de todo el día', manual: true, dia: true, kcal: Math.round(+m.kcal || 0), prot: Math.round(+m.prot || 0), carbs: Math.round(+m.carbs || 0), fat: Math.round(+m.fat || 0), comidas: lista };
+    if (window.__DATA) (D.manualDia || (D.manualDia = {}))[f] = { kcal: a.kcal, p: a.prot, c: a.carbs, g: a.fat, comidas: lista };
+    return Promise.all([guardarComidaLibre(COMIDA_DIA, [a], f),
+      _guardaComidasDia(f, comidas, nuevas.map(function (id) { return { k: 'comida', f: f, mealId: id, opcion: 'macros' }; }))]);
+  }
+  function quitarMacrosDia(fecha, desmarcar) {
+    if (!_ctx.token || !_ctx.email) return Promise.reject(new Error('sin sesión'));
+    var f = (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : _ctx.hoy);
+    var D = window.__DATA || {}, comidas = Object.assign({}, (D.mealsByDate || {})[f] || {});
+    var fuera = (desmarcar || []).filter(function (id) { return comidas[id] === 'macros'; });
+    fuera.forEach(function (id) { delete comidas[id]; });
+    if (window.__DATA) (D.manualDia || (D.manualDia = {}))[f] = null;
+    return Promise.all([guardarComidaLibre(COMIDA_DIA, [{ nombre: 'Macros de todo el día', manual: true, dia: true, quitado: true }], f),
+      _guardaComidasDia(f, comidas, fuera.map(function (id) { return { k: 'descomida', f: f, mealId: id }; }))]);
   }
 
   // cambia la contraseña del cliente (Supabase Auth). NO afecta al CRM: el CRM enlaza por EMAIL, no por contraseña.
@@ -878,6 +930,7 @@
     },
     guardarComidaLibre: guardarComidaLibre,
     guardarMacrosManual: guardarMacrosManual,   // «Macros a mano» (14 nov 2026)
+    guardarMacrosDia: guardarMacrosDia, quitarMacrosDia: quitarMacrosDia, quitarMacrosManual: quitarMacrosManual,   // «Macros de todo el día» (14 nov 2026)
     conectarSalud: conectarSalud,
     saludConectado: saludConectado,
     desconectarSalud: desconectarSalud,
