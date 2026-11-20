@@ -20,6 +20,18 @@
   var MEAL_H = { breakfast: '08:00', morningSnack: '11:00', lunch: '14:00', snack: '17:00', preworkout: '18:00', postworkout: '20:00', dinner: '21:30' };
 
   function ms(x) { return x && typeof x === 'object' && x.$date != null ? x.$date : x; }
+  // Punto de Harbiz que repite el valor inicial fuera de un registro (ver MET / WEIGHTS): se quita.
+  function sinInicialRepetido(m) {
+    var d = (m && m.data) || []; if (d.length < 2) return m;
+    var y0 = String(d[0].y);
+    var repetido = function (p, i) { var t = p && ms(p.t); return i > 0 && typeof t === 'number' && t % 86400000 !== 0 && String(p.y) === y0; };
+    var limpio = d.filter(function (p, i) { return !repetido(p, i); });
+    if (limpio.length === d.length || !limpio.length) return m;
+    var r = {}; for (var k in m) r[k] = m[k];
+    r.data = limpio;
+    if (repetido(d[d.length - 1], d.length - 1) && String(m.current) === String(d[d.length - 1].y)) r.current = limpio[limpio.length - 1].y;
+    return r;
+  }
   function d2(n) { return (n < 10 ? '0' : '') + n; }
   function ytId(u) {
     if (!u) return '';
@@ -513,7 +525,11 @@
     }
 
     // ---------- MET / WEIGHTS ----------
-    var metrics = (row.evolution && row.evolution.metrics) || [];
+    // 20 nov 2026 (José Anguis: «me coge el peso inicial en vez del último»): Harbiz, al tocar la ficha, volvía a
+    // apuntar el valor INICIAL de la métrica como un punto más (a la hora exacta del cambio; los registros de verdad
+    // van a las 00:00) y lo dejaba como «actual». José: 95,5 kg el 15 sep y, 12 h después, «104» (su peso de inicio).
+    // Esos puntos no cuentan; si era el último, el actual pasa a ser el último registro real. No se toca la base.
+    var metrics = ((row.evolution && row.evolution.metrics) || []).map(sinInicialRepetido);
     function metVal(m) { return m.current != null && m.current !== '' && m.current !== 0 ? m.current : (m.data && m.data.length ? m.data[m.data.length - 1].y : null); }
     function metPrev(m) {
       var p = null;
