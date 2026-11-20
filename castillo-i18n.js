@@ -6,6 +6,11 @@
 
   // ---- Alimentos (clave = nombre original en minúsculas) ----
   var FOOD = {
+    // 20 nov 2026: alimentos que entraron en inglés en las dietas después de la revisión del 15 nov.
+    'artichoke': { es: 'Alcachofa', en: 'Artichoke' },
+    'chickpeas': { es: 'Garbanzos', en: 'Chickpeas' },
+    'couscous, dry': { es: 'Cuscús seco', en: 'Couscous, dry' },
+    'peanut butter, smooth, reduced fat': { es: 'Crema de cacahuete suave, baja en grasa', en: 'Peanut butter, smooth, reduced fat' },
     // 15 nov 2026 (Eric: «si es inglés, todo inglés, y viceversa»): los 445 alimentos de las dietas y de la biblioteca del CRM que salían igual en los dos idiomas.
     'corn flakes': { es: 'Copos de maíz', en: 'Corn Flakes' },
     'russian protein': { es: 'Proteína Russian', en: 'Russian Protein' },
@@ -1273,6 +1278,19 @@
 
   // normaliza: quita espacios raros (non-breaking  ), colapsa espacios, minúsculas
   function nk(s) { return String(s == null ? '' : s).replace(/ /g, ' ').replace(/\s+/g, ' ').trim().toLowerCase(); }
+  // 20 nov 2026 (Martín): el buscador del CRM ya guarda el alimento con su nombre en castellano o en inglés.
+  // Para traducirlo también entonces, se busca además por el nombre ya traducido de cada alimento.
+  var FOOD_INV = null;
+  function foodInv(k) {
+    if (!FOOD_INV) {
+      FOOD_INV = {};
+      for (var x in FOOD) {
+        var e = FOOD[x]; if (!e || typeof e !== 'object') continue;
+        [e.es, e.en].forEach(function (v) { if (v) { var y = nk(v); if (!FOOD[y] && !FOOD_INV[y]) FOOD_INV[y] = e; } });
+      }
+    }
+    return FOOD_INV[k];
+  }
   // nombres de ejercicios (tabla + entrenos, ES/mixto) -> EN. Clave normalizada SIN acentos.
   function nkx(s) { return nk(s).normalize('NFD').replace(/[̀-ͯ]/g, ''); }
   // 15 nov 2026 (Eric: «si es inglés, todo inglés, y viceversa»): nombre de cada ejercicio de los entrenos en los DOS idiomas.
@@ -1680,12 +1698,12 @@
     // food(): si no está en el diccionario, devuelve el original tal cual
     food: function (name, lang) {
       if (!name) return name;
-      var e = FOOD[nk(name)];
+      var e = FOOD[nk(name)] || foodInv(nk(name));
       if (e) return e[lang] || e.es || name;
       // "Yogur Griego - Hacendado": la marca va detrás del guion y NO se traduce; traducimos el alimento.
       var i = String(name).lastIndexOf(' - ');
       if (i > 0) {
-        var b = FOOD[nk(String(name).slice(0, i))];
+        var b = FOOD[nk(String(name).slice(0, i))] || foodInv(nk(String(name).slice(0, i)));
         if (b) return (b[lang] || b.es || String(name).slice(0, i)) + String(name).slice(i);
       }
       return name;
